@@ -1,0 +1,10 @@
+.guard {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}

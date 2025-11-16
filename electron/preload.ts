@@ -15,10 +15,11 @@ const INVOKE_CHANNELS = [
     'set-local-version',
     'get-installed-liveries',
     'read-manifest',
-    'detect-sim-paths'
+    'detect-sim-paths',
+    'auth-open-panel'
 ] as const;
 
-const ON_CHANNELS = ['download-progress'] as const;
+const ON_CHANNELS = ['download-progress', 'auth-token'] as const;
 
 type InvokeChannel = typeof INVOKE_CHANNELS[number];
 type OnChannel = typeof ON_CHANNELS[number];
@@ -92,6 +93,10 @@ const api: ElectronAPI = {
         ensureInvokeChannel('read-manifest');
         return ipcRenderer.invoke('read-manifest', liveryPath);
     },
+    openPanelAuth: (url) => {
+        ensureInvokeChannel('auth-open-panel');
+        return ipcRenderer.invoke('auth-open-panel', url);
+    },
     onDownloadProgress: (callback) => {
         ensureOnChannel('download-progress');
         ipcRenderer.removeAllListeners('download-progress');
@@ -104,6 +109,16 @@ const api: ElectronAPI = {
     },
     removeAllDownloadProgressListeners: () => {
         ipcRenderer.removeAllListeners('download-progress');
+    },
+    onAuthToken: (callback) => {
+        ensureOnChannel('auth-token');
+        ipcRenderer.removeAllListeners('auth-token');
+
+        if (callback && typeof callback === 'function') {
+            ipcRenderer.on('auth-token', (_event, payload) => {
+                callback(payload);
+            });
+        }
     }
 };
 

@@ -1,0 +1,88 @@
+.page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at top, rgba(53, 81, 255, 0.2), transparent 60%), var(--bg);
+    padding: 20px;
+}
+
+.card {
+    width: min(500px, 100%);
+    background: var(--panel);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+}
+
+.titleGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.titleGroup h1 {
+    margin: 0;
+    margin-top: 8px;
+    font-size: 1.8rem;
+}
+
+.titleGroup p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.notice {
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.notice ol {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.button {
+  border: none;
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  background: var(--card);
+  color: var(--primary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid rgb(134, 134, 134);
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.helper {
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-align: center;
+}
+
+.error {
+    color: var(--danger);
+    font-size: 0.85rem;
+}

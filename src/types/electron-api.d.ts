@@ -20,6 +20,12 @@ interface DetectedSimPaths {
     msfs2024Path: string | null;
 }
 
+export interface AuthTokenPayload {
+    token: string;
+    role?: string | null;
+    bawId?: string | null;
+}
+
 export interface ElectronAPI {
     fetchLiveries: () => Promise<{ version?: string; liveries: Livery[] }>;
     downloadLivery: (downloadUrl: string, liveryName: string, simulator: 'MSFS2020' | 'MSFS2024', resolution: string) => Promise<DownloadResult>;
@@ -37,6 +43,8 @@ export interface ElectronAPI {
     readManifest: (path: string) => Promise<any>;
     onDownloadProgress: (callback: ((event: DownloadProgressEvent) => void) | null) => void;
     removeAllDownloadProgressListeners: () => void;
+    openPanelAuth: (url: string) => Promise<void>;
+    onAuthToken: (callback: ((payload: AuthTokenPayload) => void) | null) => void;
 }
 
 declare global {
