@@ -1,0 +1,72 @@
+.sidePanel {
+    width: 250px;
+    height: 100vh;
+    background: var(--panel);
+    padding: 20px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+}
+
+.panelHeader h2 {
+    margin: 0 0 30px;
+    font-weight: 600;
+}
+
+.panelButtons {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.panelButton {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 15px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.panelButton svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--muted);
+}
+
+.panelButton:hover,
+.panelButtonActive {
+    background: #2a2a2a;
+    color: var(--text);
+    border-color: #ffffff;
+}
+
+.panelButton:hover svg,
+.panelButtonActive svg {
+    stroke: var(--text);
+}
+
+.sidebarLogo {
+    border-top: 1px solid var(--border);
+    padding: 12px 0 8px;
+    text-align: center;
+    margin-top: auto;
+}
+
+.logoImage {
+    max-width: 75%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}

@@ -1,0 +1,291 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.pageHeader h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+.searchContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.searchBar {
+    display: flex;
+    gap: 10px;
+}
+
+.searchInput {
+    flex: 1;
+    padding: 12px 15px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--card);
+    color: var(--text);
+}
+
+.iconButton {
+    width: 48px;
+    height: 48px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #2a2a2a;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.iconButton:hover {
+    background: #3a3a3a;
+    border-color: #666666;
+}
+
+.iconButtonActive {
+    border-color: #ffffff;
+}
+
+.filterPanel {
+    background: var(--card);
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border-top: 1px solid transparent;
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 15px;
+    transition: max-height 0.4s cubic-bezier(0.22, 0.61, 0.36, 1), padding 0.4s ease-out;
+}
+
+.filterPanelActive {
+    max-height: 220px;
+    padding: 20px 15px 15px;
+    border-top-color: var(--border);
+}
+
+.filterRow {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.filterSelect {
+    flex: 1;
+    padding: 8px 12px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+}
+
+.resetButton {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.scrollContainer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.paginationBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.paginationText {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.paginationButtons {
+    display: flex;
+    gap: 8px;
+}
+
+.paginationButtons button {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 4px;
+    background: #2a2a2a;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.paginationButtons button:hover:not(:disabled) {
+    background: #3a3a3a;
+}
+
+.paginationButtons button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--card);
+    color: var(--muted);
+}
+
+.grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    overflow-y: auto;
+    padding-right: 8px;
+    margin-right: -8px;
+}
+
+.card {
+    background: var(--card);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.cardMedia {
+    position: relative;
+    height: 160px;
+    background: #1c1c1c;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cardImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cardPlaceholder {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.cardBadge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #ffffff;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+}
+
+.cardBody {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.developer {
+    color: var(--muted);
+    margin: 0;
+    font-size: 14px;
+}
+
+.title {
+    margin: 0;
+    font-size: 18px;
+    color: var(--text);
+}
+
+.badge {
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin: 0;
+}
+
+.metaLabel {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+
+.metaValue {
+    font-size: 14px;
+    color: var(--text);
+}
+
+.installPath {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.pathValue {
+    font-size: 13px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.uninstallButton {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    background: #c24040;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.uninstallButton:hover {
+    background: #d05151;
+}
+
+.emptyState {
+    color: var(--muted);
+    text-align: center;
+    margin-top: 40px;
+}

@@ -1,0 +1,63 @@
+{
+  "name": "bav-livery-manager",
+  "version": "1.0.0",
+  "description": "Livery manager for BAV",
+  "main": "dist-electron/electron/main.js",
+  "scripts": {
+    "dev": "concurrently -k \"bun run dev:renderer\" \"bun run dev:ts\" \"bun run dev:electron\"",
+    "dev:renderer": "vite dev --host",
+    "dev:ts": "tsc -p tsconfig.electron.json --watch --preserveWatchOutput",
+    "dev:electron": "wait-on tcp:5173 file:dist-electron/electron/main.js && cross-env NODE_ENV=development VITE_DEV_SERVER_URL=http://localhost:5173 electron .",
+    "build": "bun run build:renderer && bun run build:main",
+    "build:renderer": "vite build",
+    "build:main": "tsc -p tsconfig.electron.json",
+    "build:exe": "bun run build && electron-builder --win --x64 --publish never",
+    "start": "bun run build && electron .",
+    "electron": "electron ."
+  },
+  "author": "Pavel Sergienko, Laurie Cooper",
+  "license": "MIT",
+  "packageManager": "bun@1.2.21",
+  "dependencies": {
+    "adm-zip": "^0.5.10",
+    "fs-extra": "^11.3.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/node": "^22.8.1",
+    "@types/react": "^18.3.8",
+    "@types/react-dom": "^18.3.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.0.1",
+    "cross-env": "^7.0.3",
+    "electron": "^39.2.1",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.8",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "productName": "BAV Livery Manager",
+    "asar": true,
+    "compression": "maximum",
+    "npmRebuild": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "localVersion.json",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "artifactName": "BAV-Livery-Manager-${version}-Setup.${ext}",
+      "compression": "maximum"
+    }
+  }
+}

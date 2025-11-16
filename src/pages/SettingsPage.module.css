@@ -1,0 +1,155 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.header h1 {
+    margin: 0;
+}
+
+.description {
+    margin: 4px 0 0;
+    color: var(--muted);
+}
+
+.autoDetectButton {
+    padding: 10px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #2a2a2a;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.autoDetectButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.autoDetectButton:not(:disabled):hover {
+    background: #3a3a3a;
+    border-color: #666666;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background: var(--card);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.pathInput {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.label {
+    font-size: 14px;
+    color: var(--text);
+}
+
+.inputRow {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.inputRow input {
+    flex: 1;
+    padding: 10px 15px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 4px;
+}
+
+.inputRow button {
+    padding: 10px 15px;
+    background: #2a2a2a;
+    color: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.inputRow button:hover {
+    background: #3a3a3a;
+    border-color: #666666;
+}
+
+.selectionControls {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.selectionGroup {
+    flex: 1;
+    min-width: 220px;
+}
+
+.selectionLabel {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.toggleGroup {
+    display: flex;
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 2px;
+    border: 1px solid var(--border);
+}
+
+.toggleButton {
+    flex: 1;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toggleButtonActive {
+    background: #2a2a2a;
+    color: #ffffff;
+}
+
+.submitButton {
+    align-self: flex-start;
+    padding: 12px 24px;
+    background: #2a2a2a;
+    color: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.status {
+    color: var(--success);
+}
+
+.statusError {
+    color: #f08686;
+}
