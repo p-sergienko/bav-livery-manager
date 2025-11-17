@@ -12,7 +12,7 @@ jobs:
   build:
     runs-on: windows-latest
     env:
-      APP_VERSION: ${{ inputs["app-version"] }}
+      APP_VERSION: ${{ inputs['app-version'] }}
       CSC_IDENTITY_AUTO_DISCOVERY: false
       USE_HARD_LINKS: false
     steps:
@@ -37,7 +37,7 @@ jobs:
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: bav-livery-manager-${{ inputs["app-version"] }}
+          name: bav-livery-manager-${{ inputs['app-version'] }}
           path: |
             release/**
           if-no-files-found: error
