@@ -123,7 +123,7 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
             try {
                 if (api?.fetchLiveries) {
                     const payload = await api.fetchLiveries(authToken);
-                    const normalized = (payload?.liveries ?? []).map((entry) => normalizeRemoteLivery(entry as Record<string, unknown>));
+                    const normalized = (payload?.liveries ?? []).map((entry) => normalizeRemoteLivery(entry as unknown as Record<string, unknown>));
                     set({ liveries: normalized });
                 } else {
                     const response = await fetch(REMOTE_LIVERY_LIST_URL, {
