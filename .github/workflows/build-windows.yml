@@ -1,5 +1,8 @@
 name: Build Windows Installer
 
+permissions:
+  contents: write
+
 on:
     workflow_dispatch:
         inputs:
@@ -9,14 +12,14 @@ on:
                 type: string
 
 jobs:
-    build:
-        runs-on: windows-latest
-        env:
-            APP_VERSION: ${{ inputs['app-version'] }}
-            BAV_PANEL_BASE_URL: ${{ secrets.BAV_PANEL_BASE_URL }}
-            CSC_IDENTITY_AUTO_DISCOVERY: false
-            USE_HARD_LINKS: false
-        steps:
+  build:
+    runs-on: windows-latest
+    env:
+      APP_VERSION: ${{ inputs['app-version'] }}
+      BAV_PANEL_BASE_URL: ${{ secrets.BAV_PANEL_BASE_URL }}
+      CSC_IDENTITY_AUTO_DISCOVERY: false
+      USE_HARD_LINKS: false
+    steps:
             - name: Checkout repository
               uses: actions/checkout@v4
 
@@ -38,6 +41,7 @@ jobs:
             - name: Create GitHub release
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               shell: bash
               run: |
                   TAG=${{ inputs['app-version'] }}
