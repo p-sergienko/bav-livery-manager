@@ -19,6 +19,35 @@ interface DownloadLiveryOptions {
     authToken: string | null;
 }
 
+const INVALID_FILENAME_CHARS = /[<>:"/\\|?*]+/g;
+
+function deriveZipFilename(downloadUrl: string): string {
+    const buildName = (raw?: string | null) => {
+        if (!raw) {
+            return '';
+        }
+        return raw.replace(INVALID_FILENAME_CHARS, '_');
+    };
+
+    try {
+        const parsed = new URL(downloadUrl);
+        const fromPath = buildName(path.basename(parsed.pathname));
+        if (fromPath) {
+            return fromPath;
+        }
+    } catch {
+        // Non-absolute URL, fall back to manual parsing
+    }
+
+    const withoutQuery = downloadUrl.split(/[?#]/)[0];
+    const fallback = buildName(path.basename(withoutQuery));
+    if (fallback) {
+        return fallback;
+    }
+
+    return `livery-${Date.now()}.zip`;
+}
+
 export async function downloadAndInstallLivery(options: DownloadLiveryOptions): Promise<DownloadResult> {
     const { downloadEndpoint, liveryName, simulator, resolution, settings, appContext, fetchManifestData, authToken } = options;
 
@@ -39,8 +68,8 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
 
     await fs.ensureDir(baseFolder);
 
-    const zipFilename = path.basename(downloadUrl);
-    const folderName = zipFilename.replace('.zip', '');
+    const zipFilename = deriveZipFilename(downloadUrl);
+    const folderName = zipFilename.replace(/\.zip$/i, '');
     const outputPath = path.join(baseFolder, zipFilename);
     const extractPath = path.join(baseFolder, folderName);
 
