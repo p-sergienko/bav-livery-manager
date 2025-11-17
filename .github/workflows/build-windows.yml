@@ -1,0 +1,43 @@
+name: Build Windows Installer
+
+on:
+  workflow_dispatch:
+    inputs:
+      app-version:
+        description: "Version (semver) to embed in the installer"
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      APP_VERSION: ${{ inputs["app-version"] }}
+      CSC_IDENTITY_AUTO_DISCOVERY: false
+      USE_HARD_LINKS: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.2.21
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Apply provided version
+        shell: pwsh
+        run: npm version $env:APP_VERSION --no-git-tag-version
+
+      - name: Build Windows installer
+        run: bun run build:exe
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bav-livery-manager-${{ inputs["app-version"] }}
+          path: |
+            release/**
+          if-no-files-found: error
