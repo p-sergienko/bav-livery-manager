@@ -32,23 +32,34 @@ export function registerIpcHandlers(appContext: AppContext) {
         }
     });
 
-    ipcMain.handle('fetch-liveries', async () => {
+    ipcMain.handle('fetch-liveries', async (_event, authToken: string | null) => {
         console.log('Fetching liveries from remote server...');
-        return fetchRemoteLiveryList();
+        return fetchRemoteLiveryList(authToken);
     });
 
-    ipcMain.handle('download-livery', async (_event, downloadUrl: string, liveryName: string, simulator: 'MSFS2020' | 'MSFS2024', resolution: string): Promise<DownloadResult> => {
+    ipcMain.handle(
+        'download-livery',
+        async (
+            _event,
+            downloadEndpoint: string,
+            liveryName: string,
+            simulator: 'MSFS2020' | 'MSFS2024',
+            resolution: string,
+            authToken: string | null
+        ): Promise<DownloadResult> => {
         const settings = loadSettings();
         return downloadAndInstallLivery({
-            downloadUrl,
-            liveryName,
-            simulator,
-            resolution,
-            settings,
-            appContext,
-            fetchManifestData: fetchLiveriesForManifest
+                downloadEndpoint,
+                liveryName,
+                simulator,
+                resolution,
+                settings,
+                appContext,
+                fetchManifestData: fetchLiveriesForManifest,
+                authToken
         });
-    });
+        }
+    );
 
     ipcMain.handle('read-manifest', async (_event, liveryPath: string) => {
         return readManifestFile(liveryPath);

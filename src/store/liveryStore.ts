@@ -8,7 +8,8 @@ import type {
     Settings,
     Simulator
 } from '@/types/livery';
-import { getDownloadUrlForSelection, getFolderNameFromUrl, joinPaths } from '@/utils/livery';
+import { useAuthStore } from '@/store/authStore';
+import { buildDownloadRequestUrl, deriveInstallFolderName, joinPaths, normalizeRemoteLivery } from '@/utils/livery';
 import { REMOTE_LIVERY_LIST_URL } from '@shared/constants';
 
 const DEFAULT_SETTINGS: Settings = {
@@ -41,246 +42,263 @@ interface LiveryState {
     isVariantInstalled: (livery: Livery, resolution: Resolution, simulator: Simulator) => boolean;
 }
 
-export const useLiveryStore = create<LiveryState>((set, get) => ({
-    liveries: [],
-    installedLiveries: [],
-    settings: DEFAULT_SETTINGS,
-    downloadStates: {},
-    loading: false,
-    error: null,
-    initialized: false,
-    downloadListenerAttached: false,
+export const useLiveryStore = create<LiveryState>((set, get) => {
+    const matchInstalledEntry = (livery: Livery, resolution: Resolution, simulator: Simulator) => {
+        const installed = get().installedLiveries;
+        const settings = get().settings;
+        const fallback = deriveInstallFolderName(livery);
 
-    initialize: async () => {
-        if (get().initialized) return;
-        await get().loadSettings();
-        await get().refreshLiveries();
-        await get().refreshInstalled();
-        get().attachDownloadListener();
-        set({ initialized: true });
-    },
+        return installed.find((entry) => {
+            const metadata = entry.manifest?.livery_manager_metadata;
+            if (metadata?.original_name) {
+                const metaResolution = (metadata.resolution as Resolution) ?? settings.defaultResolution;
+                const metaSimulator = (metadata.simulator as Simulator) ?? settings.defaultSimulator;
+                return (
+                    metadata.original_name === livery.name &&
+                    metaResolution === resolution &&
+                    metaSimulator === simulator
+                );
+            }
+            return entry.name === fallback;
+        });
+    };
 
-    attachDownloadListener: () => {
-        if (get().downloadListenerAttached) return;
-        const api = getAPI();
-        if (!api?.onDownloadProgress) return;
+    return ({
+        liveries: [],
+        installedLiveries: [],
+        settings: DEFAULT_SETTINGS,
+        downloadStates: {},
+        loading: false,
+        error: null,
+        initialized: false,
+        downloadListenerAttached: false,
 
-        api.onDownloadProgress((payload) => {
+        initialize: async () => {
+            if (get().initialized) return;
+            await get().loadSettings();
+            await get().refreshLiveries();
+            await get().refreshInstalled();
+            get().attachDownloadListener();
+            set({ initialized: true });
+        },
+
+        attachDownloadListener: () => {
+            if (get().downloadListenerAttached) return;
+            const api = getAPI();
+            if (!api?.onDownloadProgress) return;
+
+            api.onDownloadProgress((payload) => {
+                set((state) => ({
+                    downloadStates: {
+                        ...state.downloadStates,
+                        [payload.liveryName]: {
+                            progress: payload.progress,
+                            downloaded: payload.downloaded,
+                            total: payload.total,
+                            extracting: payload.extracting
+                        }
+                    }
+                }));
+            });
+
+            set({ downloadListenerAttached: true });
+        },
+
+        loadSettings: async () => {
+            const api = getAPI();
+            if (!api?.getSettings) return;
+            try {
+                const persisted = await api.getSettings();
+                set({ settings: { ...DEFAULT_SETTINGS, ...persisted } });
+            } catch (error) {
+                console.error('Failed to load settings', error);
+                set({ settings: DEFAULT_SETTINGS });
+            }
+        },
+
+        refreshLiveries: async () => {
+            set({ loading: true, error: null });
+            const api = getAPI();
+            const authToken = useAuthStore.getState().token ?? null;
+            try {
+                if (api?.fetchLiveries) {
+                    const payload = await api.fetchLiveries(authToken);
+                    const normalized = (payload?.liveries ?? []).map((entry) => normalizeRemoteLivery(entry as Record<string, unknown>));
+                    set({ liveries: normalized });
+                } else {
+                    const response = await fetch(REMOTE_LIVERY_LIST_URL, {
+                        headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined
+                    });
+                    if (!response.ok) {
+                        throw new Error(`Remote list request failed with status ${response.status}`);
+                    }
+                    const payload = await response.json();
+                    const normalized = (payload?.liveries ?? []).map((entry: Record<string, unknown>) => normalizeRemoteLivery(entry));
+                    set({ liveries: normalized });
+                }
+            } catch (error) {
+                console.error('Failed to load liveries', error);
+                set({ liveries: [], error: 'Unable to load liveries. Please check your connection.' });
+            } finally {
+                set({ loading: false });
+            }
+        },
+
+        refreshInstalled: async () => {
+            const api = getAPI();
+            if (!api?.getInstalledLiveries) {
+                set({ installedLiveries: [] });
+                return;
+            }
+
+            const paths: Array<{ path: string; simulator: Simulator }> = [];
+            const { msfs2020Path, msfs2024Path } = get().settings;
+
+            if (msfs2020Path) paths.push({ path: msfs2020Path, simulator: 'FS20' });
+            if (msfs2024Path) paths.push({ path: msfs2024Path, simulator: 'FS24' });
+
+            if (!paths.length) {
+                set({ installedLiveries: [] });
+                return;
+            }
+
+            try {
+                const collections = await Promise.all(
+                    paths.map(async ({ path, simulator }) => {
+                        try {
+                            const entries = await api.getInstalledLiveries(path);
+                            return entries.map((entry) => ({ ...entry, simulatorHint: simulator }));
+                        } catch (innerError) {
+                            console.error(`Failed to read installed liveries from ${path}`, innerError);
+                            return [];
+                        }
+                    })
+                );
+                set({ installedLiveries: collections.flat() });
+            } catch (error) {
+                console.error('Failed to refresh installed liveries', error);
+                set({ installedLiveries: [] });
+            }
+        },
+
+        updateSettings: async (partial: Partial<Settings>) => {
+            const api = getAPI();
+            const next = { ...get().settings, ...partial };
+            set({ settings: next });
+            try {
+                await api?.saveSettings?.(next);
+                await get().refreshInstalled();
+            } catch (error) {
+                console.error('Failed to save settings', error);
+                set({ error: 'Unable to save settings.' });
+            }
+        },
+
+        handleDownload: async (livery, resolution, simulator) => {
+            const api = getAPI();
+            if (!api?.downloadLivery) {
+                set({ error: 'Electron APIs are not available.' });
+                return false;
+            }
+
+            const downloadRequestUrl = buildDownloadRequestUrl(livery, resolution, simulator);
+            const authToken = useAuthStore.getState().token ?? null;
+            if (!authToken) {
+                set({ error: 'Please sign in again to download liveries.' });
+                return false;
+            }
+            const targetSimulator = simulator === 'FS24' ? 'MSFS2024' : 'MSFS2020';
+
             set((state) => ({
                 downloadStates: {
                     ...state.downloadStates,
-                    [payload.liveryName]: {
-                        progress: payload.progress,
-                        downloaded: payload.downloaded,
-                        total: payload.total,
-                        extracting: payload.extracting
+                    [livery.name]: {
+                        progress: 0,
+                        downloaded: 0,
+                        total: 0,
+                        extracting: false
                     }
                 }
             }));
-        });
 
-        set({ downloadListenerAttached: true });
-    },
-
-    loadSettings: async () => {
-        const api = getAPI();
-        if (!api?.getSettings) return;
-        try {
-            const persisted = await api.getSettings();
-            set({ settings: { ...DEFAULT_SETTINGS, ...persisted } });
-        } catch (error) {
-            console.error('Failed to load settings', error);
-            set({ settings: DEFAULT_SETTINGS });
-        }
-    },
-
-    refreshLiveries: async () => {
-        set({ loading: true, error: null });
-        const api = getAPI();
-        try {
-            if (api?.fetchLiveries) {
-                const payload = await api.fetchLiveries();
-                set({ liveries: payload.liveries || [] });
-            } else {
-                const response = await fetch(REMOTE_LIVERY_LIST_URL);
-                if (!response.ok) {
-                    throw new Error(`Remote list request failed with status ${response.status}`);
+            try {
+                const result = await api.downloadLivery(downloadRequestUrl, livery.name, targetSimulator, resolution, authToken);
+                if (!result.success) {
+                    throw new Error(result.error || 'Download failed');
                 }
-                const payload = await response.json();
-                set({ liveries: payload.liveries || [] });
+
+                await api.setLocalVersion?.(livery.name, livery.version ?? '1.0.0');
+                await get().refreshInstalled();
+                return true;
+            } catch (error) {
+                console.error('Download failed', error);
+                set({ error: error instanceof Error ? error.message : 'Download failed' });
+                return false;
+            } finally {
+                set((state) => {
+                    const clone = { ...state.downloadStates };
+                    delete clone[livery.name];
+                    return { downloadStates: clone };
+                });
             }
-        } catch (error) {
-            console.error('Failed to load liveries', error);
-            set({ liveries: [], error: 'Unable to load liveries. Please check your connection.' });
-        } finally {
-            set({ loading: false });
-        }
-    },
+        },
 
-    refreshInstalled: async () => {
-        const api = getAPI();
-        if (!api?.getInstalledLiveries) {
-            set({ installedLiveries: [] });
-            return;
-        }
+        handleUninstall: async (livery, resolution, simulator) => {
+            const api = getAPI();
+            if (!api?.uninstallLivery) {
+                set({ error: 'Electron APIs are not available.' });
+                return false;
+            }
 
-        const paths: Array<{ path: string; simulator: Simulator }> = [];
-        const { msfs2020Path, msfs2024Path } = get().settings;
+            const basePath = simulator === 'FS24' ? get().settings.msfs2024Path : get().settings.msfs2020Path;
+            if (!basePath) {
+                set({ error: `No ${simulator === 'FS24' ? 'MSFS 2024' : 'MSFS 2020'} path configured.` });
+                return false;
+            }
 
-        if (msfs2020Path) paths.push({ path: msfs2020Path, simulator: 'FS20' });
-        if (msfs2024Path) paths.push({ path: msfs2024Path, simulator: 'FS24' });
+            const installedMatch = matchInstalledEntry(livery, resolution, simulator);
+            const installPath = installedMatch?.path ?? joinPaths(basePath, deriveInstallFolderName(livery));
 
-        if (!paths.length) {
-            set({ installedLiveries: [] });
-            return;
-        }
-
-        try {
-            const collections = await Promise.all(
-                paths.map(async ({ path, simulator }) => {
-                    try {
-                        const entries = await api.getInstalledLiveries(path);
-                        return entries.map((entry) => ({ ...entry, simulatorHint: simulator }));
-                    } catch (innerError) {
-                        console.error(`Failed to read installed liveries from ${path}`, innerError);
-                        return [];
-                    }
-                })
-            );
-            set({ installedLiveries: collections.flat() });
-        } catch (error) {
-            console.error('Failed to refresh installed liveries', error);
-            set({ installedLiveries: [] });
-        }
-    },
-
-    updateSettings: async (partial: Partial<Settings>) => {
-        const api = getAPI();
-        const next = { ...get().settings, ...partial };
-        set({ settings: next });
-        try {
-            await api?.saveSettings?.(next);
-            await get().refreshInstalled();
-        } catch (error) {
-            console.error('Failed to save settings', error);
-            set({ error: 'Unable to save settings.' });
-        }
-    },
-
-    handleDownload: async (livery, resolution, simulator) => {
-        const api = getAPI();
-        if (!api?.downloadLivery) {
-            set({ error: 'Electron APIs are not available.' });
-            return false;
-        }
-
-        const downloadUrl = getDownloadUrlForSelection(livery, resolution, simulator);
-        const targetSimulator = simulator === 'FS24' ? 'MSFS2024' : 'MSFS2020';
-
-        set((state) => ({
-            downloadStates: {
-                ...state.downloadStates,
-                [livery.name]: {
-                    progress: 0,
-                    downloaded: 0,
-                    total: 0,
-                    extracting: false
+            try {
+                const result = await api.uninstallLivery(installPath);
+                if (!result.success) {
+                    throw new Error(result.error || 'Uninstall failed');
                 }
+                await get().refreshInstalled();
+                return true;
+            } catch (error) {
+                console.error('Uninstall failed', error);
+                set({ error: error instanceof Error ? error.message : 'Unable to uninstall livery.' });
+                return false;
             }
-        }));
+        },
 
-        try {
-            const result = await api.downloadLivery(downloadUrl, livery.name, targetSimulator, resolution);
-            if (!result.success) {
-                throw new Error(result.error || 'Download failed');
+        uninstallEntry: async (entry) => {
+            const api = getAPI();
+            if (!api?.uninstallLivery) {
+                set({ error: 'Electron APIs are not available.' });
+                return false;
             }
 
-            await api.setLocalVersion?.(livery.name, livery.version ?? '1.0.0');
-            await get().refreshInstalled();
-            return true;
-        } catch (error) {
-            console.error('Download failed', error);
-            set({ error: error instanceof Error ? error.message : 'Download failed' });
-            return false;
-        } finally {
-            set((state) => {
-                const clone = { ...state.downloadStates };
-                delete clone[livery.name];
-                return { downloadStates: clone };
-            });
-        }
-    },
-
-    handleUninstall: async (livery, resolution, simulator) => {
-        const api = getAPI();
-        if (!api?.uninstallLivery) {
-            set({ error: 'Electron APIs are not available.' });
-            return false;
-        }
-
-        const basePath = simulator === 'FS24' ? get().settings.msfs2024Path : get().settings.msfs2020Path;
-        if (!basePath) {
-            set({ error: `No ${simulator === 'FS24' ? 'MSFS 2024' : 'MSFS 2020'} path configured.` });
-            return false;
-        }
-
-        const downloadUrl = getDownloadUrlForSelection(livery, resolution, simulator);
-        const folderName = getFolderNameFromUrl(downloadUrl);
-        const installPath = joinPaths(basePath, folderName);
-
-        try {
-            const result = await api.uninstallLivery(installPath);
-            if (!result.success) {
-                throw new Error(result.error || 'Uninstall failed');
+            try {
+                const result = await api.uninstallLivery(entry.path);
+                if (!result.success) {
+                    throw new Error(result.error || 'Uninstall failed');
+                }
+                await get().refreshInstalled();
+                return true;
+            } catch (error) {
+                console.error('Uninstall failed', error);
+                set({ error: error instanceof Error ? error.message : 'Unable to uninstall livery.' });
+                return false;
             }
-            await get().refreshInstalled();
-            return true;
-        } catch (error) {
-            console.error('Uninstall failed', error);
-            set({ error: error instanceof Error ? error.message : 'Unable to uninstall livery.' });
-            return false;
+        },
+
+        isVariantInstalled: (livery, resolution, simulator) => {
+            return Boolean(matchInstalledEntry(livery, resolution, simulator));
         }
-    },
-
-    uninstallEntry: async (entry) => {
-        const api = getAPI();
-        if (!api?.uninstallLivery) {
-            set({ error: 'Electron APIs are not available.' });
-            return false;
-        }
-
-        try {
-            const result = await api.uninstallLivery(entry.path);
-            if (!result.success) {
-                throw new Error(result.error || 'Uninstall failed');
-            }
-            await get().refreshInstalled();
-            return true;
-        } catch (error) {
-            console.error('Uninstall failed', error);
-            set({ error: error instanceof Error ? error.message : 'Unable to uninstall livery.' });
-            return false;
-        }
-    },
-
-    isVariantInstalled: (livery, resolution, simulator) => {
-        const installed = get().installedLiveries;
-        const settings = get().settings;
-        const expectedFolder = getFolderNameFromUrl(getDownloadUrlForSelection(livery, resolution, simulator));
-
-        return installed.some((entry) => {
-            const metadata = entry.manifest?.livery_manager_metadata;
-            if (metadata?.original_name) {
-                return (
-                    metadata.original_name === livery.name &&
-                    (metadata.resolution ?? settings.defaultResolution) === resolution &&
-                    (metadata.simulator ?? settings.defaultSimulator) === simulator
-                );
-            }
-            return entry.name === expectedFolder;
-        });
-    }
-}));
+    });
+});
 
 export const useInitializeLiveryStore = () => {
     const initialized = useLiveryStore((state) => state.initialized);

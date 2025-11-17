@@ -41,6 +41,9 @@ const classNames = (...tokens: Array<string | false | undefined>) => tokens.filt
 
 export const Sidebar = () => {
     const userId = useAuthStore((state) => state.userId);
+    const fullName = useAuthStore((state) => state.fullName);
+    const pilotId = useAuthStore((state) => state.pilotId);
+    const totalTimeHours = useAuthStore((state) => state.totalTimeHours);
     const role = useAuthStore((state) => state.role);
     const logout = useAuthStore((state) => state.logout);
     const navigate = useNavigate();
@@ -74,8 +77,13 @@ export const Sidebar = () => {
             <div className={styles.footer}>
                 <div className={styles.sessionBlock}>
                     <p className={styles.sessionLabel}>Signed in as</p>
-                    <p className={styles.sessionUser}>{userId ?? 'Unknown'}</p>
-                    <p className={styles.sessionRole}>{role ?? 'offline'}</p>
+                    <p className={styles.sessionUser}>{fullName ?? userId ?? 'Unknown'}</p>
+                    <p className={styles.sessionMeta}>
+                        {userId ?? '—'}
+                    </p>
+                    {typeof totalTimeHours === 'number' && (
+                        <p className={styles.sessionMeta}>Total Hours: {(totalTimeHours / 60).toFixed(1)}</p>
+                    )}
                     <button type="button" className={styles.logoutButton} onClick={handleSignOut}>
                         Sign out
                     </button>

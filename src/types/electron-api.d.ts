@@ -24,11 +24,21 @@ export interface AuthTokenPayload {
     token: string;
     role?: string | null;
     bawId?: string | null;
+    pilotId?: string | null;
+    fullName?: string | null;
+    rank?: string | null;
+    totalTime?: string | null;
 }
 
 export interface ElectronAPI {
-    fetchLiveries: () => Promise<{ version?: string; liveries: Livery[] }>;
-    downloadLivery: (downloadUrl: string, liveryName: string, simulator: 'MSFS2020' | 'MSFS2024', resolution: string) => Promise<DownloadResult>;
+    fetchLiveries: (authToken?: string | null) => Promise<{ version?: string; liveries: Livery[] }>;
+    downloadLivery: (
+        downloadEndpoint: string,
+        liveryName: string,
+        simulator: 'MSFS2020' | 'MSFS2024',
+        resolution: string,
+        authToken?: string | null
+    ) => Promise<DownloadResult>;
     uninstallLivery: (installPath: string) => Promise<{ success: boolean; error?: string }>;
     getSettings: () => Promise<Settings>;
     saveSettings: (settings: Settings) => Promise<boolean>;

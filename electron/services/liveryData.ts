@@ -4,13 +4,14 @@ import { REMOTE_LIVERY_LIST_URL } from '../../shared/constants';
 import type { RemoteLivery, RemoteLiveryPayload } from '../types';
 import { fetchJson } from '../utils/network';
 
-export async function fetchRemoteLiveryList(): Promise<RemoteLiveryPayload> {
-    return fetchJson<RemoteLiveryPayload>(REMOTE_LIVERY_LIST_URL);
+export async function fetchRemoteLiveryList(authToken?: string | null): Promise<RemoteLiveryPayload> {
+    const headers: HeadersInit = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+    return fetchJson<RemoteLiveryPayload>(REMOTE_LIVERY_LIST_URL, { headers });
 }
 
-export async function fetchLiveriesForManifest(): Promise<RemoteLiveryPayload | null> {
+export async function fetchLiveriesForManifest(authToken?: string | null): Promise<RemoteLiveryPayload | null> {
     try {
-        return await fetchRemoteLiveryList();
+        return await fetchRemoteLiveryList(authToken);
     } catch (error) {
         console.error('Failed to fetch liveries for manifest creation:', error);
         return null;
@@ -23,7 +24,7 @@ export async function createManifestFile(extractPath: string, livery: RemoteLive
     const manifest = {
         dependencies: [],
         content_type: 'LIVERY',
-        title: livery.name || 'Unknown Livery',
+        title: livery.title || livery.name || 'Unknown Livery',
         manufacturer: livery.manufacturer || livery.aircraftType || 'Unknown',
         creator: livery.developer || 'Unknown',
         package_version: livery.version || '1.0.0',
@@ -41,7 +42,7 @@ export async function createManifestFile(extractPath: string, livery: RemoteLive
         livery_manager_metadata: {
             original_name: livery.name,
             install_date: new Date().toISOString(),
-            source_url: livery.downloadUrl || '',
+            source_url: livery.downloadEndpoint || '',
             resolution,
             simulator
         }

@@ -93,6 +93,12 @@
     font-size: 0.85rem;
 }
 
+.sessionMeta {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.75rem;
+}
+
 .logoutButton {
     margin-top: 10px;
     border: 1px solid var(--border);

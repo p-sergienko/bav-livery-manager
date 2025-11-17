@@ -37,13 +37,13 @@ function ensureOnChannel(channel: OnChannel) {
 }
 
 const api: ElectronAPI = {
-    fetchLiveries: () => {
+    fetchLiveries: (authToken?: string | null) => {
         ensureInvokeChannel('fetch-liveries');
-        return ipcRenderer.invoke('fetch-liveries');
+        return ipcRenderer.invoke('fetch-liveries', authToken ?? null);
     },
-    downloadLivery: (downloadUrl, liveryName, simulator, resolution) => {
+    downloadLivery: (downloadEndpoint, liveryName, simulator, resolution, authToken) => {
         ensureInvokeChannel('download-livery');
-        return ipcRenderer.invoke('download-livery', downloadUrl, liveryName, simulator, resolution);
+        return ipcRenderer.invoke('download-livery', downloadEndpoint, liveryName, simulator, resolution, authToken ?? null);
     },
     uninstallLivery: (installPath) => {
         ensureInvokeChannel('uninstall-livery');

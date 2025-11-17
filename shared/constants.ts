@@ -1,2 +1,5 @@
-export const REMOTE_LIVERY_LIST_URL = 'https://pub-2238f1e492d94cc6b7dfbeed51dd902f.r2.dev/list.json';
+const PANEL_BASE_URL = (process.env.BAV_PANEL_BASE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+
+export const REMOTE_LIVERY_LIST_URL = `${PANEL_BASE_URL}/api/simulator/liveries`;
+export const PANEL_BASE_ENDPOINT = PANEL_BASE_URL;
 export const DEFAULT_FETCH_TIMEOUT_MS = 15000;

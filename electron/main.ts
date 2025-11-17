@@ -9,7 +9,15 @@ const APP_TITLE = 'BAV Livery Manager';
 const AUTH_PROTOCOL = 'bav-livery-manager';
 
 let mainWindow: BrowserWindow | null = null;
-let pendingAuthPayload: { token: string; role?: string | null; bawId?: string | null } | null = null;
+let pendingAuthPayload: {
+    token: string;
+    role?: string | null;
+    bawId?: string | null;
+    pilotId?: string | null;
+    fullName?: string | null;
+    rank?: string | null;
+    totalTime?: string | null;
+} | null = null;
 const isDev = process.env.NODE_ENV === 'development';
 app.setName(APP_TITLE);
 
@@ -96,7 +104,11 @@ function parseAuthPayload(rawUrl: string) {
         return {
             token,
             role: parsed.searchParams.get('role'),
-            bawId: parsed.searchParams.get('bawId')
+            bawId: parsed.searchParams.get('bawId'),
+            pilotId: parsed.searchParams.get('pilotId'),
+            fullName: parsed.searchParams.get('fullName'),
+            rank: parsed.searchParams.get('rank'),
+            totalTime: parsed.searchParams.get('totalTime')
         };
     } catch {
         return null;

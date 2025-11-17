@@ -6,10 +6,18 @@ export interface BrowserTokenPayload {
     token: string;
     role?: string | null;
     bawId?: string | null;
+    pilotId?: string | null;
+    fullName?: string | null;
+    rank?: string | null;
+    totalTime?: string | null;
 }
 
 interface AuthState {
     userId: string | null;
+    pilotId: string | null;
+    fullName: string | null;
+    rank: string | null;
+    totalTimeHours: number | null;
     role: AuthRole | null;
     token: string | null;
     status: 'idle' | 'awaiting-browser' | 'error';
@@ -32,6 +40,10 @@ export const useAuthStore = create<AuthState>()(
     persist(
         (set) => ({
             userId: null,
+            pilotId: null,
+            fullName: null,
+            rank: null,
+            totalTimeHours: null,
             role: null,
             token: null,
             status: 'idle',
@@ -44,7 +56,11 @@ export const useAuthStore = create<AuthState>()(
                     isAuthenticated: false,
                     token: null,
                     role: null,
-                    userId: null
+                    userId: null,
+                    pilotId: null,
+                    fullName: null,
+                    rank: null,
+                    totalTimeHours: null
                 }),
             applyBrowserToken: (payload) => {
                 if (!payload?.token) {
@@ -56,6 +72,16 @@ export const useAuthStore = create<AuthState>()(
                     token: payload.token,
                     role: mapRole(payload.role),
                     userId: payload.bawId ?? null,
+                    pilotId: payload.pilotId ?? null,
+                    fullName: payload.fullName ?? null,
+                    rank: payload.rank ?? null,
+                    totalTimeHours: (() => {
+                        if (payload.totalTime === undefined || payload.totalTime === null) {
+                            return null;
+                        }
+                        const numeric = Number(payload.totalTime);
+                        return Number.isFinite(numeric) ? numeric : null;
+                    })(),
                     status: 'idle',
                     error: null,
                     isAuthenticated: true
@@ -63,7 +89,18 @@ export const useAuthStore = create<AuthState>()(
             },
             setError: (message) => set({ error: message, status: message ? 'error' : 'idle' }),
             logout: () =>
-                set({ userId: null, role: null, token: null, status: 'idle', error: null, isAuthenticated: false })
+                set({
+                    userId: null,
+                    pilotId: null,
+                    fullName: null,
+                    rank: null,
+                    totalTimeHours: null,
+                    role: null,
+                    token: null,
+                    status: 'idle',
+                    error: null,
+                    isAuthenticated: false
+                })
         }),
         {
             name: 'bav-auth-store',

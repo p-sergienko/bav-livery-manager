@@ -5,21 +5,29 @@ import type { ReadableStream as NodeReadableStream } from 'node:stream/web';
 import fs from 'fs-extra';
 import AdmZip from 'adm-zip';
 import type { AppContext, DownloadProgress, DownloadResult, RemoteLiveryPayload, Settings } from '../types';
-import { fetchWithTimeout } from '../utils/network';
+import { fetchJson, fetchWithTimeout } from '../utils/network';
 import { createManifestFile } from './liveryData';
 
 interface DownloadLiveryOptions {
-    downloadUrl: string;
+    downloadEndpoint: string;
     liveryName: string;
     simulator: 'MSFS2020' | 'MSFS2024';
     resolution: string;
     settings: Settings;
     appContext: AppContext;
-    fetchManifestData: () => Promise<RemoteLiveryPayload | null>;
+    fetchManifestData: (authToken: string | null) => Promise<RemoteLiveryPayload | null>;
+    authToken: string | null;
 }
 
 export async function downloadAndInstallLivery(options: DownloadLiveryOptions): Promise<DownloadResult> {
-    const { downloadUrl, liveryName, simulator, resolution, settings, appContext, fetchManifestData } = options;
+    const { downloadEndpoint, liveryName, simulator, resolution, settings, appContext, fetchManifestData, authToken } = options;
+
+    if (!authToken) {
+        return { success: false, error: 'Missing authentication token. Please sign in again.' };
+    }
+
+    const signedDownload = await resolveDownloadEndpoint(downloadEndpoint, authToken);
+    const downloadUrl = signedDownload.downloadUrl;
 
     const baseFolder = simulator === 'MSFS2024' && settings.msfs2024Path ? settings.msfs2024Path : settings.msfs2020Path;
 
@@ -64,7 +72,7 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
 
         await extractZipNonBlocking(outputPath, extractPath);
 
-        const manifestData = await fetchManifestData();
+        const manifestData = await fetchManifestData(authToken);
         const livery = manifestData?.liveries.find((entry) => entry.name === liveryName);
         if (livery) {
             await createManifestFile(extractPath, livery, resolution, simulator === 'MSFS2024' ? 'FS24' : 'FS20');
@@ -135,6 +143,18 @@ async function downloadFile(url: string, filePath: string, onProgress?: (progres
 
         nodeStream.pipe(writer);
     });
+}
+
+interface SignedDownloadPayload {
+    downloadUrl: string;
+    expiresAt: string;
+    sizeBytes?: number;
+    version?: string;
+}
+
+async function resolveDownloadEndpoint(endpoint: string, authToken: string | null): Promise<SignedDownloadPayload> {
+    const headers: HeadersInit = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+    return fetchJson<SignedDownloadPayload>(endpoint, { headers }, 15000);
 }
 
 async function extractZipNonBlocking(zipPath: string, extractPath: string) {

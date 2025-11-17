@@ -21,7 +21,7 @@ export async function fetchWithTimeout(url: string, options: RequestInit = {}, t
     }
 }
 
-export async function fetchJson<T>(url: string, timeout = DEFAULT_FETCH_TIMEOUT_MS): Promise<T> {
-    const response = await fetchWithTimeout(url, {}, timeout);
+export async function fetchJson<T>(url: string, options: RequestInit = {}, timeout = DEFAULT_FETCH_TIMEOUT_MS): Promise<T> {
+    const response = await fetchWithTimeout(url, options, timeout);
     return response.json() as Promise<T>;
 }

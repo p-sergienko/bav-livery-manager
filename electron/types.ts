@@ -8,16 +8,28 @@ export interface Settings {
 }
 
 export interface RemoteLivery {
+    id: string;
     name: string;
-    manufacturer?: string;
-    aircraftType?: string;
-    developer?: string;
-    version?: string;
-    downloadUrl?: string;
+    title?: string;
+    tailNumber?: string | null;
+    manufacturer?: string | null;
+    aircraftType?: string | null;
+    aircraft?: string | null;
+    developer?: string | null;
+    version?: string | null;
+    downloadEndpoint: string;
+    packageKey?: string | null;
+    previewUrl?: string | null;
+    simulator?: string | null;
+    resolution?: string | null;
+    engine?: string | null;
+    year?: number | string | null;
+    tags?: string[];
 }
 
 export interface RemoteLiveryPayload {
     version?: string;
+    count?: number;
     liveries: RemoteLivery[];
 }
 

@@ -2,22 +2,27 @@ export type Resolution = '4K' | '8K';
 export type Simulator = 'FS20' | 'FS24';
 
 export interface Livery {
+    id: string;
     name: string;
+    title?: string;
+    tailNumber?: string | null;
     developer: string;
     aircraftType: string;
-    year?: string;
-    engine?: string;
-    resolution?: Resolution;
-    size?: string;
-    preview?: string;
-    downloadUrl: string;
-    downloadUrl4K?: string;
-    downloadUrlFS24?: string;
-    downloadUrl4KFS24?: string;
-    simulator?: 'MSFS2020' | 'MSFS2024' | string;
-    registration?: string;
-    version?: string;
-    manufacturer?: string;
+    aircraft?: string;
+    year?: string | number | null;
+    engine?: string | null;
+    resolution?: string | Resolution | null;
+    size?: string | number | null;
+    preview?: string | null;
+    previewUrl?: string | null;
+    downloadEndpoint: string;
+    packageKey?: string | null;
+    simulator?: 'MSFS2020' | 'MSFS2024' | string | null;
+    registration?: string | null;
+    version?: string | null;
+    manufacturer?: string | null;
+    tags?: string[];
+    status?: string;
 }
 
 export interface Settings {
