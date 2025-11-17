@@ -130,3 +130,11 @@
     display: block;
     margin: 0 auto;
 }
+
+.versionBadge {
+    text-align: center;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+}

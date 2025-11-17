@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { APP_VERSION } from '@/constants/appVersion';
 import styles from './Sidebar.module.css';
 
 const NAV_ITEMS = [
@@ -88,6 +89,7 @@ export const Sidebar = () => {
                         Sign out
                     </button>
                 </div>
+                <div className={styles.versionBadge}>v{APP_VERSION}</div>
                 <div className={styles.sidebarLogo}>
                     <img className={styles.logoImage} src={LOGO_URL} alt="Livery Manager" />
                 </div>

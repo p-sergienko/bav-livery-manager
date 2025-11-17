@@ -1,43 +1,57 @@
 name: Build Windows Installer
 
 on:
-  workflow_dispatch:
-    inputs:
-      app-version:
-        description: "Version (semver) to embed in the installer"
-        required: true
-        type: string
+    workflow_dispatch:
+        inputs:
+            app-version:
+                description: "Version (semver) to embed in the installer"
+                required: true
+                type: string
 
 jobs:
-  build:
-    runs-on: windows-latest
-    env:
-      APP_VERSION: ${{ inputs['app-version'] }}
-      CSC_IDENTITY_AUTO_DISCOVERY: false
-      USE_HARD_LINKS: false
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    build:
+        runs-on: windows-latest
+        env:
+            APP_VERSION: ${{ inputs['app-version'] }}
+            BAV_PANEL_BASE_URL: ${{ secrets.BAV_PANEL_BASE_URL }}
+            CSC_IDENTITY_AUTO_DISCOVERY: false
+            USE_HARD_LINKS: false
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: 1.2.21
+            - name: Set up Bun
+              uses: oven-sh/setup-bun@v1
+              with:
+                  bun-version: 1.2.21
 
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+            - name: Install dependencies
+              run: bun install --frozen-lockfile
 
-      - name: Apply provided version
-        shell: pwsh
-        run: npm version $env:APP_VERSION --no-git-tag-version
+            - name: Apply provided version
+              shell: pwsh
+              run: npm version $env:APP_VERSION --no-git-tag-version
 
-      - name: Build Windows installer
-        run: bun run build:exe
+            - name: Build Windows installer
+              run: bun run build:exe
 
-      - name: Upload release artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: bav-livery-manager-${{ inputs['app-version'] }}
-          path: |
-            release/**
-          if-no-files-found: error
+            - name: Create GitHub release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              shell: bash
+              run: |
+                  TAG=${{ inputs['app-version'] }}
+                  REPO=${{ github.repository }}
+                  shopt -s nullglob
+                  INSTALLERS=(release/*-Setup.exe)
+                  shopt -u nullglob
+                  if [ ${#INSTALLERS[@]} -eq 0 ]; then
+                    echo "No Windows installer found in release/" >&2
+                    exit 1
+                  fi
+                  ASSET=${INSTALLERS[0]}
+                  if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+                    gh release upload "$TAG" "$ASSET" --clobber --repo "$REPO"
+                  else
+                    gh release create "$TAG" "$ASSET" --title "BAV Livery Manager $TAG" --notes "Release $TAG" --repo "$REPO" --target "${{ github.sha }}"
+                  fi
