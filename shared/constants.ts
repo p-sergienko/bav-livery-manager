@@ -1,4 +1,4 @@
-const PANEL_BASE_URL = (process.env.BAV_PANEL_BASE_URL ?? 'https://liveries.p-sergienko.online/').replace(/\/$/, '');
+const PANEL_BASE_URL = (process.env.BAV_PANEL_BASE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
 
 export const REMOTE_LIVERY_LIST_URL = `${PANEL_BASE_URL}/api/simulator/liveries`;
 export const PANEL_BASE_ENDPOINT = PANEL_BASE_URL;

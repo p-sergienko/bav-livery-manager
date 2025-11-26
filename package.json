@@ -13,7 +13,8 @@
     "build:main": "tsc -p tsconfig.electron.json",
     "build:exe": "bun run build && electron-builder --win --x64 --publish never",
     "start": "bun run build && electron .",
-    "electron": "electron ."
+    "electron": "electron .",
+    "generate-icons": "node scripts/generate-icons.js"
   },
   "author": "Pavel Sergienko, Laurie Cooper",
   "license": "MIT",
@@ -36,6 +37,9 @@
     "cross-env": "^7.0.3",
     "electron": "^39.2.1",
     "electron-builder": "^25.1.8",
+    "icon-gen": "^5.0.0",
+    "png-to-ico": "^3.0.1",
+    "sharp": "^0.34.5",
     "typescript": "^5.6.3",
     "vite": "^5.4.8",
     "wait-on": "^7.2.0"
@@ -48,6 +52,16 @@
     "directories": {
       "output": "release"
     },
+    "extraResources": [
+      {
+        "from": "public",
+        "to": "public",
+        "filter": [
+          "BAV-Livery-Manager.png",
+          "BAV-Livery-Manager.ico"
+        ]
+      }
+    ],
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
@@ -57,7 +71,8 @@
     "win": {
       "target": "nsis",
       "artifactName": "BAV-Livery-Manager-${version}-Setup.${ext}",
-      "compression": "maximum"
+      "compression": "maximum",
+      "icon": "public/BAV-Livery-Manager.ico"
     }
   }
 }

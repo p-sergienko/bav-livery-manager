@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, Menu, ipcMain, shell, nativeImage, type NativeImage } from 'electron';
 import path from 'node:path';
 import { URL } from 'node:url';
 import fs from 'fs-extra';
@@ -7,6 +7,7 @@ import type { AppContext } from './types';
 
 const APP_TITLE = 'BAV Livery Manager';
 const AUTH_PROTOCOL = 'bav-livery-manager';
+const ICON_BASENAME = 'BAV-Livery-Manager';
 
 let mainWindow: BrowserWindow | null = null;
 let pendingAuthPayload: {
@@ -33,7 +34,60 @@ function getRendererPath(): string {
     return path.resolve(__dirname, '..', '..', 'index.html');
 }
 
+function getPublicAssetPath(assetRelativePath: string): string {
+    const basePath = app.isPackaged
+        ? path.join(process.resourcesPath, 'public')
+        : path.resolve(__dirname, '..', '..', 'public');
+    return path.join(basePath, assetRelativePath.replace(/^[/\\]/, ''));
+}
+
+function loadNativeImageFrom(assetPath: string): NativeImage | undefined {
+    try {
+        if (fs.existsSync(assetPath)) {
+            const image = nativeImage.createFromPath(assetPath);
+            if (!image.isEmpty()) {
+                return image;
+            }
+        }
+    } catch (error) {
+        console.warn(`Failed to load icon at ${assetPath}:`, error);
+    }
+
+    return undefined;
+}
+
+function resolveIconAssets(): { browserIcon?: string | NativeImage; dockIcon?: NativeImage } {
+    const pngPath = getPublicAssetPath(`${ICON_BASENAME}.png`);
+    const icoPath = getPublicAssetPath(`${ICON_BASENAME}.ico`);
+
+    const pngImage = loadNativeImageFrom(pngPath);
+    const icoExists = fs.existsSync(icoPath);
+    const icoImage = icoExists ? loadNativeImageFrom(icoPath) : undefined;
+
+    const browserIcon = process.platform === 'win32'
+        ? (icoExists ? icoPath : pngImage)
+        : (pngImage ?? icoImage);
+
+    if (!browserIcon) {
+        console.warn('No icon assets were found. Ensure public/BAV-Livery-Manager.(png|ico) exists.');
+    }
+
+    const dockIcon = pngImage ?? icoImage;
+
+    if (!pngImage) {
+        console.warn(`PNG icon missing at ${pngPath}; dock icon will fall back to ICO if available.`);
+    }
+
+    if (process.platform === 'win32' && !icoExists) {
+        console.warn(`ICO icon missing at ${icoPath}; Windows build falls back to PNG.`);
+    }
+
+    return { browserIcon, dockIcon };
+}
+
 function createWindow() {
+    const { browserIcon, dockIcon } = resolveIconAssets();
+
     mainWindow = new BrowserWindow({
         width: 1400,
         height: 900,
@@ -48,8 +102,13 @@ function createWindow() {
         },
         show: false,
         title: APP_TITLE,
-        titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default'
+        titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+        icon: browserIcon
     });
+
+    if (process.platform === 'darwin' && dockIcon) {
+        app.dock?.setIcon(dockIcon);
+    }
 
     const rendererEntry = getRendererPath();
 
