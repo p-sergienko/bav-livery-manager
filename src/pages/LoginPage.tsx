@@ -41,11 +41,14 @@ export const LoginPage = () => {
         setLastAttempt(Date.now());
     }, [markAwaitingAuth, setError]);
 
+    // Auto-open on first mount if not already waiting
     useEffect(() => {
-        openPortal().catch((err) => {
-            console.error('Failed to open panel auth flow', err);
-        });
-    }, [openPortal]);
+        if (status === 'idle' && !lastAttempt) {
+            openPortal().catch((err) => {
+                console.error('Failed to open panel auth flow', err);
+            });
+        }
+    }, [openPortal, status, lastAttempt]);
 
     return (
         <div className={styles.page}>
@@ -57,23 +60,36 @@ export const LoginPage = () => {
                 </div>
 
                 <div className={styles.notice}>
-                    <ol>
-                        <li>Enter your BAW ID and password inside the browser window.</li>
-                        <li>After a successful login, the browser will reopen this app automatically.</li>
-                        <li>You can return here at any time and press the button below to relaunch the portal.</li>
-                    </ol>
+                    {status === 'awaiting-browser' ? (
+                        <div className={styles.awaiting}>
+                            <p><strong>Browser window opened.</strong></p>
+                            <p>Please log in or confirm your session in the browser window.</p>
+                            <p>Once verified, this app will unlock automatically.</p>
+                        </div>
+                    ) : (
+                        <ol>
+                            <li>We'll open a secure browser window.</li>
+                            <li>Enter your BAW ID and password there.</li>
+                            <li>The app will reopen automatically.</li>
+                        </ol>
+                    )}
                 </div>
 
                 {error && <p className={styles.error}>{error}</p>}
 
-                <button className={styles.button} type="button" onClick={() => openPortal()}>
-                    {status === 'awaiting-browser' ? 'Waiting for confirmation…' : 'Open login page'}
-                </button>
+                <div className={styles.actions}>
+                    <button
+                        className={styles.button}
+                        type="button"
+                        onClick={() => openPortal()}
+                    >
+                        {status === 'awaiting-browser' ? 'Re-open login page' : 'Open login page'}
+                    </button>
+                </div>
 
                 {lastAttempt && (
                     <p className={styles.helper}>
-                        Last attempt: {new Date(lastAttempt).toLocaleTimeString()} — keep this window open until we
-                        detect your token.
+                        Waiting for token... (started {new Date(lastAttempt).toLocaleTimeString()})
                     </p>
                 )}
             </div>

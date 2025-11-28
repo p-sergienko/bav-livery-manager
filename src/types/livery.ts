@@ -23,6 +23,8 @@ export interface Livery {
     manufacturer?: string | null;
     tags?: string[];
     status?: string;
+    categoryId?: string | null;
+    categoryName?: string | null;
 }
 
 export interface Settings {

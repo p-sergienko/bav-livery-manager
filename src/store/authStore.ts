@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AuthRole } from '@/types/auth';
+import { PANEL_AUTH_ENDPOINT } from '@/config/auth';
 
 export interface BrowserTokenPayload {
     token: string;
@@ -20,11 +21,12 @@ interface AuthState {
     totalTimeHours: number | null;
     role: AuthRole | null;
     token: string | null;
-    status: 'idle' | 'awaiting-browser' | 'error';
+    status: 'idle' | 'awaiting-browser' | 'verifying' | 'error';
     error: string | null;
     isAuthenticated: boolean;
     markAwaitingAuth: () => void;
     applyBrowserToken: (payload: BrowserTokenPayload) => void;
+    verifySession: () => Promise<void>;
     setError: (message: string | null) => void;
     logout: () => void;
 }
@@ -38,7 +40,7 @@ const mapRole = (role?: string | null): AuthRole | null => {
 
 export const useAuthStore = create<AuthState>()(
     persist(
-        (set) => ({
+        (set, get) => ({
             userId: null,
             pilotId: null,
             fullName: null,
@@ -86,6 +88,39 @@ export const useAuthStore = create<AuthState>()(
                     error: null,
                     isAuthenticated: true
                 });
+            },
+            verifySession: async () => {
+                const { token, logout } = get();
+                if (!token) return;
+
+                set({ status: 'verifying' });
+
+                try {
+                    const response = await fetch(PANEL_AUTH_ENDPOINT, {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.status === 401 || response.status === 403) {
+                        console.warn('Session expired or invalid, logging out.');
+                        logout();
+                        set({ error: 'Your session has expired. Please log in again.' });
+                        return;
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(`Verification failed: ${response.status}`);
+                    }
+
+                    // Session is valid, we could update user details here if needed
+                    set({ status: 'idle' });
+                } catch (error) {
+                    console.error('Failed to verify session:', error);
+                    // Strict enforcement: if we can't verify, we assume invalid.
+                    logout();
+                    set({ error: 'Unable to verify session. Please log in again.' });
+                }
             },
             setError: (message) => set({ error: message, status: message ? 'error' : 'idle' }),
             logout: () =>

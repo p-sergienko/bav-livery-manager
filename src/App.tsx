@@ -1,4 +1,5 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { AuthTokenListener } from '@/components/AuthTokenListener';
 import { RequireAuth } from '@/components/RequireAuth';
@@ -7,6 +8,20 @@ import { DownloadsPage } from '@/pages/DownloadsPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { useInitializeLiveryStore } from '@/store/liveryStore';
+import { useAuthStore } from '@/store/authStore';
+
+const SessionVerifier = () => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const verifySession = useAuthStore((state) => state.verifySession);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      verifySession();
+    }
+  }, [isAuthenticated, verifySession]);
+
+  return null;
+};
 
 export const App = () => {
   useInitializeLiveryStore();
@@ -14,6 +29,7 @@ export const App = () => {
   return (
     <HashRouter>
       <AuthTokenListener />
+      <SessionVerifier />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<RequireAuth />}>

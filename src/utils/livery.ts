@@ -34,7 +34,9 @@ export const normalizeRemoteLivery = (entry: Record<string, unknown>): Livery =>
         manufacturer: asString(entry.manufacturer),
         registration: tailNumber ?? undefined,
         tags: Array.isArray(entry.tags) ? (entry.tags as string[]) : [],
-        status: asString(entry.status) ?? undefined
+        status: asString(entry.status) ?? undefined,
+        categoryId: asString(entry.categoryId),
+        categoryName: asString(entry.categoryName)
     };
 };
 
