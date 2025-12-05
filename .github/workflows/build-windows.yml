@@ -7,15 +7,23 @@ on:
     workflow_dispatch:
         inputs:
             app-version:
-                description: "Version (semver) to embed in the installer"
-                required: true
+                description: "Version (semver) to embed in the installer (leave empty for auto-bump)"
+                required: false
                 type: string
+            version-bump:
+                description: "Auto version bump type (only if app-version is empty)"
+                required: false
+                type: choice
+                default: "patch"
+                options:
+                  - patch
+                  - minor
+                  - major
 
 jobs:
   build:
     runs-on: windows-latest
     env:
-      APP_VERSION: ${{ inputs['app-version'] }}
       BAV_PANEL_BASE_URL: ${{ secrets.BAV_PANEL_BASE_URL }}
       CSC_IDENTITY_AUTO_DISCOVERY: false
       USE_HARD_LINKS: false
@@ -31,12 +39,41 @@ jobs:
             - name: Install dependencies
               run: bun install --frozen-lockfile
 
-            - name: Apply provided version
+            - name: Determine version
+              id: version
               shell: pwsh
-              run: npm version $env:APP_VERSION --no-git-tag-version
+              run: |
+                  if ("${{ inputs.app-version }}" -ne "") {
+                      $version = "${{ inputs.app-version }}"
+                      Write-Output "Using provided version: $version"
+                  } else {
+                      $bumpType = "${{ inputs.version-bump }}"
+                      Write-Output "Auto-bumping version ($bumpType)..."
+                      npm version $bumpType --no-git-tag-version
+                      $packageJson = Get-Content -Raw package.json | ConvertFrom-Json
+                      $version = $packageJson.version
+                      Write-Output "New version: $version"
+                  }
+                  Write-Output "APP_VERSION=$version" >> $env:GITHUB_OUTPUT
+                  Write-Output "APP_VERSION=$version" >> $env:GITHUB_ENV
+
+            - name: Apply version to package.json (if manual version provided)
+              if: inputs.app-version != ''
+              shell: pwsh
+              run: npm version ${{ inputs.app-version }} --no-git-tag-version
 
             - name: Build Windows installer
               run: bun run build:exe
+
+            - name: Commit version bump
+              if: inputs.app-version == ''
+              shell: bash
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git add package.json
+                  git commit -m "chore: bump version to ${{ steps.version.outputs.APP_VERSION }}"
+                  git push
 
             - name: Create GitHub release
               env:
@@ -44,7 +81,7 @@ jobs:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               shell: bash
               run: |
-                  TAG=${{ inputs['app-version'] }}
+                  TAG=${{ steps.version.outputs.APP_VERSION }}
                   REPO=${{ github.repository }}
                   shopt -s nullglob
                   INSTALLERS=(release/*-Setup.exe)
