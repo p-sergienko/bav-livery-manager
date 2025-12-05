@@ -25,6 +25,25 @@ const BACKOFF_MS = 800;
 
 const INVALID_FILENAME_CHARS = /[<>:"/\\|?*]+/g;
 
+async function retryAsync<T>(
+    fn: () => Promise<T>,
+    attempts: number,
+    backoffMs: number
+): Promise<T> {
+    let lastError: Error | undefined;
+    for (let i = 0; i < attempts; i++) {
+        try {
+            return await fn();
+        } catch (error) {
+            lastError = error instanceof Error ? error : new Error(String(error));
+            if (i < attempts - 1) {
+                await new Promise((resolve) => setTimeout(resolve, backoffMs * (i + 1)));
+            }
+        }
+    }
+    throw lastError ?? new Error('retryAsync failed');
+}
+
 function deriveZipFilename(downloadUrl: string): string {
     const buildName = (raw?: string | null) => {
         if (!raw) {

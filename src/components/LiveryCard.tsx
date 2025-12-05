@@ -27,6 +27,13 @@ const formatSize = (size?: string | number | null) => {
     return '';
 };
 
+const formatBytes = (bytes?: number) => {
+    if (!bytes || bytes <= 0) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
 const DownloadIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -132,11 +139,25 @@ export const LiveryCard = ({
             <div className={styles.imageContainer}>
                 {downloadState && (
                     <div className={classNames(styles.overlay, downloadState.extracting ? styles.overlayExtracting : '')}>
-                        <span>{downloadState.extracting ? 'Installing…' : 'Downloading…'}</span>
-                        {!downloadState.extracting && (
-                            <div className={styles.progressBar}>
-                                <div className={styles.progressFill} style={{ width: `${downloadState.progress}%` }} />
-                            </div>
+                        {downloadState.extracting ? (
+                            <>
+                                <div className={styles.spinner} />
+                                <span className={styles.overlayTitle}>Installing…</span>
+                                <span className={styles.overlaySubtitle}>Extracting files</span>
+                            </>
+                        ) : (
+                            <>
+                                <span className={styles.overlayTitle}>Downloading…</span>
+                                <span className={styles.overlayPercent}>{downloadState.progress}%</span>
+                                <div className={styles.progressBar}>
+                                    <div className={styles.progressFill} style={{ width: `${downloadState.progress}%` }} />
+                                </div>
+                                {downloadState.downloaded && downloadState.total ? (
+                                    <span className={styles.overlaySubtitle}>
+                                        {formatBytes(downloadState.downloaded)} / {formatBytes(downloadState.total)}
+                                    </span>
+                                ) : null}
+                            </>
                         )}
                     </div>
                 )}
@@ -153,7 +174,7 @@ export const LiveryCard = ({
             <div className={styles.content}>
                 <div className={styles.titleRow}>
                     <div>
-                        <p className={styles.developer}>{livery.developer}</p>
+                        <p className={styles.developer}>{livery.developerName}</p>
                         <h3 className={styles.title}>{livery.name}</h3>
                     </div>
                     {livery.version && <span className={styles.badge}>v{livery.version}</span>}
@@ -162,11 +183,11 @@ export const LiveryCard = ({
                 <dl className={styles.meta}>
                     <div>
                         <dt className={styles.metaLabel}>Aircraft</dt>
-                        <dd className={styles.metaValue}>{livery.aircraftType || livery.aircraftProfileName || 'Unknown'}</dd>
+                        <dd className={styles.metaValue}>{livery.aircraft || livery.aircraftProfileName || 'Unknown'}</dd>
                     </div>
                     <div>
                         <dt className={styles.metaLabel}>Developer</dt>
-                        <dd className={styles.metaValue}>{livery.developer || livery.developerName}</dd>
+                        <dd className={styles.metaValue}>{livery.developerName}</dd>
                     </div>
                     {livery.engine && (
                         <div>

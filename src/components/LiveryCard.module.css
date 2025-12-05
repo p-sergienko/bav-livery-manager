@@ -33,7 +33,7 @@
 .overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(0, 0, 0, 0.9);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -43,26 +43,66 @@
     font-size: 16px;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
     z-index: 1;
-    gap: 12px;
+    gap: 8px;
+    padding: 16px;
+}
+
+.overlayTitle {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    opacity: 0.9;
+}
+
+.overlayPercent {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    margin: 4px 0;
+}
+
+.overlaySubtitle {
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.7;
+    margin-top: 4px;
 }
 
 .overlayExtracting {
     color: var(--success);
 }
 
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top-color: var(--success);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .progressBar {
     width: 80%;
-    height: 8px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
     overflow: hidden;
+    margin-top: 8px;
 }
 
 .progressFill {
     height: 100%;
     width: 0;
-    background: #ffffff;
-    transition: width 0.3s ease;
+    background: linear-gradient(90deg, #4caf50, #8bc34a);
+    transition: width 0.2s ease-out;
+    border-radius: 3px;
 }
 
 .installedBadge {
