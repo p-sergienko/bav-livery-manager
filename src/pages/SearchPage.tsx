@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { LiveryCard } from '@/components/LiveryCard';
 import { RangeSlider } from '@/components/RangeSlider';
 import { ITEMS_PER_PAGE } from '@/utils/livery';
-import type { Resolution, Simulator } from '@/types/livery';
+import type { Livery, Resolution, Simulator } from '@/types/livery';
 import { useLiveryStore } from '@/store/liveryStore';
 import { useAuthStore } from '@/store/authStore';
-import type { CatalogResponse } from '@/types/catalog';
-import { REMOTE_CATALOG_URL } from '@shared/constants';
+import { useCatalogQuery } from '@/hooks/useCatalogQuery';
+import { useLiveriesQuery } from '@/hooks/useLiveriesQuery';
+import { StatusBar } from '@/components/StatusBar';
 import styles from './SearchPage.module.css';
 
 type FilterKey = 'developer' | 'aircraft' | 'engine' | 'simulator' | 'resolution' | 'category';
@@ -29,7 +30,7 @@ const filterLabels: Record<FilterKey, string> = {
     category: 'Category'
 };
 
-const createDefaultFilters = (): Record<FilterKey, string> => ({ ...baseFilters });
+const createDefaultFilters = (): FilterState => ({ ...baseFilters });
 
 const uniqueStrings = (values: Array<string | null | undefined>) => {
     const set = new Set<string>();
@@ -47,6 +48,156 @@ interface ChipOption {
     hint?: string | null;
 }
 
+type FilterState = Record<FilterKey, string>;
+type FilterCounts = Record<FilterKey, Map<string, number>>;
+type ValueMaps = Record<FilterKey, Map<string, string>>;
+
+const UNCATEGORIZED = '__uncategorized';
+
+const dedupeOptions = (entries: ChipOption[]) => {
+    const map = new Map<string, ChipOption>();
+    entries.forEach(({ value, label, hint }) => {
+        if (!value) {
+            return;
+        }
+        if (!map.has(value)) {
+            map.set(value, { value, label, hint: hint ?? null });
+        }
+    });
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+};
+
+const buildFallbackOptions = (liveries: Livery[]) => {
+    const categories = dedupeOptions(
+        liveries.map((l) => ({
+            value: l.categoryId ?? l.categoryName ?? '',
+            label: l.categoryName ?? l.categoryId ?? ''
+        }))
+    );
+
+    const hasUncategorized = liveries.some((l) => !(l.categoryId || l.categoryName));
+    if (hasUncategorized) {
+        categories.push({ value: UNCATEGORIZED, label: 'Uncategorized' });
+    }
+
+    return {
+        developers: dedupeOptions(liveries.map((l) => ({ value: l.developerId, label: l.developerName }))),
+        aircraft: dedupeOptions(liveries.map((l) => ({ value: l.aircraftProfileId, label: l.aircraftProfileName }))),
+        engines: uniqueStrings(liveries.map((l) => l.engine)),
+        simulators: dedupeOptions(liveries.map((l) => ({ value: l.simulatorId, label: l.simulatorCode || l.simulatorId }))),
+        resolutions: dedupeOptions(liveries.map((l) => ({ value: l.resolutionId, label: l.resolutionValue }))),
+        categories
+    };
+};
+
+const buildValueMaps = (options: {
+    developers: ChipOption[];
+    aircraft: ChipOption[];
+    engines: string[];
+    simulators: ChipOption[];
+    resolutions: ChipOption[];
+    categories: ChipOption[];
+}): ValueMaps => {
+    const buildMapFromOptions = (opts: ChipOption[]) => {
+        const map = new Map<string, string>();
+        opts.forEach((option) => map.set(option.value, option.label));
+        return map;
+    };
+    const buildMapFromStrings = (values: string[]) => {
+        const map = new Map<string, string>();
+        values.forEach((value) => {
+            if (value) {
+                map.set(value, value);
+            }
+        });
+        return map;
+    };
+
+    return {
+        developer: buildMapFromOptions(options.developers),
+        aircraft: buildMapFromOptions(options.aircraft),
+        engine: buildMapFromStrings(options.engines),
+        simulator: buildMapFromOptions(options.simulators),
+        resolution: buildMapFromOptions(options.resolutions),
+        category: new Map(options.categories.map((category) => [category.value, category.label]))
+    } satisfies ValueMaps;
+};
+
+const buildFilterCounts = (liveries: Livery[]): FilterCounts => {
+    const makeCounts = (resolver: (livery: Livery) => string | null | undefined) => {
+        const counts = new Map<string, number>();
+        liveries.forEach((livery) => {
+            const raw = resolver(livery)?.trim();
+            if (!raw) {
+                return;
+            }
+            counts.set(raw, (counts.get(raw) ?? 0) + 1);
+        });
+        return counts;
+    };
+
+    return {
+        developer: makeCounts((livery) => livery.developerId),
+        aircraft: makeCounts((livery) => livery.aircraftProfileId ?? null),
+        engine: makeCounts((livery) => livery.engine ?? null),
+        simulator: makeCounts((livery) => livery.simulatorId ?? null),
+        resolution: makeCounts((livery) => livery.resolutionId ?? null),
+        category: makeCounts((livery) => livery.categoryId ?? livery.categoryName ?? UNCATEGORIZED)
+    } satisfies FilterCounts;
+};
+
+const filterLiveries = (
+    liveries: Livery[],
+    filters: FilterState,
+    searchTerm: string,
+    viewMode: 'all' | 'installed',
+    settings: { defaultResolution: Resolution; defaultSimulator: Simulator },
+    isVariantInstalled: (livery: Livery, resolution: Resolution, simulator: Simulator) => boolean
+) => {
+    const term = searchTerm.toLowerCase();
+    const matches = liveries.filter((livery) => {
+        const matchesSearch =
+            !term ||
+            livery.name.toLowerCase().includes(term) ||
+            livery.developerName.toLowerCase().includes(term) ||
+            (livery.aircraftProfileName ?? '').toLowerCase().includes(term) ||
+            livery.simulatorCode.toLowerCase().includes(term) ||
+            livery.resolutionValue.toLowerCase().includes(term);
+
+        const matchesDeveloper = filters.developer === 'all' || livery.developerId === filters.developer;
+        const matchesAircraft = filters.aircraft === 'all' || livery.aircraftProfileId === filters.aircraft;
+        const matchesEngine = filters.engine === 'all' || livery.engine === filters.engine;
+        const matchesSimulator = filters.simulator === 'all' || livery.simulatorId === filters.simulator;
+        const matchesResolution = filters.resolution === 'all' || livery.resolutionId === filters.resolution;
+        const matchesCategory = (() => {
+            if (filters.category === 'all') return true;
+            const value = filters.category.trim();
+            if (!value) return true;
+            if (value === UNCATEGORIZED) {
+                return !livery.categoryId && !livery.categoryName;
+            }
+            const lower = value.toLowerCase();
+            return livery.categoryId === value || (livery.categoryName ?? '').toLowerCase() === lower;
+        })();
+
+        return (
+            matchesSearch &&
+            matchesDeveloper &&
+            matchesAircraft &&
+            matchesEngine &&
+            matchesSimulator &&
+            matchesResolution &&
+            matchesCategory
+        );
+    });
+
+    if (viewMode === 'installed') {
+        return matches.filter((livery) => isVariantInstalled(livery, settings.defaultResolution, settings.defaultSimulator));
+    }
+
+    return matches;
+};
+
 interface QuickFilterGroup {
     key: FilterKey;
     label: string;
@@ -55,8 +206,6 @@ interface QuickFilterGroup {
 }
 
 const numberFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
-
-const CATALOG_ENDPOINT = process.env.NODE_ENV === 'development' ? '/api/catalog' : REMOTE_CATALOG_URL;
 
 const classNames = (...tokens: Array<string | false>) => tokens.filter(Boolean).join(' ');
 
@@ -83,145 +232,90 @@ export const SearchPage = () => {
     const isVariantInstalled = useLiveryStore((state) => state.isVariantInstalled);
     const installedLiveries = useLiveryStore((state) => state.installedLiveries);
     const authToken = useAuthStore((state) => state.token);
+    const authError = useAuthStore((state) => state.error);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filters, setFilters] = useState<Record<FilterKey, string>>(() => createDefaultFilters());
+    const [filters, setFilters] = useState<FilterState>(() => createDefaultFilters());
     const [showFilters, setShowFilters] = useState(false);
     const [page, setPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(ITEMS_PER_PAGE);
-    const [catalog, setCatalog] = useState<CatalogResponse | null>(null);
-    const [catalogLoading, setCatalogLoading] = useState(false);
-    const [catalogError, setCatalogError] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'all' | 'installed'>('all');
+    const { data: catalog, isFetching: catalogLoading, error: catalogErrorObject } = useCatalogQuery(authToken);
+    const catalogError = catalogErrorObject ? 'Catalog filters are temporarily unavailable.' : null;
+    const { isFetching: liveriesFetching } = useLiveriesQuery();
 
-    useEffect(() => {
-        if (!authToken) {
-            setCatalog(null);
-            return;
+    const fallbackOptions = useMemo(() => buildFallbackOptions(liveries), [liveries]);
+
+    const developerOptions = useMemo<ChipOption[]>(() => {
+        if (catalog?.developers?.length) {
+            const entries = catalog.developers
+                .filter((dev) => dev.id && dev.name)
+                .map((dev) => ({ value: dev.id, label: dev.name }));
+            return dedupeOptions(entries);
         }
-
-        let cancelled = false;
-        const controller = new AbortController();
-
-        const fetchCatalog = async () => {
-            setCatalogLoading(true);
-            setCatalogError(null);
-            try {
-                const response = await fetch(CATALOG_ENDPOINT, {
-                    headers: { Authorization: `Bearer ${authToken}` },
-                    signal: controller.signal
-                });
-                if (!response.ok) {
-                    throw new Error(`Catalog request failed with status ${response.status}`);
-                }
-                const payload: CatalogResponse = await response.json();
-                if (!cancelled) {
-                    setCatalog(payload);
-                }
-            } catch (catalogErr) {
-                if (cancelled || (catalogErr as Error)?.name === 'AbortError') {
-                    return;
-                }
-                console.error('Failed to load catalog filters', catalogErr);
-                setCatalog(null);
-                setCatalogError('Catalog filters are temporarily unavailable.');
-            } finally {
-                if (!cancelled) {
-                    setCatalogLoading(false);
-                }
-            }
-        };
-
-        fetchCatalog();
-
-        return () => {
-            cancelled = true;
-            controller.abort();
-        };
-    }, [authToken]);
-
-    const fallbackOptions = useMemo(() => ({
-        developers: uniqueStrings(liveries.map((l) => l.developer)),
-        aircraft: uniqueStrings(liveries.map((l) => l.aircraftType)),
-        engines: uniqueStrings(liveries.map((l) => l.engine)),
-        simulators: uniqueStrings(liveries.map((l) => l.simulator)),
-        resolutions: uniqueStrings(liveries.map((l) => (typeof l.resolution === 'string' ? l.resolution : null))),
-        categories: uniqueStrings(liveries.map((l) => l.categoryName ?? undefined))
-    }), [liveries]);
-
-    const developerOptions = useMemo(() => {
-        const names = catalog?.developers?.map((dev) => dev.name).filter(Boolean) ?? fallbackOptions.developers;
-        return [...new Set(names)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        return fallbackOptions.developers;
     }, [catalog?.developers, fallbackOptions.developers]);
 
-    const aircraftOptions = useMemo(() => {
-        const names = catalog?.aircraft?.map((air) => air.name).filter(Boolean) ?? fallbackOptions.aircraft;
-        return [...new Set(names)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    const aircraftOptions = useMemo<ChipOption[]>(() => {
+        if (catalog?.aircraft?.length) {
+            const entries = catalog.aircraft
+                .filter((air) => air.id && air.name)
+                .map((air) => ({ value: air.id, label: air.name }));
+            return dedupeOptions(entries);
+        }
+        return fallbackOptions.aircraft;
     }, [catalog?.aircraft, fallbackOptions.aircraft]);
 
     const engineOptions = useMemo(() => fallbackOptions.engines, [fallbackOptions.engines]);
 
-    const simulatorOptions = useMemo(() => {
-        const codes = catalog?.simulators?.map((sim) => sim.code).filter(Boolean) ?? fallbackOptions.simulators;
-        return [...new Set(codes)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    const simulatorOptions = useMemo<ChipOption[]>(() => {
+        if (catalog?.simulators?.length) {
+            const entries = catalog.simulators
+                .filter((sim) => sim.id && sim.code)
+                .map((sim) => ({ value: sim.id, label: sim.code }));
+            return dedupeOptions(entries);
+        }
+        return fallbackOptions.simulators;
     }, [catalog?.simulators, fallbackOptions.simulators]);
 
-    const resolutionOptions = useMemo(() => {
-        const values = catalog?.resolutions?.map((res) => res.value).filter(Boolean) ?? fallbackOptions.resolutions;
-        return [...new Set(values)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    const resolutionOptions = useMemo<ChipOption[]>(() => {
+        if (catalog?.resolutions?.length) {
+            const entries = catalog.resolutions
+                .filter((res) => res.id && res.value)
+                .map((res) => ({ value: res.id, label: res.value }));
+            return dedupeOptions(entries);
+        }
+        return fallbackOptions.resolutions;
     }, [catalog?.resolutions, fallbackOptions.resolutions]);
 
     const categoryOptions = useMemo<ChipOption[]>(() => {
-        if (catalog?.categories?.length) {
-            return catalog.categories
-                .filter((category) => Boolean(category.name))
-                .map((category) => ({ value: category.name, label: category.name, hint: category.description ?? null }))
-                .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+        const fromCatalog = (catalog?.categories ?? [])
+            .filter((category) => Boolean(category.name || category.id))
+            .map((category) => ({
+                value: category.id ?? category.name,
+                label: category.name ?? category.id ?? 'Unlabeled',
+                hint: category.description ?? null
+            }));
+
+        const combined = dedupeOptions([...fromCatalog, ...fallbackOptions.categories]);
+
+        const needsUncategorized = liveries.some((l) => !(l.categoryId || l.categoryName));
+        if (needsUncategorized && !combined.find((c) => c.value === UNCATEGORIZED)) {
+            combined.push({ value: UNCATEGORIZED, label: 'Uncategorized' });
         }
 
-        return fallbackOptions.categories.map((name) => ({ value: name, label: name }));
-    }, [catalog?.categories, fallbackOptions.categories]);
+        return combined;
+    }, [catalog?.categories, fallbackOptions.categories, liveries]);
 
-    const valueMaps = useMemo(() => {
-        const buildMap = (values: string[]) => {
-            const map = new Map<string, string>();
-            values.forEach((value) => map.set(value, value));
-            return map;
-        };
+    const valueMaps = useMemo<ValueMaps>(() => buildValueMaps({
+        developers: developerOptions,
+        aircraft: aircraftOptions,
+        engines: engineOptions,
+        simulators: simulatorOptions,
+        resolutions: resolutionOptions,
+        categories: categoryOptions
+    }), [developerOptions, aircraftOptions, engineOptions, simulatorOptions, resolutionOptions, categoryOptions]);
 
-        return {
-            developer: buildMap(developerOptions),
-            aircraft: buildMap(aircraftOptions),
-            engine: buildMap(engineOptions),
-            simulator: buildMap(simulatorOptions),
-            resolution: buildMap(resolutionOptions),
-            category: new Map(categoryOptions.map((category) => [category.value, category.label]))
-        } satisfies Record<FilterKey, Map<string, string>>;
-    }, [developerOptions, aircraftOptions, engineOptions, simulatorOptions, resolutionOptions, categoryOptions]);
-
-    const filterCounts = useMemo(() => {
-        const makeCounts = (
-            resolver: (livery: (typeof liveries)[number]) => string | null | undefined
-        ): Map<string, number> => {
-            const counts = new Map<string, number>();
-            liveries.forEach((livery) => {
-                const raw = resolver(livery)?.trim();
-                if (!raw) {
-                    return;
-                }
-                counts.set(raw, (counts.get(raw) ?? 0) + 1);
-            });
-            return counts;
-        };
-
-        return {
-            developer: makeCounts((livery) => livery.developer),
-            aircraft: makeCounts((livery) => livery.aircraftType ?? null),
-            engine: makeCounts((livery) => livery.engine ?? null),
-            simulator: makeCounts((livery) => livery.simulator ?? null),
-            resolution: makeCounts((livery) => (typeof livery.resolution === 'string' ? livery.resolution : null)),
-            category: makeCounts((livery) => livery.categoryName ?? null)
-        } satisfies Record<FilterKey, Map<string, number>>;
-    }, [liveries]);
+    const filterCounts = useMemo<FilterCounts>(() => buildFilterCounts(liveries), [liveries]);
 
     const quickFilterGroups = useMemo<QuickFilterGroup[]>(() => {
         const formatHint = (key: FilterKey, value: string) => {
@@ -235,10 +329,10 @@ export const SearchPage = () => {
             groups.push({
                 key: 'simulator',
                 label: 'Simulators',
-                options: simulatorOptions.map((code) => ({
-                    value: code,
-                    label: code,
-                    hint: formatHint('simulator', code)
+                options: simulatorOptions.map((option) => ({
+                    value: option.value,
+                    label: option.label,
+                    hint: formatHint('simulator', option.value)
                 })),
                 limit: 4
             });
@@ -248,10 +342,10 @@ export const SearchPage = () => {
             groups.push({
                 key: 'resolution',
                 label: 'Resolutions',
-                options: resolutionOptions.map((value) => ({
-                    value,
-                    label: value,
-                    hint: formatHint('resolution', value)
+                options: resolutionOptions.map((option) => ({
+                    value: option.value,
+                    label: option.label,
+                    hint: formatHint('resolution', option.value)
                 })),
                 limit: 4
             });
@@ -261,10 +355,10 @@ export const SearchPage = () => {
             groups.push({
                 key: 'developer',
                 label: 'Developers',
-                options: developerOptions.map((name) => ({
-                    value: name,
-                    label: name,
-                    hint: formatHint('developer', name)
+                options: developerOptions.map((option) => ({
+                    value: option.value,
+                    label: option.label,
+                    hint: formatHint('developer', option.value)
                 })),
                 limit: 6
             });
@@ -295,52 +389,18 @@ export const SearchPage = () => {
         categories: categoryOptions
     }), [developerOptions, aircraftOptions, engineOptions, simulatorOptions, resolutionOptions, categoryOptions]);
 
-    const filteredLiveries = useMemo(() => {
-        const term = searchTerm.toLowerCase();
-        const matches = liveries.filter((livery) => {
-            const matchesSearch =
-                !term ||
-                livery.name.toLowerCase().includes(term) ||
-                livery.developer.toLowerCase().includes(term) ||
-                (livery.aircraftType ?? '').toLowerCase().includes(term);
-
-            const matchesDeveloper = filters.developer === 'all' || livery.developer === filters.developer;
-            const matchesAircraft = filters.aircraft === 'all' || livery.aircraftType === filters.aircraft;
-            const matchesEngine = filters.engine === 'all' || livery.engine === filters.engine;
-            const matchesSimulator =
-                filters.simulator === 'all' || (livery.simulator ?? '').toLowerCase() === filters.simulator.toLowerCase();
-            const matchesResolution =
-                filters.resolution === 'all' || (livery.resolution ?? '').toLowerCase() === filters.resolution.toLowerCase();
-            const matchesCategory =
-                filters.category === 'all' || (livery.categoryName ?? '').toLowerCase() === filters.category.toLowerCase();
-
-            return (
-                matchesSearch &&
-                matchesDeveloper &&
-                matchesAircraft &&
-                matchesEngine &&
-                matchesSimulator &&
-                matchesResolution &&
-                matchesCategory
-            );
-        });
-
-        if (viewMode === 'installed') {
-            return matches.filter((livery) =>
-                isVariantInstalled(livery, settings.defaultResolution, settings.defaultSimulator)
-            );
-        }
-
-        return matches;
-    }, [
-        filters,
-        isVariantInstalled,
-        liveries,
-        searchTerm,
-        settings.defaultResolution,
-        settings.defaultSimulator,
-        viewMode
-    ]);
+    const filteredLiveries = useMemo(
+        () =>
+            filterLiveries(
+                liveries,
+                filters,
+                searchTerm,
+                viewMode,
+                { defaultResolution: settings.defaultResolution, defaultSimulator: settings.defaultSimulator },
+                isVariantInstalled
+            ),
+        [filters, isVariantInstalled, liveries, searchTerm, settings.defaultResolution, settings.defaultSimulator, viewMode]
+    );
 
     const totalPages = Math.max(1, Math.ceil(filteredLiveries.length / itemsPerPage));
     const paginated = filteredLiveries.slice((page - 1) * itemsPerPage, page * itemsPerPage);
@@ -414,6 +474,14 @@ export const SearchPage = () => {
                 </div>
             </header>
 
+            <StatusBar
+                messages={[
+                    authError ? { type: 'error', text: authError } : null,
+                    error ? { type: 'error', text: error } : null,
+                    catalogError ? { type: 'info', text: catalogError } : null
+                ].filter(Boolean) as Array<{ type?: 'info' | 'error' | 'success'; text: string }>}
+            />
+
             <div className={styles.toolbar}>
                 <div className={styles.searchBar}>
                     <input
@@ -484,10 +552,10 @@ export const SearchPage = () => {
                         <select className={styles.filterSelect} value={filters.developer} onChange={(e) => updateFilter('developer', e.target.value)}>
                             <option value="all">All</option>
                             {options.developers.map((developer) => {
-                                const count = filterCounts.developer.get(developer);
+                                const count = filterCounts.developer.get(developer.value);
                                 return (
-                                    <option key={developer} value={developer}>
-                                        {count ? `${developer} (${numberFormatter.format(count)})` : developer}
+                                    <option key={developer.value} value={developer.value}>
+                                        {count ? `${developer.label} (${numberFormatter.format(count)})` : developer.label}
                                     </option>
                                 );
                             })}
@@ -498,10 +566,10 @@ export const SearchPage = () => {
                         <select className={styles.filterSelect} value={filters.aircraft} onChange={(e) => updateFilter('aircraft', e.target.value)}>
                             <option value="all">All</option>
                             {options.aircraft.map((aircraftType) => {
-                                const count = filterCounts.aircraft.get(aircraftType);
+                                const count = filterCounts.aircraft.get(aircraftType.value);
                                 return (
-                                    <option key={aircraftType} value={aircraftType}>
-                                        {count ? `${aircraftType} (${numberFormatter.format(count)})` : aircraftType}
+                                    <option key={aircraftType.value} value={aircraftType.value}>
+                                        {count ? `${aircraftType.label} (${numberFormatter.format(count)})` : aircraftType.label}
                                     </option>
                                 );
                             })}
@@ -526,10 +594,10 @@ export const SearchPage = () => {
                         <select className={styles.filterSelect} value={filters.simulator} onChange={(e) => updateFilter('simulator', e.target.value)}>
                             <option value="all">All</option>
                             {options.simulators.map((simulator) => {
-                                const count = filterCounts.simulator.get(simulator);
+                                const count = filterCounts.simulator.get(simulator.value);
                                 return (
-                                    <option key={simulator} value={simulator}>
-                                        {count ? `${simulator} (${numberFormatter.format(count)})` : simulator}
+                                    <option key={simulator.value} value={simulator.value}>
+                                        {count ? `${simulator.label} (${numberFormatter.format(count)})` : simulator.label}
                                     </option>
                                 );
                             })}
@@ -540,10 +608,10 @@ export const SearchPage = () => {
                         <select className={styles.filterSelect} value={filters.resolution} onChange={(e) => updateFilter('resolution', e.target.value)}>
                             <option value="all">All</option>
                             {options.resolutions.map((resolution) => {
-                                const count = filterCounts.resolution.get(resolution);
+                                const count = filterCounts.resolution.get(resolution.value);
                                 return (
-                                    <option key={resolution} value={resolution}>
-                                        {count ? `${resolution}` : resolution}
+                                    <option key={resolution.value} value={resolution.value}>
+                                        {count ? `${resolution.label} (${numberFormatter.format(count)})` : resolution.label}
                                     </option>
                                 );
                             })}
@@ -613,13 +681,13 @@ export const SearchPage = () => {
                     </div>
                 </div>
 
-                {loading ? (
+                {(loading || liveriesFetching) ? (
                     <p className={styles.loading}>Loading liveries…</p>
                 ) : paginated.length ? (
                     <div className={styles.grid}>
                         {paginated.map((livery) => (
                             <LiveryCard
-                                key={livery.id}
+                                key={livery.id ?? livery.name}
                                 livery={livery}
                                 defaultResolution={settings.defaultResolution}
                                 defaultSimulator={settings.defaultSimulator}
