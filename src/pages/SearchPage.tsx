@@ -146,6 +146,33 @@ const buildFilterCounts = (liveries: Livery[]): FilterCounts => {
     } satisfies FilterCounts;
 };
 
+const dedupeLiveriesForDisplay = (liveries: Livery[], preferredResolution: Resolution): Livery[] => {
+    const normalize = (value: string | null | undefined) => (value ?? '').trim().toLowerCase();
+    const map = new Map<string, Livery>();
+
+    liveries.forEach((entry) => {
+        const key = [normalize(entry.simulatorId), normalize(entry.developerId), normalize(entry.aircraftProfileId), normalize(entry.title ?? entry.name)].join('|');
+
+        const score = (candidate: Livery) => {
+            const resScore = normalize(candidate.resolutionValue) === normalize(preferredResolution) ? 2 : 0;
+            const previewScore = candidate.preview ? 1 : 0;
+            return resScore + previewScore;
+        };
+
+        const existing = map.get(key);
+        if (!existing) {
+            map.set(key, entry);
+            return;
+        }
+
+        if (score(entry) > score(existing)) {
+            map.set(key, entry);
+        }
+    });
+
+    return Array.from(map.values());
+};
+
 const filterLiveries = (
     liveries: Livery[],
     filters: FilterState,
@@ -467,8 +494,13 @@ export const SearchPage = () => {
         [filters, hasSimulatorSelection, isVariantInstalled, liveries, searchTerm, settings.defaultResolution, settings.defaultSimulator, viewMode]
     );
 
-    const totalPages = Math.max(1, Math.ceil(filteredLiveries.length / itemsPerPage));
-    const paginated = filteredLiveries.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+    const dedupedLiveries = useMemo(
+        () => dedupeLiveriesForDisplay(filteredLiveries, settings.defaultResolution),
+        [filteredLiveries, settings.defaultResolution]
+    );
+
+    const totalPages = Math.max(1, Math.ceil(dedupedLiveries.length / itemsPerPage));
+    const paginated = dedupedLiveries.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
     const updateFilter = (key: FilterKey, value: string) => {
         setFilters((prev) => ({ ...prev, [key]: value }));
@@ -512,10 +544,10 @@ export const SearchPage = () => {
     const insights = useMemo(
         () => [
             { label: 'Available', value: liveries.length, hint: 'Synced from panel' },
-            { label: 'Matching', value: filteredLiveries.length, hint: viewMode === 'installed' ? 'Filtered & installed' : 'After filters' },
+            { label: 'Matching', value: dedupedLiveries.length, hint: viewMode === 'installed' ? 'Filtered & installed' : 'After filters' },
             { label: 'Installed', value: installedLiveries.length, hint: 'Detected locally' }
         ],
-        [filteredLiveries.length, installedLiveries.length, liveries.length, viewMode]
+        [dedupedLiveries.length, installedLiveries.length, liveries.length, viewMode]
     );
 
     return (
@@ -757,6 +789,11 @@ export const SearchPage = () => {
                                 livery={livery}
                                 defaultResolution={settings.defaultResolution}
                                 defaultSimulator={settings.defaultSimulator}
+                                resolutionFilter={
+                                    filters.resolution === 'all'
+                                        ? 'all'
+                                        : ((valueMaps.resolution.get(filters.resolution) ?? filters.resolution) as Resolution)
+                                }
                                 downloadState={downloadStates[livery.name]}
                                 isInstalled={(resolution, simulator) => isVariantInstalled(livery, resolution, simulator)}
                                 onDownload={(resolution: Resolution, simulator: Simulator) => handleDownload(livery, resolution, simulator)}

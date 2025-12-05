@@ -1,20 +1,31 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { DownloadProgress, Livery, Resolution, Simulator } from '@/types/livery';
+import { useLiveryStore } from '@/store/liveryStore';
 import styles from './LiveryCard.module.css';
 
 interface LiveryCardProps {
     livery: Livery;
     defaultResolution: Resolution;
     defaultSimulator: Simulator;
+    resolutionFilter?: Resolution | 'all';
     downloadState?: DownloadProgress;
     isInstalled: (resolution: Resolution, simulator: Simulator) => boolean;
     onDownload: (resolution: Resolution, simulator: Simulator) => Promise<boolean>;
     onUninstall: (resolution: Resolution, simulator: Simulator) => Promise<boolean>;
 }
 
-const resolutionOptions: Resolution[] = ['4K', '8K'];
-const simulatorOptions: Simulator[] = ['FS20', 'FS24'];
 const classNames = (...tokens: Array<string | false>) => tokens.filter(Boolean).join(' ');
+
+const formatSize = (size?: string | number | null) => {
+    if (typeof size === 'number') {
+        const mb = size / (1024 * 1024);
+        return `${mb >= 0.1 ? mb.toFixed(1) : mb.toFixed(2)} MB`;
+    }
+    if (typeof size === 'string' && size.trim()) {
+        return size;
+    }
+    return '';
+};
 
 const DownloadIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -34,44 +45,87 @@ export const LiveryCard = ({
     livery,
     defaultResolution,
     defaultSimulator,
+    resolutionFilter,
     downloadState,
     isInstalled,
     onDownload,
     onUninstall
 }: LiveryCardProps) => {
-    const [resolution, setResolution] = useState<Resolution>(defaultResolution);
+    const allLiveries = useLiveryStore((state) => state.liveries);
     const [simulator, setSimulator] = useState<Simulator>(defaultSimulator);
     const [busy, setBusy] = useState(false);
-
-    useEffect(() => {
-        setResolution(defaultResolution);
-    }, [defaultResolution]);
+    const [selectedResolution, setSelectedResolution] = useState<Resolution | null>(null);
+    const isResolutionForced = Boolean(resolutionFilter && resolutionFilter !== 'all');
 
     useEffect(() => {
         setSimulator(defaultSimulator);
     }, [defaultSimulator]);
 
-    const handleDownload = async () => {
+    useEffect(() => {
+        if (resolutionFilter && resolutionFilter !== 'all') {
+            setSelectedResolution(resolutionFilter);
+            return;
+        }
+        setSelectedResolution(null);
+    }, [resolutionFilter]);
+
+    const peerResolutions = useMemo(() => {
+        const title = (livery.title || livery.name || '').trim().toLowerCase();
+        const matches = allLiveries.filter((entry) => {
+            const entryTitle = (entry.title || entry.name || '').trim().toLowerCase();
+            return (
+                entry.developerId === livery.developerId &&
+                entry.aircraftProfileId === livery.aircraftProfileId &&
+                entry.simulatorId === livery.simulatorId &&
+                entryTitle === title
+            );
+        });
+
+        const map = new Map<Resolution, { resolution: Resolution; size?: string | number | null }>();
+        matches.forEach((entry) => {
+            const res = (entry.resolutionValue as Resolution) ?? null;
+            if (!res) return;
+            if (!map.has(res)) {
+                map.set(res, { resolution: res, size: entry.size });
+            }
+        });
+
+        if (!map.size) {
+            map.set(livery.resolutionValue as Resolution, { resolution: livery.resolutionValue as Resolution, size: livery.size });
+        }
+
+        return Array.from(map.values()).sort((a, b) => a.resolution.localeCompare(b.resolution));
+    }, [allLiveries, livery]);
+
+    const handleDownload = async (res: Resolution) => {
+        setSelectedResolution(res);
         setBusy(true);
         try {
-            await onDownload(resolution, simulator);
+            await onDownload(res, simulator);
         } finally {
             setBusy(false);
         }
     };
 
-    const handleUninstall = async () => {
+    const handleUninstall = async (res: Resolution) => {
+        setSelectedResolution(res);
         setBusy(true);
         try {
-            await onUninstall(resolution, simulator);
+            await onUninstall(res, simulator);
         } finally {
             setBusy(false);
         }
     };
 
-    const installed = isInstalled(resolution, simulator);
+    const installedAny = peerResolutions.some((variant) => isInstalled(variant.resolution, simulator));
     const disableDownload = busy || Boolean(downloadState);
-    const disableUninstall = busy || !installed;
+
+    const showAllResolutions = selectedResolution === null && !isResolutionForced;
+    const resolutionsToRender = showAllResolutions
+        ? peerResolutions
+        : peerResolutions.filter((variant) => variant.resolution === selectedResolution);
+
+    const resolutionPills = peerResolutions.map((variant) => variant.resolution);
 
     return (
         <article className={styles.card} aria-label={`${livery.name} livery`}>
@@ -87,28 +141,7 @@ export const LiveryCard = ({
                     </div>
                 )}
 
-                <div className={styles.imageButtons}>
-                    <button
-                        type="button"
-                        className={styles.iconButton}
-                        onClick={handleDownload}
-                        disabled={disableDownload}
-                        aria-label={installed ? 'Reinstall livery' : 'Download livery'}
-                    >
-                        <DownloadIcon />
-                    </button>
-                    <button
-                        type="button"
-                        className={styles.iconButton}
-                        onClick={handleUninstall}
-                        disabled={disableUninstall}
-                        aria-label="Uninstall livery"
-                    >
-                        <UninstallIcon />
-                    </button>
-                </div>
-
-                {installed && <span className={styles.installedBadge}>INSTALLED</span>}
+                {installedAny && <span className={styles.installedBadge}>INSTALLED</span>}
 
                 {livery.preview ? (
                     <img className={styles.image} src={livery.preview} alt={`${livery.name} preview`} loading="lazy" />
@@ -129,7 +162,11 @@ export const LiveryCard = ({
                 <dl className={styles.meta}>
                     <div>
                         <dt className={styles.metaLabel}>Aircraft</dt>
-                        <dd className={styles.metaValue}>{livery.aircraftType || 'Unknown'}</dd>
+                        <dd className={styles.metaValue}>{livery.aircraftType || livery.aircraftProfileName || 'Unknown'}</dd>
+                    </div>
+                    <div>
+                        <dt className={styles.metaLabel}>Developer</dt>
+                        <dd className={styles.metaValue}>{livery.developer || livery.developerName}</dd>
                     </div>
                     {livery.engine && (
                         <div>
@@ -137,44 +174,57 @@ export const LiveryCard = ({
                             <dd className={styles.metaValue}>{livery.engine}</dd>
                         </div>
                     )}
-                    {livery.size && (
-                        <div>
-                            <dt className={styles.metaLabel}>Size</dt>
-                            <dd className={styles.metaValue}>{livery.size}</dd>
-                        </div>
-                    )}
+                </dl>
+                <dl className={styles.metaSecond}>
+                    <div>
+                        <dt className={styles.metaLabel}>Year</dt>
+                        <dd className={styles.metaValue}>{livery.year ?? '—'}</dd>
+                    </div>
+                    <div>
+                        <dt className={styles.metaLabel}>Category</dt>
+                        <dd className={styles.metaValue}>{livery.categoryName ?? 'Uncategorized'}</dd>
+                    </div>
                 </dl>
 
                 <div className={styles.selectionControls}>
                     <div className={styles.selectionGroup}>
-                        <p className={styles.selectionLabel}>Resolution</p>
-                        <div className={styles.toggleGroup}>
-                            {resolutionOptions.map((option) => (
-                                <button
-                                    key={option}
-                                    className={classNames(styles.toggleButton, option === resolution && styles.toggleButtonActive)}
-                                    onClick={() => setResolution(option)}
-                                    type="button"
-                                >
-                                    {option}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className={styles.selectionGroup}>
-                        <p className={styles.selectionLabel}>Simulator</p>
-                        <div className={styles.toggleGroup}>
-                            {simulatorOptions.map((option) => (
-                                <button
-                                    key={option}
-                                    className={classNames(styles.toggleButton, option === simulator && styles.toggleButtonActive)}
-                                    onClick={() => setSimulator(option)}
-                                    type="button"
-                                >
-                                    {option}
-                                </button>
-                            ))}
+                        <div className={styles.downloadRow}>
+                            {resolutionsToRender.map((variant) => {
+                                const res = variant.resolution;
+                                const sizeLabel = formatSize(variant.size || livery.size);
+                                const isInstalledVariant = isInstalled(res, simulator);
+                                const disableVariantUninstall = busy || !isInstalledVariant;
+                                const label = sizeLabel ? `${res} (${sizeLabel})` : res;
+                                return (
+                                    <div key={res} className={styles.downloadChip}>
+                                        <button
+                                            type="button"
+                                            className={classNames(styles.downloadButton, selectedResolution === res && styles.downloadButtonActive)}
+                                            disabled={disableDownload}
+                                            onClick={() => handleDownload(res)}
+                                        >
+                                            <span className={styles.buttonIcon} aria-hidden>
+                                                <DownloadIcon />
+                                            </span>
+                                            <span className={styles.btnLabelFull}>Download {label}</span>
+                                            <span className={styles.btnLabelShort}>{label}</span>
+                                        </button>
+                                        {isInstalledVariant && (
+                                            <button
+                                                type="button"
+                                                className={styles.uninstallButton}
+                                                disabled={disableVariantUninstall}
+                                                onClick={() => handleUninstall(res)}
+                                            >
+                                                <span className={styles.buttonIcon} aria-hidden>
+                                                    <UninstallIcon />
+                                                </span>
+                                                <span>Uninstall</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
