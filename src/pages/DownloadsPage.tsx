@@ -36,57 +36,61 @@ export const DownloadsPage = () => {
     const [page, setPage] = useState(1);
 
     const managedEntries = useMemo(
-        () => installedLiveries.filter((entry) => entry.manifest?.livery_manager_metadata?.original_name),
+        () => installedLiveries.filter((entry) => entry.originalName),
         [installedLiveries]
     );
 
     const options = useMemo(() => {
         const developers = new Set<string>();
         const aircraft = new Set<string>();
-        const engines = new Set<string>();
+        const resolutions = new Set<string>();
 
         managedEntries.forEach((entry) => {
-            const metadata = entry.manifest?.livery_manager_metadata;
-            const creator = entry.manifest?.creator;
-            const aircraftTitle = entry.manifest?.title;
-            const resolution = metadata?.resolution;
+            // Try to get more info from catalog match
+            const catalogMatch = liveries.find((l) => l.name === entry.originalName);
+            const creator = catalogMatch?.developerName;
+            const aircraftTitle = catalogMatch?.aircraftProfileName;
 
             if (creator) developers.add(creator);
             if (aircraftTitle) aircraft.add(aircraftTitle);
-            if (resolution) engines.add(resolution);
+            if (entry.resolution) resolutions.add(entry.resolution);
         });
 
         return {
             developers: Array.from(developers),
             aircraft: Array.from(aircraft),
-            engines: Array.from(engines)
+            engines: Array.from(resolutions)
         };
-    }, [managedEntries]);
+    }, [managedEntries, liveries]);
 
     const filtered = useMemo(() => {
         const term = searchTerm.toLowerCase();
         return managedEntries.filter((entry) => {
-            const metadata = entry.manifest?.livery_manager_metadata;
+            // Match against catalog for extra info
+            const catalogMatch = liveries.find((l) => l.name === entry.originalName);
+            const developer = catalogMatch?.developerName ?? '';
+            const manufacturer = catalogMatch?.manufacturer ?? '';
+
             const haystack = [
-                entry.name,
-                metadata?.original_name,
-                metadata?.simulator,
-                metadata?.resolution,
-                entry.manifest?.creator,
-                entry.manifest?.manufacturer
+                entry.folderName,
+                entry.originalName,
+                entry.simulator,
+                entry.resolution,
+                developer,
+                manufacturer
             ]
                 .filter(Boolean)
                 .join(' ')
                 .toLowerCase();
 
             const matchesSearch = haystack.includes(term);
-            const matchesDeveloper = filters.developer === 'all' || entry.manifest?.creator === filters.developer;
-            const matchesAircraft = filters.aircraft === 'all' || entry.manifest?.title === filters.aircraft;
-            const matchesResolution = filters.engine === 'all' || metadata?.resolution === filters.engine;
+            const matchesDeveloper = filters.developer === 'all' || developer === filters.developer;
+            const matchesAircraft = filters.aircraft === 'all' || catalogMatch?.aircraftProfileName === filters.aircraft;
+            const matchesResolution = filters.engine === 'all' || entry.resolution === filters.engine;
 
             return matchesSearch && matchesDeveloper && matchesAircraft && matchesResolution;
         });
-    }, [managedEntries, searchTerm, filters]);
+    }, [managedEntries, liveries, searchTerm, filters]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / DOWNLOADS_PER_PAGE));
     const paginated = filtered.slice((page - 1) * DOWNLOADS_PER_PAGE, page * DOWNLOADS_PER_PAGE);
@@ -186,20 +190,18 @@ export const DownloadsPage = () => {
                 {paginated.length ? (
                     <div className={styles.grid}>
                         {paginated.map((entry) => {
-                            const metadata = entry.manifest?.livery_manager_metadata;
-                            const manifest = entry.manifest;
-                            const liveryMatch = liveries.find((l) => l.name === metadata?.original_name);
+                            const liveryMatch = liveries.find((l) => l.name === entry.originalName);
                             const preview = liveryMatch?.preview;
-                            const aircraftTitle = manifest?.title ?? liveryMatch?.aircraftProfileName ?? 'Unknown aircraft';
-                            const developer = manifest?.creator ?? liveryMatch?.developerName ?? 'Unknown developer';
+                            const aircraftTitle = liveryMatch?.aircraftProfileName ?? 'Unknown aircraft';
+                            const developer = liveryMatch?.developerName ?? 'Unknown developer';
                             const registration = liveryMatch?.registration ?? '—';
-                            const simulatorLabel = (metadata?.simulator ?? entry.simulatorHint ?? 'Unknown').toUpperCase();
+                            const simulatorLabel = (entry.simulator ?? 'Unknown').toUpperCase();
 
                             return (
-                                <article key={entry.path} className={styles.card}>
+                                <article key={entry.installPath} className={styles.card}>
                                     <div className={styles.cardMedia}>
                                         {preview ? (
-                                            <img className={styles.cardImage} src={preview} alt={`${metadata?.original_name ?? entry.name} preview`} loading="lazy" />
+                                            <img className={styles.cardImage} src={preview} alt={`${entry.originalName} preview`} loading="lazy" />
                                         ) : (
                                             <div className={styles.cardPlaceholder}>No preview available</div>
                                         )}
@@ -210,7 +212,7 @@ export const DownloadsPage = () => {
                                         <header className={styles.cardHeader}>
                                             <div>
                                                 <p className={styles.developer}>{developer}</p>
-                                                <h3 className={styles.title}>{metadata?.original_name ?? entry.name}</h3>
+                                                <h3 className={styles.title}>{entry.originalName}</h3>
                                             </div>
                                             {liveryMatch?.version && <span className={styles.badge}>v{liveryMatch.version}</span>}
                                         </header>
@@ -222,7 +224,7 @@ export const DownloadsPage = () => {
                                             </div>
                                             <div>
                                                 <dt className={styles.metaLabel}>Resolution</dt>
-                                                <dd className={styles.metaValue}>{metadata?.resolution ?? 'Unknown'}</dd>
+                                                <dd className={styles.metaValue}>{entry.resolution ?? 'Unknown'}</dd>
                                             </div>
                                             <div>
                                                 <dt className={styles.metaLabel}>Registration</dt>
@@ -230,14 +232,14 @@ export const DownloadsPage = () => {
                                             </div>
                                             <div>
                                                 <dt className={styles.metaLabel}>Installed</dt>
-                                                <dd className={styles.metaValue}>{formatDate(entry.installedDate)}</dd>
+                                                <dd className={styles.metaValue}>{formatDate(entry.installDate)}</dd>
                                             </div>
                                         </dl>
 
                                         <div className={styles.actions}>
-                                            <div className={styles.installPath} title={entry.path}>
+                                            <div className={styles.installPath} title={entry.installPath}>
                                                 <span className={styles.metaLabel}>Folder</span>
-                                                <span className={styles.pathValue}>{entry.name}</span>
+                                                <span className={styles.pathValue}>{entry.folderName}</span>
                                             </div>
                                             <button className={styles.uninstallButton} onClick={() => uninstallEntry(entry)}>
                                                 Uninstall

@@ -38,26 +38,16 @@ export interface Settings {
     defaultSimulator: Simulator;
 }
 
-export interface ManifestMetadata {
-    title?: string;
-    creator?: string;
+/** Installed livery record from local store */
+export interface InstalledLiveryRecord {
+    liveryId: string;
+    originalName: string;
+    folderName: string;
+    installPath: string;
+    resolution: string;
+    simulator: string;
+    installDate: string;
     version?: string;
-    manufacturer?: string;
-    livery_manager_metadata?: {
-        original_name?: string;
-        install_date?: string;
-        source_url?: string;
-        resolution?: Resolution;
-        simulator?: Simulator;
-    };
-}
-
-export interface InstalledLivery {
-    name: string;
-    path: string;
-    installedDate: string | number | Date;
-    manifest?: ManifestMetadata;
-    simulatorHint?: Simulator;
 }
 
 export interface DownloadProgress {

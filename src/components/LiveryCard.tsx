@@ -61,20 +61,11 @@ export const LiveryCard = ({
     const allLiveries = useLiveryStore((state) => state.liveries);
     const [simulator, setSimulator] = useState<Simulator>(defaultSimulator);
     const [busy, setBusy] = useState(false);
-    const [selectedResolution, setSelectedResolution] = useState<Resolution | null>(null);
     const isResolutionForced = Boolean(resolutionFilter && resolutionFilter !== 'all');
 
     useEffect(() => {
         setSimulator(defaultSimulator);
     }, [defaultSimulator]);
-
-    useEffect(() => {
-        if (resolutionFilter && resolutionFilter !== 'all') {
-            setSelectedResolution(resolutionFilter);
-            return;
-        }
-        setSelectedResolution(null);
-    }, [resolutionFilter]);
 
     const peerResolutions = useMemo(() => {
         const title = (livery.title || livery.name || '').trim().toLowerCase();
@@ -105,7 +96,6 @@ export const LiveryCard = ({
     }, [allLiveries, livery]);
 
     const handleDownload = async (res: Resolution) => {
-        setSelectedResolution(res);
         setBusy(true);
         try {
             await onDownload(res, simulator);
@@ -115,7 +105,6 @@ export const LiveryCard = ({
     };
 
     const handleUninstall = async (res: Resolution) => {
-        setSelectedResolution(res);
         setBusy(true);
         try {
             await onUninstall(res, simulator);
@@ -127,12 +116,10 @@ export const LiveryCard = ({
     const installedAny = peerResolutions.some((variant) => isInstalled(variant.resolution, simulator));
     const disableDownload = busy || Boolean(downloadState);
 
-    const showAllResolutions = selectedResolution === null && !isResolutionForced;
-    const resolutionsToRender = showAllResolutions
-        ? peerResolutions
-        : peerResolutions.filter((variant) => variant.resolution === selectedResolution);
-
-    const resolutionPills = peerResolutions.map((variant) => variant.resolution);
+    // Always show all resolutions unless filtered from above (resolutionFilter prop)
+    const resolutionsToRender = isResolutionForced
+        ? peerResolutions.filter((variant) => variant.resolution === resolutionFilter)
+        : peerResolutions;
 
     return (
         <article className={styles.card} aria-label={`${livery.name} livery`}>
@@ -214,13 +201,32 @@ export const LiveryCard = ({
                                 const res = variant.resolution;
                                 const sizeLabel = formatSize(variant.size || livery.size);
                                 const isInstalledVariant = isInstalled(res, simulator);
-                                const disableVariantUninstall = busy || !isInstalledVariant;
                                 const label = sizeLabel ? `${res} (${sizeLabel})` : res;
+
+                                if (isInstalledVariant) {
+                                    return (
+                                        <div key={res} className={styles.downloadChip}>
+                                            <button
+                                                type="button"
+                                                className={styles.uninstallButton}
+                                                disabled={busy}
+                                                onClick={() => handleUninstall(res)}
+                                            >
+                                                <span className={styles.buttonIcon} aria-hidden>
+                                                    <UninstallIcon />
+                                                </span>
+                                                <span className={styles.btnLabelFull}>Uninstall {label}</span>
+                                                <span className={styles.btnLabelShort}>{label}</span>
+                                            </button>
+                                        </div>
+                                    );
+                                }
+
                                 return (
                                     <div key={res} className={styles.downloadChip}>
                                         <button
                                             type="button"
-                                            className={classNames(styles.downloadButton, selectedResolution === res && styles.downloadButtonActive)}
+                                            className={styles.downloadButton}
                                             disabled={disableDownload}
                                             onClick={() => handleDownload(res)}
                                         >
@@ -230,19 +236,6 @@ export const LiveryCard = ({
                                             <span className={styles.btnLabelFull}>Download {label}</span>
                                             <span className={styles.btnLabelShort}>{label}</span>
                                         </button>
-                                        {isInstalledVariant && (
-                                            <button
-                                                type="button"
-                                                className={styles.uninstallButton}
-                                                disabled={disableVariantUninstall}
-                                                onClick={() => handleUninstall(res)}
-                                            >
-                                                <span className={styles.buttonIcon} aria-hidden>
-                                                    <UninstallIcon />
-                                                </span>
-                                                <span>Uninstall</span>
-                                            </button>
-                                        )}
                                     </div>
                                 );
                             })}

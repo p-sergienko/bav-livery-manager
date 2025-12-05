@@ -1,4 +1,4 @@
-import type { InstalledLivery, Livery, Settings } from './livery';
+import type { Settings } from './livery';
 
 interface DownloadProgressEvent {
     liveryName: string;
@@ -30,10 +30,23 @@ export interface AuthTokenPayload {
     totalTime?: string | null;
 }
 
+/** Record of an installed livery from the local store */
+export interface InstalledLiveryRecord {
+    liveryId: string;
+    originalName: string;
+    folderName: string;
+    installPath: string;
+    resolution: string;
+    simulator: string;
+    installDate: string;
+    version?: string;
+}
+
 export interface ElectronAPI {
     fetchLiveries: (authToken?: string | null) => Promise<{ version?: string; liveries: Livery[] }>;
     downloadLivery: (
         downloadEndpoint: string,
+        liveryId: string,
         liveryName: string,
         simulator: 'MSFS2020' | 'MSFS2024',
         resolution: string,
@@ -49,8 +62,7 @@ export interface ElectronAPI {
     pathExists: (path: string) => Promise<boolean>;
     getLocalVersion: (liveryId: string) => Promise<string | null>;
     setLocalVersion: (liveryId: string, version: string) => Promise<boolean>;
-    getInstalledLiveries: (path: string) => Promise<InstalledLivery[]>;
-    readManifest: (path: string) => Promise<any>;
+    getInstalledLiveries: () => Promise<InstalledLiveryRecord[]>;
     onDownloadProgress: (callback: ((event: DownloadProgressEvent) => void) | null) => void;
     removeAllDownloadProgressListeners: () => void;
     openPanelAuth: (url: string) => Promise<void>;

@@ -4,18 +4,18 @@ import { Readable } from 'node:stream';
 import type { ReadableStream as NodeReadableStream } from 'node:stream/web';
 import fs from 'fs-extra';
 import AdmZip from 'adm-zip';
-import type { AppContext, DownloadProgress, DownloadResult, RemoteLiveryPayload, Settings } from '../types';
+import type { AppContext, DownloadProgress, DownloadResult, Settings } from '../types';
 import { fetchJson, fetchWithTimeout } from '../utils/network';
-import { createManifestFile } from './liveryData';
+import { recordInstallation } from './installedLiveriesStore';
 
 interface DownloadLiveryOptions {
     downloadEndpoint: string;
+    liveryId: string;
     liveryName: string;
     simulator: 'MSFS2020' | 'MSFS2024';
     resolution: string;
     settings: Settings;
     appContext: AppContext;
-    fetchManifestData: (authToken: string | null) => Promise<RemoteLiveryPayload | null>;
     authToken: string | null;
 }
 
@@ -72,7 +72,7 @@ function deriveZipFilename(downloadUrl: string): string {
 }
 
 export async function downloadAndInstallLivery(options: DownloadLiveryOptions): Promise<DownloadResult> {
-    const { downloadEndpoint, liveryName, simulator, resolution, settings, appContext, fetchManifestData, authToken } = options;
+    const { downloadEndpoint, liveryId, liveryName, simulator, resolution, settings, appContext, authToken } = options;
 
     if (!authToken) {
         return { success: false, error: 'Missing authentication token. Please sign in again.' };
@@ -124,11 +124,17 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
 
         await extractZipNonBlocking(outputPath, extractPath);
 
-        const manifestData = await fetchManifestData(authToken);
-        const livery = manifestData?.liveries?.find((entry) => entry.name === liveryName);
-        if (livery) {
-            await createManifestFile(extractPath, livery, resolution, simulator === 'MSFS2024' ? 'FS24' : 'FS20');
-        }
+        // Record the installation in our local store (not in the livery folder)
+        const simCode = simulator === 'MSFS2024' ? 'FS24' : 'FS20';
+        await recordInstallation({
+            liveryId,
+            originalName: liveryName,
+            folderName,
+            installPath: extractPath,
+            resolution,
+            simulator: simCode,
+            version: '1.0.0'
+        });
 
         await fs.remove(outputPath);
 

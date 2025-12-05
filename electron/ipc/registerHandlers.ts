@@ -4,9 +4,14 @@ import { dialog, ipcMain } from 'electron';
 import type { OpenDialogOptions } from 'electron';
 import type { AppContext, DownloadResult, Settings } from '../types';
 import { detectSimulatorPaths } from '../services/simulatorPaths';
-import { fetchLiveriesForManifest, fetchRemoteLiveryList, readManifestFile } from '../services/liveryData';
+import { fetchRemoteLiveryList } from '../services/liveryData';
 import { downloadAndInstallLivery } from '../services/downloadManager';
 import { loadSettings, saveSettings } from '../services/settingsStore';
+import { 
+    getInstalledLiveries, 
+    removeInstallationByPath,
+    validateInstallations 
+} from '../services/installedLiveriesStore';
 import { fetchWithTimeout } from '../utils/network';
 import * as versionManager from '../versionManager';
 
@@ -42,6 +47,7 @@ export function registerIpcHandlers(appContext: AppContext) {
         async (
             _event,
             downloadEndpoint: string,
+            liveryId: string,
             liveryName: string,
             simulator: 'MSFS2020' | 'MSFS2024',
             resolution: string,
@@ -50,20 +56,16 @@ export function registerIpcHandlers(appContext: AppContext) {
         const settings = loadSettings();
         return downloadAndInstallLivery({
                 downloadEndpoint,
+                liveryId,
                 liveryName,
                 simulator,
                 resolution,
                 settings,
                 appContext,
-                fetchManifestData: fetchLiveriesForManifest,
                 authToken
         });
         }
     );
-
-    ipcMain.handle('read-manifest', async (_event, liveryPath: string) => {
-        return readManifestFile(liveryPath);
-    });
 
     ipcMain.handle('detect-sim-paths', async () => {
         return detectSimulatorPaths();
@@ -73,12 +75,15 @@ export function registerIpcHandlers(appContext: AppContext) {
         try {
             console.log('Uninstalling livery from:', liveryPath);
 
+            // Remove from our local store first
+            await removeInstallationByPath(liveryPath);
+
             if (await fs.pathExists(liveryPath)) {
                 await fs.remove(liveryPath);
                 console.log('Successfully uninstalled livery');
                 return { success: true };
             }
-            return { success: false, error: 'Path does not exist' };
+            return { success: true }; // Already removed, still success
         } catch (error) {
             console.error('Uninstall error:', error);
             return { success: false, error: (error as Error).message };
@@ -135,39 +140,12 @@ export function registerIpcHandlers(appContext: AppContext) {
     ipcMain.handle('get-local-version', (_event, liveryId: string) => versionManager.getLocalVersion(liveryId));
     ipcMain.handle('set-local-version', (_event, liveryId: string, version: string) => versionManager.setLocalVersion(liveryId, version));
 
-    ipcMain.handle('get-installed-liveries', async (_event, basePath: string) => {
+    ipcMain.handle('get-installed-liveries', async () => {
         try {
-            if (!(await fs.pathExists(basePath))) return [];
-
-            const folders = await fs.readdir(basePath);
-            const installedLiveries: Array<{ name: string; path: string; installedDate: Date; manifest: unknown }> = [];
-
-            for (const folder of folders) {
-                if (folder.startsWith('orbx-') || folder.startsWith('asobo-')) {
-                    continue;
-                }
-
-                const folderPath = path.join(basePath, folder);
-
-                try {
-                    const stat = await fs.stat(folderPath);
-                    if (!stat.isDirectory()) {
-                        continue;
-                    }
-
-                    const manifest = await readManifestFile(folderPath);
-                    installedLiveries.push({
-                        name: folder,
-                        path: folderPath,
-                        installedDate: stat.birthtime,
-                        manifest
-                    });
-                } catch {
-                    continue;
-                }
-            }
-
-            return installedLiveries;
+            // First validate that recorded installations still exist on disk
+            await validateInstallations();
+            // Return all recorded installations
+            return getInstalledLiveries();
         } catch (error) {
             console.error('Error getting installed liveries:', error);
             return [];

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { create } from 'zustand';
 import type {
     DownloadProgress,
-    InstalledLivery,
+    InstalledLiveryRecord,
     Livery,
     Resolution,
     Settings,
@@ -23,7 +23,7 @@ const getAPI = () => (typeof window === 'undefined' ? undefined : window.electro
 
 interface LiveryState {
     liveries: Livery[];
-    installedLiveries: InstalledLivery[];
+    installedLiveries: InstalledLiveryRecord[];
     settings: Settings;
     downloadStates: Record<string, DownloadProgress>;
     loading: boolean;
@@ -38,7 +38,8 @@ interface LiveryState {
     updateSettings: (partial: Partial<Settings>) => Promise<void>;
     handleDownload: (livery: Livery, resolution: Resolution, simulator: Simulator) => Promise<boolean>;
     handleUninstall: (livery: Livery, resolution: Resolution, simulator: Simulator) => Promise<boolean>;
-    uninstallEntry: (entry: InstalledLivery) => Promise<boolean>;
+    uninstallByPath: (installPath: string) => Promise<boolean>;
+    uninstallEntry: (entry: InstalledLiveryRecord) => Promise<boolean>;
     isVariantInstalled: (livery: Livery, resolution: Resolution, simulator: Simulator) => boolean;
     clearError: () => void;
 }
@@ -46,21 +47,16 @@ interface LiveryState {
 export const useLiveryStore = create<LiveryState>((set, get) => {
     const matchInstalledEntry = (livery: Livery, resolution: Resolution, simulator: Simulator) => {
         const installed = get().installedLiveries;
-        const settings = get().settings;
-        const fallback = deriveInstallFolderName(livery);
 
         return installed.find((entry) => {
-            const metadata = entry.manifest?.livery_manager_metadata;
-            if (metadata?.original_name) {
-                const metaResolution = (metadata.resolution as Resolution) ?? settings.defaultResolution;
-                const metaSimulator = (metadata.simulator as Simulator) ?? settings.defaultSimulator;
-                return (
-                    metadata.original_name === livery.name &&
-                    metaResolution === resolution &&
-                    metaSimulator === simulator
-                );
-            }
-            return entry.name === fallback;
+            // Match by liveryId (preferred) or fall back to originalName for older records
+            const idMatch = entry.liveryId === livery.id;
+            const nameMatch = entry.originalName === livery.name;
+            return (
+                (idMatch || nameMatch) &&
+                entry.resolution === resolution &&
+                entry.simulator === simulator
+            );
         });
     };
 
@@ -167,30 +163,9 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
                 return;
             }
 
-            const paths: Array<{ path: string; simulator: Simulator }> = [];
-            const { msfs2020Path, msfs2024Path } = get().settings;
-
-            if (msfs2020Path) paths.push({ path: msfs2020Path, simulator: 'FS20' });
-            if (msfs2024Path) paths.push({ path: msfs2024Path, simulator: 'FS24' });
-
-            if (!paths.length) {
-                set({ installedLiveries: [] });
-                return;
-            }
-
             try {
-                const collections = await Promise.all(
-                    paths.map(async ({ path, simulator }) => {
-                        try {
-                            const entries = await api.getInstalledLiveries(path);
-                            return entries.map((entry) => ({ ...entry, simulatorHint: simulator }));
-                        } catch (innerError) {
-                            console.error(`Failed to read installed liveries from ${path}`, innerError);
-                            return [];
-                        }
-                    })
-                );
-                set({ installedLiveries: collections.flat() });
+                const entries = await api.getInstalledLiveries();
+                set({ installedLiveries: entries });
             } catch (error) {
                 console.error('Failed to refresh installed liveries', error);
                 set({ installedLiveries: [] });
@@ -238,12 +213,12 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
             }));
 
             try {
-                const result = await api.downloadLivery(downloadRequestUrl, livery.name, targetSimulator, resolution, authToken);
+                const result = await api.downloadLivery(downloadRequestUrl, livery.id, livery.name, targetSimulator, resolution, authToken);
                 if (!result.success) {
                     throw new Error(result.error || 'Download failed');
                 }
 
-                await api.setLocalVersion?.(livery.name, livery.version ?? '1.0.0');
+                await api.setLocalVersion?.(livery.id, livery.version ?? '1.0.0');
                 await get().refreshInstalled();
                 return true;
             } catch (error) {
@@ -273,7 +248,7 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
             }
 
             const installedMatch = matchInstalledEntry(livery, resolution, simulator);
-            const installPath = installedMatch?.path ?? joinPaths(basePath, deriveInstallFolderName(livery));
+            const installPath = installedMatch?.installPath ?? joinPaths(basePath, deriveInstallFolderName(livery));
 
             try {
                 const result = await api.uninstallLivery(installPath);
@@ -297,7 +272,28 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
             }
 
             try {
-                const result = await api.uninstallLivery(entry.path);
+                const result = await api.uninstallLivery(entry.installPath);
+                if (!result.success) {
+                    throw new Error(result.error || 'Uninstall failed');
+                }
+                await get().refreshInstalled();
+                return true;
+            } catch (error) {
+                console.error('Uninstall failed', error);
+                set({ error: error instanceof Error ? error.message : 'Unable to uninstall livery.' });
+                return false;
+            }
+        },
+
+        uninstallByPath: async (installPath) => {
+            const api = getAPI();
+            if (!api?.uninstallLivery) {
+                set({ error: 'Electron APIs are not available.' });
+                return false;
+            }
+
+            try {
+                const result = await api.uninstallLivery(installPath);
                 if (!result.success) {
                     throw new Error(result.error || 'Uninstall failed');
                 }

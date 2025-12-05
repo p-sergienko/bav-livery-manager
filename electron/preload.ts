@@ -14,7 +14,6 @@ const INVOKE_CHANNELS = [
     'get-local-version',
     'set-local-version',
     'get-installed-liveries',
-    'read-manifest',
     'detect-sim-paths',
     'auth-open-panel'
 ] as const;
@@ -41,9 +40,9 @@ const api: ElectronAPI = {
         ensureInvokeChannel('fetch-liveries');
         return ipcRenderer.invoke('fetch-liveries', authToken ?? null);
     },
-    downloadLivery: (downloadEndpoint, liveryName, simulator, resolution, authToken) => {
+    downloadLivery: (downloadEndpoint, liveryId, liveryName, simulator, resolution, authToken) => {
         ensureInvokeChannel('download-livery');
-        return ipcRenderer.invoke('download-livery', downloadEndpoint, liveryName, simulator, resolution, authToken ?? null);
+        return ipcRenderer.invoke('download-livery', downloadEndpoint, liveryId, liveryName, simulator, resolution, authToken ?? null);
     },
     uninstallLivery: (installPath) => {
         ensureInvokeChannel('uninstall-livery');
@@ -85,13 +84,9 @@ const api: ElectronAPI = {
         ensureInvokeChannel('set-local-version');
         return ipcRenderer.invoke('set-local-version', liveryId, version);
     },
-    getInstalledLiveries: (basePath) => {
+    getInstalledLiveries: () => {
         ensureInvokeChannel('get-installed-liveries');
-        return ipcRenderer.invoke('get-installed-liveries', basePath);
-    },
-    readManifest: (liveryPath) => {
-        ensureInvokeChannel('read-manifest');
-        return ipcRenderer.invoke('read-manifest', liveryPath);
+        return ipcRenderer.invoke('get-installed-liveries');
     },
     openPanelAuth: (url) => {
         ensureInvokeChannel('auth-open-panel');

@@ -555,7 +555,6 @@ export const SearchPage = () => {
         <section className={styles.page}>
             <header className={styles.pageHeader}>
                 <div className={styles.headerCopy}>
-                    <span className={styles.headerEyebrow}>BAV catalog</span>
                     <h1>Liveries{activeSimulatorLabel ? ` for ${activeSimulatorLabel}` : ''}</h1>
                 </div>
                 <div className={styles.viewToggle}>
