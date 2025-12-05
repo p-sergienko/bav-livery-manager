@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { DownloadedLiveryCard } from '@/components/DownloadedLiveryCard';
 import { useLiveryStore } from '@/store/liveryStore';
+import type { InstalledLiveryRecord } from '@/types/electron-api';
 import styles from './DownloadsPage.module.css';
 
 type FilterKey = 'developer' | 'aircraft' | 'resolution' | 'simulator';
@@ -46,6 +47,10 @@ export const DownloadsPage = () => {
     const installedLiveries = useLiveryStore((state) => state.installedLiveries);
     const liveries = useLiveryStore((state) => state.liveries);
     const uninstallEntry = useLiveryStore((state) => state.uninstallEntry);
+
+    const handleUninstall = async (entry: InstalledLiveryRecord): Promise<void> => {
+        await uninstallEntry(entry);
+    };
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filters, setFilters] = useState(baseFilters);
@@ -268,7 +273,7 @@ export const DownloadsPage = () => {
                                     key={entry.installPath}
                                     entry={entry}
                                     liveryMatch={liveryMatch}
-                                    onUninstall={uninstallEntry}
+                                    onUninstall={handleUninstall}
                                 />
                             );
                         })}
