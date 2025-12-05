@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LiveryCard } from '@/components/LiveryCard';
 import { RangeSlider } from '@/components/RangeSlider';
 import { ITEMS_PER_PAGE } from '@/utils/livery';
@@ -16,7 +16,7 @@ const baseFilters: Record<FilterKey, string> = {
     developer: 'all',
     aircraft: 'all',
     engine: 'all',
-    simulator: 'all',
+    simulator: '',
     resolution: 'all',
     category: 'all'
 };
@@ -30,7 +30,7 @@ const filterLabels: Record<FilterKey, string> = {
     category: 'Category'
 };
 
-const createDefaultFilters = (): FilterState => ({ ...baseFilters });
+const createDefaultFilters = (simulator: string): FilterState => ({ ...baseFilters, simulator });
 
 const uniqueStrings = (values: Array<string | null | undefined>) => {
     const set = new Set<string>();
@@ -167,7 +167,7 @@ const filterLiveries = (
         const matchesDeveloper = filters.developer === 'all' || livery.developerId === filters.developer;
         const matchesAircraft = filters.aircraft === 'all' || livery.aircraftProfileId === filters.aircraft;
         const matchesEngine = filters.engine === 'all' || livery.engine === filters.engine;
-        const matchesSimulator = filters.simulator === 'all' || livery.simulatorId === filters.simulator;
+        const matchesSimulator = filters.simulator ? livery.simulatorId === filters.simulator : false;
         const matchesResolution = filters.resolution === 'all' || livery.resolutionId === filters.resolution;
         const matchesCategory = (() => {
             if (filters.category === 'all') return true;
@@ -234,7 +234,14 @@ export const SearchPage = () => {
     const authToken = useAuthStore((state) => state.token);
     const authError = useAuthStore((state) => state.error);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filters, setFilters] = useState<FilterState>(() => createDefaultFilters());
+    const pathEnabledSimulators = useMemo<Simulator[]>(() => {
+        const sims: Simulator[] = [];
+        if (settings.msfs2020Path) sims.push('FS20');
+        if (settings.msfs2024Path) sims.push('FS24');
+        return sims;
+    }, [settings.msfs2020Path, settings.msfs2024Path]);
+
+    const [filters, setFilters] = useState<FilterState>(() => createDefaultFilters(''));
     const [showFilters, setShowFilters] = useState(false);
     const [page, setPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(ITEMS_PER_PAGE);
@@ -244,6 +251,7 @@ export const SearchPage = () => {
     const { isFetching: liveriesFetching } = useLiveriesQuery();
 
     const fallbackOptions = useMemo(() => buildFallbackOptions(liveries), [liveries]);
+
 
     const developerOptions = useMemo<ChipOption[]>(() => {
         if (catalog?.developers?.length) {
@@ -268,14 +276,27 @@ export const SearchPage = () => {
     const engineOptions = useMemo(() => fallbackOptions.engines, [fallbackOptions.engines]);
 
     const simulatorOptions = useMemo<ChipOption[]>(() => {
-        if (catalog?.simulators?.length) {
-            const entries = catalog.simulators
-                .filter((sim) => sim.id && sim.code)
-                .map((sim) => ({ value: sim.id, label: sim.code }));
-            return dedupeOptions(entries);
-        }
-        return fallbackOptions.simulators;
+        const catalogOptions = (catalog?.simulators ?? [])
+            .filter((sim) => sim.id && sim.code)
+            .map((sim) => ({ value: sim.id, label: sim.code }));
+
+        return dedupeOptions([...catalogOptions, ...fallbackOptions.simulators]);
     }, [catalog?.simulators, fallbackOptions.simulators]);
+    const resolveSimulatorValue = useCallback(
+        (code: Simulator): string | null => {
+            const match = simulatorOptions.find((opt) => opt.label.toUpperCase() === code);
+            return match?.value ?? null;
+        },
+        [simulatorOptions]
+    );
+
+    const allowedSimulatorValues = useMemo(
+        () =>
+            pathEnabledSimulators
+                .map((code) => resolveSimulatorValue(code))
+                .filter((value): value is string => Boolean(value)),
+        [pathEnabledSimulators, resolveSimulatorValue]
+    );
 
     const resolutionOptions = useMemo<ChipOption[]>(() => {
         if (catalog?.resolutions?.length) {
@@ -306,6 +327,12 @@ export const SearchPage = () => {
         return combined;
     }, [catalog?.categories, fallbackOptions.categories, liveries]);
 
+    const hasFS20Path = Boolean(settings.msfs2020Path);
+    const hasFS24Path = Boolean(settings.msfs2024Path);
+    const hasSimulatorPathConfigured = pathEnabledSimulators.length > 0;
+    const hasSimulatorSelection = allowedSimulatorValues.length > 0;
+    const activeSimulatorLabel = simulatorOptions.find((opt) => opt.value === filters.simulator)?.label ?? null;
+
     const valueMaps = useMemo<ValueMaps>(() => buildValueMaps({
         developers: developerOptions,
         aircraft: aircraftOptions,
@@ -314,6 +341,29 @@ export const SearchPage = () => {
         resolutions: resolutionOptions,
         categories: categoryOptions
     }), [developerOptions, aircraftOptions, engineOptions, simulatorOptions, resolutionOptions, categoryOptions]);
+
+    useEffect(() => {
+        if (!simulatorOptions.length) return;
+
+        if (!allowedSimulatorValues.length) {
+            if (filters.simulator !== '') {
+                setFilters((prev) => ({ ...prev, simulator: '' }));
+            }
+            return;
+        }
+
+        const currentValid = allowedSimulatorValues.includes(filters.simulator);
+        const preferredBySettings = resolveSimulatorValue(settings.defaultSimulator);
+        const next = currentValid
+            ? filters.simulator
+            : (preferredBySettings && allowedSimulatorValues.includes(preferredBySettings))
+                ? preferredBySettings
+                : allowedSimulatorValues[0];
+
+        if (next !== filters.simulator) {
+            setFilters((prev) => ({ ...prev, simulator: next }));
+        }
+    }, [allowedSimulatorValues, filters.simulator, resolveSimulatorValue, settings.defaultSimulator, simulatorOptions]);
 
     const filterCounts = useMemo<FilterCounts>(() => buildFilterCounts(liveries), [liveries]);
 
@@ -335,6 +385,19 @@ export const SearchPage = () => {
                     hint: formatHint('simulator', option.value)
                 })),
                 limit: 4
+            });
+        }
+
+        if (aircraftOptions.length) {
+            groups.push({
+                key: 'aircraft',
+                label: 'Aircraft',
+                options: aircraftOptions.map((option) => ({
+                    value: option.value,
+                    label: option.label,
+                    hint: formatHint('aircraft', option.value)
+                })),
+                limit: 6
             });
         }
 
@@ -391,15 +454,17 @@ export const SearchPage = () => {
 
     const filteredLiveries = useMemo(
         () =>
-            filterLiveries(
-                liveries,
-                filters,
-                searchTerm,
-                viewMode,
-                { defaultResolution: settings.defaultResolution, defaultSimulator: settings.defaultSimulator },
-                isVariantInstalled
-            ),
-        [filters, isVariantInstalled, liveries, searchTerm, settings.defaultResolution, settings.defaultSimulator, viewMode]
+            hasSimulatorSelection
+                ? filterLiveries(
+                      liveries,
+                      filters,
+                      searchTerm,
+                      viewMode,
+                      { defaultResolution: settings.defaultResolution, defaultSimulator: settings.defaultSimulator },
+                      isVariantInstalled
+                  )
+                : [],
+        [filters, hasSimulatorSelection, isVariantInstalled, liveries, searchTerm, settings.defaultResolution, settings.defaultSimulator, viewMode]
     );
 
     const totalPages = Math.max(1, Math.ceil(filteredLiveries.length / itemsPerPage));
@@ -411,7 +476,8 @@ export const SearchPage = () => {
     };
 
     const resetFilters = () => {
-        setFilters(createDefaultFilters());
+        const defaultSimulatorValue = allowedSimulatorValues[0] ?? filters.simulator;
+        setFilters(createDefaultFilters(defaultSimulatorValue));
         setItemsPerPage(ITEMS_PER_PAGE);
         setPage(1);
     };
@@ -426,12 +492,16 @@ export const SearchPage = () => {
     };
 
     const handleQuickSelect = (key: FilterKey, value: string) => {
+        if (key === 'simulator') {
+            updateFilter(key, value);
+            return;
+        }
         updateFilter(key, filters[key] === value ? 'all' : value);
     };
 
     const activeFilters = useMemo(() => {
         return (Object.keys(filters) as FilterKey[])
-            .filter((key) => filters[key] !== 'all')
+            .filter((key) => filters[key] !== 'all' && filters[key] !== '')
             .map((key) => ({
                 key,
                 label: filterLabels[key],
@@ -453,8 +523,7 @@ export const SearchPage = () => {
             <header className={styles.pageHeader}>
                 <div className={styles.headerCopy}>
                     <span className={styles.headerEyebrow}>BAV catalog</span>
-                    <h1>Liveries</h1>
-                    {/* <p className={styles.headerSubtitle}>A focused view of the same data that powers the panel, tuned for quick installs.</p> */}
+                    <h1>Liveries{activeSimulatorLabel ? ` for ${activeSimulatorLabel}` : ''}</h1>
                 </div>
                 <div className={styles.viewToggle}>
                     <button
@@ -506,6 +575,11 @@ export const SearchPage = () => {
             </div>
             {catalogLoading && <p className={styles.catalogStatus}>Refreshing catalog metadata…</p>}
             {catalogError && <p className={classNames(styles.catalogStatus, styles.catalogStatusError)}>{catalogError}</p>}
+            {!hasSimulatorPathConfigured && (
+                <p className={classNames(styles.catalogStatus, styles.catalogStatusError)}>
+                    Configure a simulator path in Settings to browse and install liveries.
+                </p>
+            )}
 
             {quickFilterGroups.length ? (
                 <div className={styles.quickFilterRail}>
@@ -513,30 +587,36 @@ export const SearchPage = () => {
                         <div key={group.key} className={styles.quickFilterGroup}>
                             <div className={styles.quickFilterHeader}>
                                 <span>{group.label}</span>
-                                {filters[group.key] !== 'all' && (
+                                {group.key !== 'simulator' && filters[group.key] !== 'all' && (
                                     <button type="button" onClick={() => updateFilter(group.key, 'all')} className={styles.clearLink}>
                                         Clear
                                     </button>
                                 )}
                             </div>
                             <div className={styles.chipList}>
-                                <button
-                                    type="button"
-                                    className={classNames(styles.chip, filters[group.key] === 'all' && styles.chipActive)}
-                                    onClick={() => updateFilter(group.key, 'all')}
-                                >
-                                    All
-                                </button>
-                                {group.options.slice(0, group.limit ?? group.options.length).map((option) => (
+                                {group.key !== 'simulator' && (
+                                    <button
+                                        type="button"
+                                        className={classNames(styles.chip, filters[group.key] === 'all' && styles.chipActive)}
+                                        onClick={() => updateFilter(group.key, 'all')}
+                                    >
+                                        All
+                                    </button>
+                                )}
+                                {group.options.slice(0, group.limit ?? group.options.length).map((option) => {
+                                    const disabled = group.key === 'simulator' && !pathEnabledSimulators.includes(option.label.toUpperCase() as Simulator);
+                                    return (
                                     <button
                                         key={option.value}
                                         type="button"
                                         className={classNames(styles.chip, filters[group.key] === option.value && styles.chipActive)}
-                                        onClick={() => handleQuickSelect(group.key, option.value)}
+                                        disabled={disabled}
+                                        onClick={() => !disabled && handleQuickSelect(group.key, option.value)}
                                     >
                                         <span>{option.label}</span>
                                     </button>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     ))}
@@ -592,11 +672,11 @@ export const SearchPage = () => {
                     <label className={styles.advancedField}>
                         <span className={styles.advancedLabel}>Simulator</span>
                         <select className={styles.filterSelect} value={filters.simulator} onChange={(e) => updateFilter('simulator', e.target.value)}>
-                            <option value="all">All</option>
                             {options.simulators.map((simulator) => {
                                 const count = filterCounts.simulator.get(simulator.value);
+                                const disabled = !pathEnabledSimulators.includes(simulator.label.toUpperCase() as Simulator);
                                 return (
-                                    <option key={simulator.value} value={simulator.value}>
+                                    <option key={simulator.value} value={simulator.value} disabled={disabled}>
                                         {count ? `${simulator.label} (${numberFormatter.format(count)})` : simulator.label}
                                     </option>
                                 );
@@ -646,22 +726,6 @@ export const SearchPage = () => {
                 </div>
             </div>
 
-            {activeFilters.length > 0 && (
-                <div className={styles.activeFilters}>
-                    {activeFilters.map((filter) => (
-                        <button key={filter.key} type="button" className={styles.filterBadge} onClick={() => updateFilter(filter.key, 'all')}>
-                            <span>
-                                {filter.label}: <strong>{filter.value}</strong>
-                            </span>
-                            <span aria-hidden>×</span>
-                        </button>
-                    ))}
-                    <button type="button" className={classNames(styles.filterBadge, styles.filterBadgeClear)} onClick={resetFilters}>
-                        Clear all
-                    </button>
-                </div>
-            )}
-
             <div className={styles.scrollContainer}>
                 <div className={styles.paginationBar}>
                     <span className={styles.paginationText}>
@@ -683,6 +747,8 @@ export const SearchPage = () => {
 
                 {(loading || liveriesFetching) ? (
                     <p className={styles.loading}>Loading liveries…</p>
+                ) : !hasSimulatorPathConfigured ? (
+                    <p className={styles.emptyState}>Add a simulator path in Settings to see liveries.</p>
                 ) : paginated.length ? (
                     <div className={styles.grid}>
                         {paginated.map((livery) => (

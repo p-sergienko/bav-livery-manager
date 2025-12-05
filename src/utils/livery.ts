@@ -13,6 +13,7 @@ export const normalizeRemoteLivery = (entry: Record<string, unknown>): Livery =>
     const name = tailNumber ?? title;
     const id = asString(entry.id) ?? name;
     const downloadEndpoint = asString(entry.downloadEndpoint) ?? '';
+    const previewUrl = asString(entry.previewUrl) ?? asString(entry.preview) ?? null;
 
     return {
         id,
@@ -29,8 +30,8 @@ export const normalizeRemoteLivery = (entry: Record<string, unknown>): Livery =>
         resolutionId: asString(entry.resolutionId) ?? 'unknown-resolution',
         resolutionValue: asString(entry.resolutionValue) ?? asString(entry.resolution) ?? 'Unknown',
         size: entry.sizeBytes ?? entry.size ?? null,
-        preview: asString(entry.preview) ?? null,
-        previewUrl: asString(entry.previewUrl),
+        preview: previewUrl,
+        previewUrl,
         downloadEndpoint,
         packageKey: asString(entry.packageKey),
         simulatorId: asString(entry.simulatorId) ?? 'unknown-sim',
