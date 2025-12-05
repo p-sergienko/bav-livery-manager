@@ -1,25 +1,42 @@
 import { useMemo, useState } from 'react';
-import { formatDate } from '@/utils/livery';
+import { DownloadedLiveryCard } from '@/components/DownloadedLiveryCard';
 import { useLiveryStore } from '@/store/liveryStore';
 import styles from './DownloadsPage.module.css';
 
-const defaultFilters = {
+type FilterKey = 'developer' | 'aircraft' | 'resolution' | 'simulator';
+
+const baseFilters: Record<FilterKey, string> = {
     developer: 'all',
     aircraft: 'all',
-    engine: 'all'
+    resolution: 'all',
+    simulator: 'all'
 };
+
+const filterLabels: Record<FilterKey, string> = {
+    developer: 'Developer',
+    aircraft: 'Aircraft',
+    resolution: 'Resolution',
+    simulator: 'Simulator'
+};
+
+interface ChipOption {
+    value: string;
+    label: string;
+    hint?: string | null;
+}
+
+interface QuickFilterGroup {
+    key: FilterKey;
+    label: string;
+    options: ChipOption[];
+    limit?: number;
+}
 
 const classNames = (...tokens: Array<string | false>) => tokens.filter(Boolean).join(' ');
 
 const SearchIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
         <path d="M11 3a8 8 0 0 1 8 8c0 1.848-.627 3.55-1.68 4.905l3.386 3.388a1 1 0 0 1-1.414 1.414l-3.388-3.386A7.96 7.96 0 0 1 11 19a8 8 0 1 1 0-16z" />
-    </svg>
-);
-
-const FilterIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-        <path d="M4 21V14M4 10V3M12 21V12M12 8V3M20 21V16M20 12V3M1 14h6M9 8h6M17 16h6" />
     </svg>
 );
 
@@ -31,8 +48,7 @@ export const DownloadsPage = () => {
     const uninstallEntry = useLiveryStore((state) => state.uninstallEntry);
 
     const [searchTerm, setSearchTerm] = useState('');
-    const [filters, setFilters] = useState(defaultFilters);
-    const [showFilters, setShowFilters] = useState(false);
+    const [filters, setFilters] = useState(baseFilters);
     const [page, setPage] = useState(1);
 
     const managedEntries = useMemo(
@@ -40,27 +56,68 @@ export const DownloadsPage = () => {
         [installedLiveries]
     );
 
-    const options = useMemo(() => {
-        const developers = new Set<string>();
-        const aircraft = new Set<string>();
-        const resolutions = new Set<string>();
+    const quickFilterGroups = useMemo<QuickFilterGroup[]>(() => {
+        const developers = new Map<string, number>();
+        const aircraft = new Map<string, number>();
+        const resolutions = new Map<string, number>();
+        const simulators = new Map<string, number>();
 
         managedEntries.forEach((entry) => {
-            // Try to get more info from catalog match
             const catalogMatch = liveries.find((l) => l.name === entry.originalName);
-            const creator = catalogMatch?.developerName;
-            const aircraftTitle = catalogMatch?.aircraftProfileName;
+            const dev = catalogMatch?.developerName;
+            const air = catalogMatch?.aircraftProfileName;
 
-            if (creator) developers.add(creator);
-            if (aircraftTitle) aircraft.add(aircraftTitle);
-            if (entry.resolution) resolutions.add(entry.resolution);
+            if (dev) developers.set(dev, (developers.get(dev) ?? 0) + 1);
+            if (air) aircraft.set(air, (aircraft.get(air) ?? 0) + 1);
+            if (entry.resolution) resolutions.set(entry.resolution, (resolutions.get(entry.resolution) ?? 0) + 1);
+            if (entry.simulator) simulators.set(entry.simulator, (simulators.get(entry.simulator) ?? 0) + 1);
         });
 
-        return {
-            developers: Array.from(developers),
-            aircraft: Array.from(aircraft),
-            engines: Array.from(resolutions)
-        };
+        const groups: QuickFilterGroup[] = [];
+
+        if (simulators.size) {
+            groups.push({
+                key: 'simulator',
+                label: 'Simulators',
+                options: Array.from(simulators.entries())
+                    .map(([value, count]) => ({ value, label: value, hint: `${count} installed` }))
+                    .sort((a, b) => a.label.localeCompare(b.label))
+            });
+        }
+
+        if (aircraft.size) {
+            groups.push({
+                key: 'aircraft',
+                label: 'Aircraft',
+                options: Array.from(aircraft.entries())
+                    .map(([value, count]) => ({ value, label: value, hint: `${count} installed` }))
+                    .sort((a, b) => a.label.localeCompare(b.label)),
+                limit: 6
+            });
+        }
+
+        if (resolutions.size) {
+            groups.push({
+                key: 'resolution',
+                label: 'Resolutions',
+                options: Array.from(resolutions.entries())
+                    .map(([value, count]) => ({ value, label: value, hint: `${count} installed` }))
+                    .sort((a, b) => a.label.localeCompare(b.label))
+            });
+        }
+
+        if (developers.size) {
+            groups.push({
+                key: 'developer',
+                label: 'Developers',
+                options: Array.from(developers.entries())
+                    .map(([value, count]) => ({ value, label: value, hint: `${count} installed` }))
+                    .sort((a, b) => a.label.localeCompare(b.label)),
+                limit: 6
+            });
+        }
+
+        return groups;
     }, [managedEntries, liveries]);
 
     const filtered = useMemo(() => {
@@ -70,6 +127,7 @@ export const DownloadsPage = () => {
             const catalogMatch = liveries.find((l) => l.name === entry.originalName);
             const developer = catalogMatch?.developerName ?? '';
             const manufacturer = catalogMatch?.manufacturer ?? '';
+            const aircraftName = catalogMatch?.aircraftProfileName ?? '';
 
             const haystack = [
                 entry.folderName,
@@ -77,7 +135,8 @@ export const DownloadsPage = () => {
                 entry.simulator,
                 entry.resolution,
                 developer,
-                manufacturer
+                manufacturer,
+                aircraftName
             ]
                 .filter(Boolean)
                 .join(' ')
@@ -85,33 +144,42 @@ export const DownloadsPage = () => {
 
             const matchesSearch = haystack.includes(term);
             const matchesDeveloper = filters.developer === 'all' || developer === filters.developer;
-            const matchesAircraft = filters.aircraft === 'all' || catalogMatch?.aircraftProfileName === filters.aircraft;
-            const matchesResolution = filters.engine === 'all' || entry.resolution === filters.engine;
+            const matchesAircraft = filters.aircraft === 'all' || aircraftName === filters.aircraft;
+            const matchesResolution = filters.resolution === 'all' || entry.resolution === filters.resolution;
+            const matchesSimulator = filters.simulator === 'all' || entry.simulator === filters.simulator;
 
-            return matchesSearch && matchesDeveloper && matchesAircraft && matchesResolution;
+            return matchesSearch && matchesDeveloper && matchesAircraft && matchesResolution && matchesSimulator;
         });
     }, [managedEntries, liveries, searchTerm, filters]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / DOWNLOADS_PER_PAGE));
     const paginated = filtered.slice((page - 1) * DOWNLOADS_PER_PAGE, page * DOWNLOADS_PER_PAGE);
 
-    const updateFilter = (key: keyof typeof filters, value: string) => {
+    const updateFilter = (key: FilterKey, value: string) => {
         setFilters((prev) => ({ ...prev, [key]: value }));
         setPage(1);
     };
 
-    const resetFilters = () => {
-        setFilters({ ...defaultFilters });
+    const handleQuickSelect = (key: FilterKey, value: string) => {
+        updateFilter(key, filters[key] === value ? 'all' : value);
+    };
+
+    const handleSearchSubmit = () => {
         setPage(1);
     };
 
     return (
         <section className={styles.page}>
             <header className={styles.pageHeader}>
-                <h1>My Downloads</h1>
+                <div className={styles.headerCopy}>
+                    <h1>My Downloads</h1>
+                    <p className={styles.headerSubtitle}>
+                        {filtered.length} {filtered.length === 1 ? 'livery' : 'liveries'} installed
+                    </p>
+                </div>
             </header>
 
-            <div className={styles.searchContainer}>
+            <div className={styles.toolbar}>
                 <div className={styles.searchBar}>
                     <input
                         value={searchTerm}
@@ -119,54 +187,57 @@ export const DownloadsPage = () => {
                             setSearchTerm(event.target.value);
                             setPage(1);
                         }}
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                                handleSearchSubmit();
+                            }
+                        }}
                         className={styles.searchInput}
                         placeholder="Search installed liveries..."
+                        type="search"
                     />
-                    <button type="button" className={styles.iconButton} onClick={() => setPage(1)} aria-label="Search">
+                    <button type="button" className={styles.iconButton} onClick={handleSearchSubmit} aria-label="Search">
                         <SearchIcon />
-                    </button>
-                    <button
-                        type="button"
-                        className={classNames(styles.iconButton, showFilters && styles.iconButtonActive)}
-                        onClick={() => setShowFilters((prev) => !prev)}
-                        aria-label="Toggle filters"
-                    >
-                        <FilterIcon />
-                    </button>
-                </div>
-
-                <div className={classNames(styles.filterPanel, showFilters && styles.filterPanelActive)}>
-                    <div className={styles.filterRow}>
-                        <select className={styles.filterSelect} value={filters.developer} onChange={(e) => updateFilter('developer', e.target.value)}>
-                            <option value="all">All Developers</option>
-                            {options.developers.map((developer) => (
-                                <option key={developer} value={developer}>
-                                    {developer}
-                                </option>
-                            ))}
-                        </select>
-                        <select className={styles.filterSelect} value={filters.aircraft} onChange={(e) => updateFilter('aircraft', e.target.value)}>
-                            <option value="all">All Aircraft</option>
-                            {options.aircraft.map((aircraftType) => (
-                                <option key={aircraftType} value={aircraftType}>
-                                    {aircraftType}
-                                </option>
-                            ))}
-                        </select>
-                        <select className={styles.filterSelect} value={filters.engine} onChange={(e) => updateFilter('engine', e.target.value)}>
-                            <option value="all">All Resolutions</option>
-                            {options.engines.map((engine) => (
-                                <option key={engine} value={engine}>
-                                    {engine}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <button className={styles.resetButton} type="button" onClick={resetFilters}>
-                        Reset filters
                     </button>
                 </div>
             </div>
+
+            {quickFilterGroups.length > 0 && (
+                <div className={styles.quickFilterRail}>
+                    {quickFilterGroups.map((group) => (
+                        <div key={group.key} className={styles.quickFilterGroup}>
+                            <div className={styles.quickFilterHeader}>
+                                <span>{group.label}</span>
+                                {filters[group.key] !== 'all' && (
+                                    <button type="button" onClick={() => updateFilter(group.key, 'all')} className={styles.clearLink}>
+                                        Clear
+                                    </button>
+                                )}
+                            </div>
+                            <div className={styles.chipList}>
+                                <button
+                                    type="button"
+                                    className={classNames(styles.chip, filters[group.key] === 'all' && styles.chipActive)}
+                                    onClick={() => updateFilter(group.key, 'all')}
+                                >
+                                    All
+                                </button>
+                                {group.options.slice(0, group.limit ?? group.options.length).map((option) => (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        className={classNames(styles.chip, filters[group.key] === option.value && styles.chipActive)}
+                                        onClick={() => handleQuickSelect(group.key, option.value)}
+                                    >
+                                        <span>{option.label}</span>
+                                        {option.hint && <small>{option.hint}</small>}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             <div className={styles.scrollContainer}>
                 <div className={styles.paginationBar}>
@@ -191,67 +262,19 @@ export const DownloadsPage = () => {
                     <div className={styles.grid}>
                         {paginated.map((entry) => {
                             const liveryMatch = liveries.find((l) => l.name === entry.originalName);
-                            const preview = liveryMatch?.preview;
-                            const aircraftTitle = liveryMatch?.aircraftProfileName ?? 'Unknown aircraft';
-                            const developer = liveryMatch?.developerName ?? 'Unknown developer';
-                            const registration = liveryMatch?.registration ?? '—';
-                            const simulatorLabel = (entry.simulator ?? 'Unknown').toUpperCase();
 
                             return (
-                                <article key={entry.installPath} className={styles.card}>
-                                    <div className={styles.cardMedia}>
-                                        {preview ? (
-                                            <img className={styles.cardImage} src={preview} alt={`${entry.originalName} preview`} loading="lazy" />
-                                        ) : (
-                                            <div className={styles.cardPlaceholder}>No preview available</div>
-                                        )}
-                                        <span className={styles.cardBadge}>{simulatorLabel}</span>
-                                    </div>
-
-                                    <div className={styles.cardBody}>
-                                        <header className={styles.cardHeader}>
-                                            <div>
-                                                <p className={styles.developer}>{developer}</p>
-                                                <h3 className={styles.title}>{entry.originalName}</h3>
-                                            </div>
-                                            {liveryMatch?.version && <span className={styles.badge}>v{liveryMatch.version}</span>}
-                                        </header>
-
-                                        <dl className={styles.meta}>
-                                            <div>
-                                                <dt className={styles.metaLabel}>Aircraft</dt>
-                                                <dd className={styles.metaValue}>{aircraftTitle}</dd>
-                                            </div>
-                                            <div>
-                                                <dt className={styles.metaLabel}>Resolution</dt>
-                                                <dd className={styles.metaValue}>{entry.resolution ?? 'Unknown'}</dd>
-                                            </div>
-                                            <div>
-                                                <dt className={styles.metaLabel}>Registration</dt>
-                                                <dd className={styles.metaValue}>{registration}</dd>
-                                            </div>
-                                            <div>
-                                                <dt className={styles.metaLabel}>Installed</dt>
-                                                <dd className={styles.metaValue}>{formatDate(entry.installDate)}</dd>
-                                            </div>
-                                        </dl>
-
-                                        <div className={styles.actions}>
-                                            <div className={styles.installPath} title={entry.installPath}>
-                                                <span className={styles.metaLabel}>Folder</span>
-                                                <span className={styles.pathValue}>{entry.folderName}</span>
-                                            </div>
-                                            <button className={styles.uninstallButton} onClick={() => uninstallEntry(entry)}>
-                                                Uninstall
-                                            </button>
-                                        </div>
-                                    </div>
-                                </article>
+                                <DownloadedLiveryCard
+                                    key={entry.installPath}
+                                    entry={entry}
+                                    liveryMatch={liveryMatch}
+                                    onUninstall={uninstallEntry}
+                                />
                             );
                         })}
                     </div>
                 ) : (
-                    <p className={styles.emptyState}>No manager-installed liveries match your filters.</p>
+                    <p className={styles.emptyState}>No installed liveries match your filters.</p>
                 )}
             </div>
         </section>
