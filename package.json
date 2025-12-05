@@ -12,12 +12,17 @@
     "build:renderer": "vite build",
     "build:main": "tsc -p tsconfig.electron.json",
     "build:exe": "bun run build && electron-builder --win --x64 --publish never",
+    "build:exe:publish": "bun run build && electron-builder --win --x64 --publish always",
     "start": "bun run build && electron .",
     "electron": "electron .",
     "generate-icons": "node scripts/generate-icons.js"
   },
   "author": "Pavel Sergienko, Laurie Cooper",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/p-sergienko/bav-livery-manager.git"
+  },
   "packageManager": "bun@1.2.21",
   "dependencies": {
     "@tanstack/react-query": "^5.59.0",
@@ -26,6 +31,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0",
+    "update-electron-app": "^3.1.1",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
@@ -74,6 +80,12 @@
       "artifactName": "BAV-Livery-Manager-${version}-Setup.${ext}",
       "compression": "maximum",
       "icon": "public/BAV-Livery-Manager.ico"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "p-sergienko",
+      "repo": "bav-livery-manager",
+      "releaseType": "release"
     }
   }
 }

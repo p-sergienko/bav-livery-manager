@@ -6,19 +6,20 @@ permissions:
 on:
     workflow_dispatch:
         inputs:
-            app-version:
-                description: "Version (semver) to embed in the installer (leave empty for auto-bump)"
-                required: false
-                type: string
             version-bump:
-                description: "Auto version bump type (only if app-version is empty)"
-                required: false
+                description: "Version bump type"
+                required: true
                 type: choice
                 default: "patch"
                 options:
                   - patch
                   - minor
                   - major
+                  - manual
+            app-version:
+                description: "Manual version (only used when version-bump is 'manual')"
+                required: false
+                type: string
 
 jobs:
   build:
@@ -43,30 +44,65 @@ jobs:
               id: version
               shell: pwsh
               run: |
-                  if ("${{ inputs.app-version }}" -ne "") {
+                  if ("${{ inputs.version-bump }}" -eq "manual") {
+                      if ("${{ inputs.app-version }}" -eq "") {
+                          Write-Error "Manual version selected but no version provided"
+                          exit 1
+                      }
                       $version = "${{ inputs.app-version }}"
-                      Write-Output "Using provided version: $version"
+                      # Strip any prerelease/build tags (e.g., -beta, -b1, +build)
+                      if ($version -match '^(\d+\.\d+\.\d+)') {
+                          $version = $matches[1]
+                      } else {
+                          Write-Error "Version must start with X.Y.Z format (got: $version)"
+                          exit 1
+                      }
+                      Write-Output "Using manual version: $version"
+                      npm version $version --no-git-tag-version --allow-same-version
                   } else {
                       $bumpType = "${{ inputs.version-bump }}"
                       Write-Output "Auto-bumping version ($bumpType)..."
                       npm version $bumpType --no-git-tag-version
-                      $packageJson = Get-Content -Raw package.json | ConvertFrom-Json
-                      $version = $packageJson.version
-                      Write-Output "New version: $version"
                   }
+                  
+                  # Read and validate final version
+                  $packageJson = Get-Content -Raw package.json | ConvertFrom-Json
+                  $version = $packageJson.version
+                  
+                  # Ensure no prerelease tags remain
+                  if ($version -match '^(\d+\.\d+\.\d+)') {
+                      $cleanVersion = $matches[1]
+                      if ($version -ne $cleanVersion) {
+                          Write-Output "Cleaning version from '$version' to '$cleanVersion'"
+                          npm version $cleanVersion --no-git-tag-version --allow-same-version
+                          $version = $cleanVersion
+                      }
+                  } else {
+                      Write-Error "Final version must be in X.Y.Z format (got: $version)"
+                      exit 1
+                  }
+                  
+                  Write-Output "Final version: $version"
                   Write-Output "APP_VERSION=$version" >> $env:GITHUB_OUTPUT
                   Write-Output "APP_VERSION=$version" >> $env:GITHUB_ENV
+                  
+                  # Verify package.json was updated correctly
+                  $verify = Get-Content -Raw package.json | ConvertFrom-Json
+                  Write-Output "Verified package.json version: $($verify.version)"
 
-            - name: Apply version to package.json (if manual version provided)
-              if: inputs.app-version != ''
+            - name: Clean build cache
               shell: pwsh
-              run: npm version ${{ inputs.app-version }} --no-git-tag-version
+              run: |
+                  if (Test-Path "release") { Remove-Item -Recurse -Force "release" }
+                  if (Test-Path "dist") { Remove-Item -Recurse -Force "dist" }
+                  if (Test-Path "dist-electron") { Remove-Item -Recurse -Force "dist-electron" }
+                  Write-Output "Build cache cleaned"
 
             - name: Build Windows installer
               run: bun run build:exe
 
             - name: Commit version bump
-              if: inputs.app-version == ''
+              if: inputs.version-bump != 'manual'
               shell: bash
               run: |
                   git config user.name "github-actions[bot]"
@@ -81,18 +117,41 @@ jobs:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               shell: bash
               run: |
-                  TAG=${{ steps.version.outputs.APP_VERSION }}
+                  TAG="v${{ steps.version.outputs.APP_VERSION }}"
                   REPO=${{ github.repository }}
                   shopt -s nullglob
                   INSTALLERS=(release/*-Setup.exe)
+                  BLOCKMAP=(release/*-Setup.exe.blockmap)
+                  LATEST_YML=(release/latest.yml)
                   shopt -u nullglob
+                  
                   if [ ${#INSTALLERS[@]} -eq 0 ]; then
                     echo "No Windows installer found in release/" >&2
                     exit 1
                   fi
-                  ASSET=${INSTALLERS[0]}
+                  
+                  ASSETS=()
+                  ASSETS+=("${INSTALLERS[0]}")
+                  
+                  # Add blockmap and latest.yml if they exist (needed for auto-update)
+                  if [ ${#BLOCKMAP[@]} -gt 0 ]; then
+                    ASSETS+=("${BLOCKMAP[0]}")
+                  fi
+                  if [ ${#LATEST_YML[@]} -gt 0 ]; then
+                    ASSETS+=("${LATEST_YML[0]}")
+                  fi
+                  
+                  # Check if release exists
                   if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
-                    gh release upload "$TAG" "$ASSET" --clobber --repo "$REPO"
+                    echo "Release $TAG already exists, uploading assets..."
+                    for asset in "${ASSETS[@]}"; do
+                      gh release upload "$TAG" "$asset" --clobber --repo "$REPO"
+                    done
                   else
-                    gh release create "$TAG" "$ASSET" --title "BAV Livery Manager $TAG" --notes "Release $TAG" --repo "$REPO" --target "${{ github.sha }}"
+                    echo "Creating new release $TAG..."
+                    gh release create "$TAG" "${ASSETS[@]}" \
+                      --title "BAV Livery Manager ${{ steps.version.outputs.APP_VERSION }}" \
+                      --notes "Release ${{ steps.version.outputs.APP_VERSION }}" \
+                      --repo "$REPO" \
+                      --target "${{ github.sha }}"
                   fi

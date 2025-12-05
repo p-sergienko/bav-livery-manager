@@ -2,6 +2,7 @@ import { app, BrowserWindow, Menu, ipcMain, shell, nativeImage, type NativeImage
 import path from 'node:path';
 import { URL } from 'node:url';
 import fs from 'fs-extra';
+import { updateElectronApp } from 'update-electron-app';
 import { registerIpcHandlers } from './ipc/registerHandlers';
 import type { AppContext } from './types';
 
@@ -209,6 +210,16 @@ if (!gotLock) {
 
 app.whenReady().then(() => {
     console.log('App ready, creating window...');
+    
+    // Initialize auto-updater (only in production)
+    if (!isDev) {
+        updateElectronApp({
+            updateInterval: '1 hour',
+            logger: console,
+            notifyUser: true
+        });
+    }
+    
     createWindow();
     registerIpcHandlers(appContext);
 
