@@ -1,11 +1,9 @@
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Resolution, Simulator } from '@/types/livery';
 import { useLiveryStore } from '@/store/liveryStore';
 import { useAuthStore } from '@/store/authStore';
+import { Toast } from '@/components/Toast';
 import styles from './SettingsPage.module.css';
-
-const classNames = (...tokens: Array<string | false>) => tokens.filter(Boolean).join(' ');
 
 export const SettingsPage = () => {
     const settings = useLiveryStore((state) => state.settings);
@@ -18,28 +16,15 @@ export const SettingsPage = () => {
     const navigate = useNavigate();
 
     const [formState, setFormState] = useState(settings);
-    const [status, setStatus] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
     const [detecting, setDetecting] = useState(false);
-    const statusTimer = useRef<number | null>(null);
 
     useEffect(() => {
         setFormState(settings);
     }, [settings]);
 
-    useEffect(() => {
-        return () => {
-            if (statusTimer.current) {
-                window.clearTimeout(statusTimer.current);
-            }
-        };
-    }, []);
-
-    const showStatus = (message: string, tone: 'success' | 'error' = 'success') => {
-        if (statusTimer.current) {
-            window.clearTimeout(statusTimer.current);
-        }
-        setStatus({ message, tone });
-        statusTimer.current = window.setTimeout(() => setStatus(null), 4000);
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+        setToast({ message, type });
     };
 
     const handleBrowse = async (field: 'msfs2020Path' | 'msfs2024Path') => {
@@ -49,19 +34,15 @@ export const SettingsPage = () => {
         }
     };
 
-    const handleToggle = (field: 'defaultResolution' | 'defaultSimulator', value: Resolution | Simulator) => {
-        setFormState((prev) => ({ ...prev, [field]: value }));
-    };
-
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
         await updateSettings(formState);
-        showStatus('Settings saved successfully.');
+        showToast('Settings saved successfully.');
     };
 
     const handleAutoDetect = async () => {
         if (!window.electronAPI?.detectSimPaths) {
-            showStatus('Auto-detect is only available in the desktop app.', 'error');
+            showToast('Auto-detect is only available in the desktop app.', 'error');
             return;
         }
 
@@ -69,7 +50,7 @@ export const SettingsPage = () => {
         try {
             const detected = await window.electronAPI.detectSimPaths();
             if (!detected) {
-                showStatus('No simulator installations were found.', 'error');
+                showToast('No simulator installations were found.', 'error');
                 return;
             }
 
@@ -79,13 +60,13 @@ export const SettingsPage = () => {
 
             if (Object.keys(updates).length) {
                 setFormState((prev) => ({ ...prev, ...updates }));
-                showStatus('Detected simulator folders. Review and save to apply.');
+                showToast('Detected simulator folders. Review and save to apply.');
             } else {
-                showStatus('No simulator installations were found.', 'error');
+                showToast('No simulator installations were found.', 'error');
             }
         } catch (error) {
             console.error('Auto-detect failed', error);
-            showStatus('Unable to detect simulator folders.', 'error');
+            showToast('Unable to detect simulator folders.', 'error');
         } finally {
             setDetecting(false);
         }
@@ -96,16 +77,28 @@ export const SettingsPage = () => {
         navigate('/login', { replace: true });
     };
 
+    const handleOpenGitHub = () => {
+        const url = 'https://github.com/p-sergienko/bav-livery-manager';
+        if (window.electronAPI?.openExternalLink) {
+            window.electronAPI.openExternalLink(url).catch((err) => console.error('openExternalLink failed', err));
+            return;
+        }
+
+        // Fallback for web: open in new tab/window
+        try {
+            window.open(url, '_blank', 'noopener');
+        } catch (err) {
+            console.error('Failed to open GitHub page', err);
+        }
+    };
+
     return (
         <section className={styles.page}>
             <header className={styles.header}>
                 <div>
                     <h1 className={styles.title}>Settings</h1>
-                    <p className={styles.description}>Update your simulator paths and defaults.</p>
+                    <p className={styles.description}>Manage your account and simulator paths.</p>
                 </div>
-                <button type="button" className={styles.autoDetectButton} onClick={handleAutoDetect} disabled={detecting}>
-                    {detecting ? 'Detecting…' : 'Auto-detect paths'}
-                </button>
             </header>
 
             <div className={styles.accountCard}>
@@ -122,6 +115,14 @@ export const SettingsPage = () => {
                     </button>
                 </div>
             </div>
+
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
+                />
+            )}
 
             <form className={styles.form} onSubmit={handleSubmit}>
                 <label className={styles.pathInput}>
@@ -144,45 +145,27 @@ export const SettingsPage = () => {
                     </div>
                 </label>
 
-                <div className={styles.selectionControls}>
-                    <div className={styles.selectionGroup}>
-                        <p className={styles.selectionLabel}>Default Resolution</p>
-                        <div className={styles.toggleGroup}>
-                            {(['4K', '8K'] as Resolution[]).map((option) => (
-                                <button
-                                    key={option}
-                                    type="button"
-                                    className={classNames(styles.toggleButton, formState.defaultResolution === option && styles.toggleButtonActive)}
-                                    onClick={() => handleToggle('defaultResolution', option)}
-                                >
-                                    {option}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className={styles.selectionGroup}>
-                        <p className={styles.selectionLabel}>Default Simulator</p>
-                        <div className={styles.toggleGroup}>
-                            {(['FS20', 'FS24'] as Simulator[]).map((option) => (
-                                <button
-                                    key={option}
-                                    type="button"
-                                    className={classNames(styles.toggleButton, formState.defaultSimulator === option && styles.toggleButtonActive)}
-                                    onClick={() => handleToggle('defaultSimulator', option)}
-                                >
-                                    {option}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                <div className={styles.formActions}>
+                    <button type="submit" className={styles.submitButton}>
+                        Save Settings
+                    </button>
+                    <button type="button" className={styles.secondaryButton} onClick={handleAutoDetect} disabled={detecting}>
+                        {detecting ? 'Detecting…' : 'Auto-detect paths'}
+                    </button>
                 </div>
-
-                <button type="submit" className={styles.submitButton}>
-                    Save Settings
-                </button>
-                {status && <p className={classNames(styles.status, status.tone === 'error' && styles.statusError)}>{status.message}</p>}
             </form>
+
+            <footer className={styles.footer}>
+                <p className={styles.footerText}>
+                    Created by <span className={styles.footerAuthor}>Pavel Sergienko</span> · © {new Date().getFullYear()}
+                </p>
+                <button type="button" className={styles.footerButton} onClick={handleOpenGitHub}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                    View on GitHub
+                </button>
+            </footer>
         </section>
     );
 };

@@ -67,6 +67,7 @@ export interface ElectronAPI {
     onDownloadProgress: (callback: ((event: DownloadProgressEvent) => void) | null) => void;
     removeAllDownloadProgressListeners: () => void;
     openPanelAuth: (url: string) => Promise<void>;
+    openExternalLink: (url: string) => Promise<void>;
     onAuthToken: (callback: ((payload: AuthTokenPayload) => void) | null) => void;
 }
 

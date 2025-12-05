@@ -261,3 +261,14 @@ ipcMain.handle('auth-open-panel', async (_event, targetUrl: string) => {
         console.error('Failed to open panel auth URL:', error);
     }
 });
+
+// Allow renderer to request opening arbitrary external links in the system browser
+ipcMain.handle('open-external', async (_event, targetUrl: string) => {
+    if (!targetUrl) return;
+
+    try {
+        await shell.openExternal(targetUrl, { activate: true });
+    } catch (error) {
+        console.error('Failed to open external URL:', error);
+    }
+});

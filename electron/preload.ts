@@ -8,6 +8,7 @@ const INVOKE_CHANNELS = [
     'get-settings',
     'save-settings',
     'open-directory-dialog',
+    'open-external',
     'get-file-size',
     'get-liveries-folders',
     'path-exists',
@@ -63,6 +64,10 @@ const api: ElectronAPI = {
     openDirectoryDialog: () => {
         ensureInvokeChannel('open-directory-dialog');
         return ipcRenderer.invoke('open-directory-dialog');
+    },
+    openExternalLink: (targetUrl: string) => {
+        ensureInvokeChannel('open-external');
+        return ipcRenderer.invoke('open-external', targetUrl);
     },
     getFileSize: (url) => {
         ensureInvokeChannel('get-file-size');
