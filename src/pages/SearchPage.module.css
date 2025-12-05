@@ -201,7 +201,8 @@
     border: none;
     color: var(--accent, #5bbcff);
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: 12px;
+    margin-bottom: -2px;
 }
 
 .chipList {
