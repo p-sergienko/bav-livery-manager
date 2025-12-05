@@ -207,7 +207,11 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
                         progress: 0,
                         downloaded: 0,
                         total: 0,
-                        extracting: false
+                        extracting: false,
+                        registration: livery.registration ?? undefined,
+                        aircraft: livery.aircraftProfileName ?? livery.aircraft ?? undefined,
+                        resolution,
+                        simulator
                     }
                 }
             }));

@@ -1,14 +1,17 @@
 .sidePanel {
-    width: 250px;
+    width: 280px;
     height: 100vh;
     background: var(--panel);
     padding: 20px;
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     position: sticky;
     top: 0;
+}
+
+.topSection {
+    flex-shrink: 0;
 }
 
 .panelHeader h2 {
@@ -17,7 +20,6 @@
 }
 
 .panelButtons {
-    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -57,65 +59,19 @@
     stroke: var(--text);
 }
 
+.middleSection {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 20px 0;
+}
 
 .footer {
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-}
-
-.sessionBlock {
-    padding: 16px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--card);
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.sessionLabel {
-    margin: 0;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-}
-
-.sessionUser {
-    margin: 0;
-    font-weight: 600;
-}
-
-.sessionRole {
-    margin: 0;
-    color: var(--muted);
-    font-size: 0.85rem;
-}
-
-.sessionMeta {
-    margin: 0;
-    color: var(--muted);
-    font-size: 0.75rem;
-}
-
-.logoutButton {
-    margin-top: 10px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 8px 12px;
-    background: transparent;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: border-color 0.2s ease, color 0.2s ease;
-}
-
-.logoutButton:hover {
-    border-color: var(--text);
-    color: var(--text);
+    gap: 12px;
 }
 
 .sidebarLogo {

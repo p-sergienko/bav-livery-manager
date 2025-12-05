@@ -1,6 +1,8 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Resolution, Simulator } from '@/types/livery';
 import { useLiveryStore } from '@/store/liveryStore';
+import { useAuthStore } from '@/store/authStore';
 import styles from './SettingsPage.module.css';
 
 const classNames = (...tokens: Array<string | false>) => tokens.filter(Boolean).join(' ');
@@ -8,6 +10,13 @@ const classNames = (...tokens: Array<string | false>) => tokens.filter(Boolean).
 export const SettingsPage = () => {
     const settings = useLiveryStore((state) => state.settings);
     const updateSettings = useLiveryStore((state) => state.updateSettings);
+
+    const userId = useAuthStore((state) => state.userId);
+    const fullName = useAuthStore((state) => state.fullName);
+    const rank = useAuthStore((state) => state.rank);
+    const logout = useAuthStore((state) => state.logout);
+    const navigate = useNavigate();
+
     const [formState, setFormState] = useState(settings);
     const [status, setStatus] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
     const [detecting, setDetecting] = useState(false);
@@ -82,6 +91,11 @@ export const SettingsPage = () => {
         }
     };
 
+    const handleSignOut = () => {
+        logout();
+        navigate('/login', { replace: true });
+    };
+
     return (
         <section className={styles.page}>
             <header className={styles.header}>
@@ -93,6 +107,21 @@ export const SettingsPage = () => {
                     {detecting ? 'Detecting…' : 'Auto-detect paths'}
                 </button>
             </header>
+
+            <div className={styles.accountCard}>
+                <div className={styles.accountHeader}>
+                    <div className={styles.accountAvatar}>
+                        {(fullName ?? userId ?? 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div className={styles.accountInfo}>
+                        <p className={styles.accountName}>{fullName ?? 'Unknown User'}</p>
+                        <p className={styles.accountId}>{userId ?? '—'}{rank ? ` • ${rank}` : ''}</p>
+                    </div>
+                    <button type="button" className={styles.signOutButton} onClick={handleSignOut}>
+                        Sign out
+                    </button>
+                </div>
+            </div>
 
             <form className={styles.form} onSubmit={handleSubmit}>
                 <label className={styles.pathInput}>

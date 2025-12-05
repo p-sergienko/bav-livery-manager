@@ -1,5 +1,5 @@
-import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/store/authStore';
+import { NavLink } from 'react-router-dom';
+import { DownloadProgress } from './DownloadProgress';
 import { APP_VERSION } from '@/constants/appVersion';
 import styles from './Sidebar.module.css';
 
@@ -41,22 +41,9 @@ const Icon = ({ name }: { name: string }) => {
 const classNames = (...tokens: Array<string | false | undefined>) => tokens.filter(Boolean).join(' ');
 
 export const Sidebar = () => {
-    const userId = useAuthStore((state) => state.userId);
-    const fullName = useAuthStore((state) => state.fullName);
-    const pilotId = useAuthStore((state) => state.pilotId);
-    const totalTimeHours = useAuthStore((state) => state.totalTimeHours);
-    const role = useAuthStore((state) => state.role);
-    const logout = useAuthStore((state) => state.logout);
-    const navigate = useNavigate();
-
-    const handleSignOut = () => {
-        logout();
-        navigate('/login', { replace: true });
-    };
-
     return (
         <aside className={styles.sidePanel}>
-            <div>
+            <div className={styles.topSection}>
                 <div className={styles.panelHeader}>
                     <h2>Livery Manager</h2>
                 </div>
@@ -75,20 +62,12 @@ export const Sidebar = () => {
                     ))}
                 </nav>
             </div>
+
+            <div className={styles.middleSection}>
+                <DownloadProgress />
+            </div>
+
             <div className={styles.footer}>
-                <div className={styles.sessionBlock}>
-                    <p className={styles.sessionLabel}>Signed in as</p>
-                    <p className={styles.sessionUser}>{fullName ?? userId ?? 'Unknown'}</p>
-                    <p className={styles.sessionMeta}>
-                        {userId ?? '—'}
-                    </p>
-                    {typeof totalTimeHours === 'number' && (
-                        <p className={styles.sessionMeta}>Total Hours: {(totalTimeHours / 60).toFixed(1)}</p>
-                    )}
-                    <button type="button" className={styles.logoutButton} onClick={handleSignOut}>
-                        Sign out
-                    </button>
-                </div>
                 <div className={styles.versionBadge}>v{APP_VERSION}</div>
                 <div className={styles.sidebarLogo}>
                     <img className={styles.logoImage} src={LOGO_URL} alt="Livery Manager" />

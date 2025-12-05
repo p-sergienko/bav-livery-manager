@@ -55,4 +55,9 @@ export interface DownloadProgress {
     downloaded?: number;
     total?: number;
     extracting?: boolean;
+    /** Metadata for display purposes */
+    registration?: string;
+    aircraft?: string;
+    resolution?: string;
+    simulator?: string;
 }

@@ -11,6 +11,7 @@ export interface BrowserTokenPayload {
     fullName?: string | null;
     rank?: string | null;
     totalTime?: string | null;
+    totalFlights?: number | null;
 }
 
 interface AuthState {
@@ -18,7 +19,8 @@ interface AuthState {
     pilotId: string | null;
     fullName: string | null;
     rank: string | null;
-    totalTimeHours: number | null;
+    totalTimeMins: number | null;
+    totalFlights: number | null;
     role: AuthRole | null;
     token: string | null;
     status: 'idle' | 'awaiting-browser' | 'verifying' | 'error';
@@ -45,7 +47,8 @@ export const useAuthStore = create<AuthState>()(
             pilotId: null,
             fullName: null,
             rank: null,
-            totalTimeHours: null,
+            totalTimeMins: null,
+            totalFlights: null,
             role: null,
             token: null,
             status: 'idle',
@@ -62,7 +65,8 @@ export const useAuthStore = create<AuthState>()(
                     pilotId: null,
                     fullName: null,
                     rank: null,
-                    totalTimeHours: null
+                    totalTimeMins: null,
+                    totalFlights: null
                 }),
             applyBrowserToken: (payload) => {
                 if (!payload?.token) {
@@ -77,13 +81,14 @@ export const useAuthStore = create<AuthState>()(
                     pilotId: payload.pilotId ?? null,
                     fullName: payload.fullName ?? null,
                     rank: payload.rank ?? null,
-                    totalTimeHours: (() => {
+                    totalTimeMins: (() => {
                         if (payload.totalTime === undefined || payload.totalTime === null) {
                             return null;
                         }
                         const numeric = Number(payload.totalTime);
                         return Number.isFinite(numeric) ? numeric : null;
                     })(),
+                    totalFlights: typeof payload.totalFlights === 'number' ? payload.totalFlights : null,
                     status: 'idle',
                     error: null,
                     isAuthenticated: true
@@ -129,7 +134,8 @@ export const useAuthStore = create<AuthState>()(
                     pilotId: null,
                     fullName: null,
                     rank: null,
-                    totalTimeHours: null,
+                    totalTimeMins: null,
+                    totalFlights: null,
                     role: null,
                     token: null,
                     status: 'idle',

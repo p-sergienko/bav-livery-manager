@@ -28,6 +28,7 @@ export interface AuthTokenPayload {
     fullName?: string | null;
     rank?: string | null;
     totalTime?: string | null;
+    totalFlights?: number | null;
 }
 
 /** Record of an installed livery from the local store */
