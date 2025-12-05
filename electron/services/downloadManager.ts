@@ -19,6 +19,10 @@ interface DownloadLiveryOptions {
     authToken: string | null;
 }
 
+const DOWNLOAD_ATTEMPTS = 3;
+const RESOLVE_ATTEMPTS = 2;
+const BACKOFF_MS = 800;
+
 const INVALID_FILENAME_CHARS = /[<>:"/\\|?*]+/g;
 
 function deriveZipFilename(downloadUrl: string): string {
@@ -55,7 +59,7 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
         return { success: false, error: 'Missing authentication token. Please sign in again.' };
     }
 
-    const signedDownload = await resolveDownloadEndpoint(downloadEndpoint, authToken);
+    const signedDownload = await retryAsync(() => resolveDownloadEndpoint(downloadEndpoint, authToken), RESOLVE_ATTEMPTS, BACKOFF_MS);
     const downloadUrl = signedDownload.downloadUrl;
 
     const baseFolder = simulator === 'MSFS2024' && settings.msfs2024Path ? settings.msfs2024Path : settings.msfs2020Path;
@@ -76,7 +80,7 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
     console.log('Starting download', { downloadUrl, outputPath, extractPath });
 
     try {
-        await downloadFile(downloadUrl, outputPath, (progress) => {
+        await retryAsync(() => downloadFile(downloadUrl, outputPath, (progress) => {
             const targetWindow = appContext.getMainWindow();
             if (!targetWindow || targetWindow.isDestroyed()) {
                 return;
@@ -88,7 +92,7 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
                 downloaded: progress.transferred,
                 total: progress.total
             });
-        });
+        }), DOWNLOAD_ATTEMPTS, BACKOFF_MS);
 
         const targetWindow = appContext.getMainWindow();
         if (targetWindow && !targetWindow.isDestroyed()) {
@@ -102,7 +106,7 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
         await extractZipNonBlocking(outputPath, extractPath);
 
         const manifestData = await fetchManifestData(authToken);
-        const livery = manifestData?.liveries.find((entry) => entry.name === liveryName);
+        const livery = manifestData?.liveries?.find((entry) => entry.name === liveryName);
         if (livery) {
             await createManifestFile(extractPath, livery, resolution, simulator === 'MSFS2024' ? 'FS24' : 'FS20');
         }

@@ -11,28 +11,33 @@ export const normalizeRemoteLivery = (entry: Record<string, unknown>): Livery =>
     const tailNumber = asString(entry.tailNumber);
     const title = asString(entry.title) ?? asString(entry.name) ?? 'Unknown Livery';
     const name = tailNumber ?? title;
+    const id = asString(entry.id) ?? name;
     const downloadEndpoint = asString(entry.downloadEndpoint) ?? '';
 
     return {
-        id: asString(entry.id) ?? name,
+        id,
         name,
         title,
         tailNumber,
-        developer: asString(entry.developer) ?? 'Unknown developer',
-        aircraftType: asString(entry.aircraftType) ?? asString(entry.aircraft) ?? 'Unknown type',
+        developerId: asString(entry.developerId) ?? 'unknown-developer',
+        developerName: asString(entry.developerName) ?? asString(entry.developer) ?? 'Unknown developer',
+        aircraftProfileId: asString(entry.aircraftProfileId) ?? 'unknown-aircraft',
+        aircraftProfileName: asString(entry.aircraftProfileName) ?? asString(entry.aircraft) ?? 'Unknown type',
         aircraft: asString(entry.aircraft) ?? undefined,
         year: entry.year ?? null,
         engine: asString(entry.engine),
-        resolution: asString(entry.resolution),
-        simulator: asString(entry.simulator),
+        resolutionId: asString(entry.resolutionId) ?? 'unknown-resolution',
+        resolutionValue: asString(entry.resolutionValue) ?? asString(entry.resolution) ?? 'Unknown',
         size: entry.sizeBytes ?? entry.size ?? null,
-        preview: asString(entry.previewUrl) ?? asString(entry.preview),
+        preview: asString(entry.preview) ?? null,
         previewUrl: asString(entry.previewUrl),
         downloadEndpoint,
         packageKey: asString(entry.packageKey),
+        simulatorId: asString(entry.simulatorId) ?? 'unknown-sim',
+        simulatorCode: asString(entry.simulatorCode) ?? asString(entry.simulator) ?? 'Unknown',
+        registration: asString(entry.registration),
         version: asString(entry.version),
         manufacturer: asString(entry.manufacturer),
-        registration: tailNumber ?? undefined,
         tags: Array.isArray(entry.tags) ? (entry.tags as string[]) : [],
         status: asString(entry.status) ?? undefined,
         categoryId: asString(entry.categoryId),

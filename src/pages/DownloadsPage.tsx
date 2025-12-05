@@ -190,8 +190,8 @@ export const DownloadsPage = () => {
                             const manifest = entry.manifest;
                             const liveryMatch = liveries.find((l) => l.name === metadata?.original_name);
                             const preview = liveryMatch?.preview;
-                            const aircraftTitle = manifest?.title ?? liveryMatch?.aircraftType ?? 'Unknown aircraft';
-                            const developer = manifest?.creator ?? liveryMatch?.developer ?? 'Unknown developer';
+                            const aircraftTitle = manifest?.title ?? liveryMatch?.aircraftProfileName ?? 'Unknown aircraft';
+                            const developer = manifest?.creator ?? liveryMatch?.developerName ?? 'Unknown developer';
                             const registration = liveryMatch?.registration ?? '—';
                             const simulatorLabel = (metadata?.simulator ?? entry.simulatorHint ?? 'Unknown').toUpperCase();
 

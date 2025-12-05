@@ -76,7 +76,7 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
         initialize: async () => {
             if (get().initialized) return;
             await get().loadSettings();
-            await get().refreshLiveries();
+            // Remote liveries are now fetched via TanStack Query hook (useLiveriesQuery) once a token exists.
             await get().refreshInstalled();
             get().attachDownloadListener();
             set({ initialized: true });
@@ -117,9 +117,15 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
         },
 
         refreshLiveries: async () => {
+            const authToken = useAuthStore.getState().token ?? null;
+            if (!authToken) {
+                set({ loading: false, liveries: [], error: 'Please sign in to load liveries.' });
+                return;
+            }
+
             set({ loading: true, error: null });
             const api = getAPI();
-            const authToken = useAuthStore.getState().token ?? null;
+
             try {
                 if (api?.fetchLiveries) {
                     const payload = await api.fetchLiveries(authToken);
@@ -127,18 +133,27 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
                     set({ liveries: normalized });
                 } else {
                     const response = await fetch(REMOTE_LIVERY_LIST_URL, {
-                        headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined
+                        headers: { Authorization: `Bearer ${authToken}` }
                     });
                     if (!response.ok) {
-                        throw new Error(`Remote list request failed with status ${response.status}`);
+                        const error: Error & { status?: number } = new Error(`Remote list request failed with status ${response.status}`);
+                        error.status = response.status;
+                        throw error;
                     }
                     const payload = await response.json();
                     const normalized = (payload?.liveries ?? []).map((entry: Record<string, unknown>) => normalizeRemoteLivery(entry));
                     set({ liveries: normalized });
                 }
             } catch (error) {
-                console.error('Failed to load liveries', error);
-                set({ liveries: [], error: 'Unable to load liveries. Please check your connection.' });
+                const status = (error as Error & { status?: number }).status;
+                if (status === 401 || status === 403) {
+                    console.warn('Livery fetch unauthorized; clearing session.');
+                    useAuthStore.getState().logout();
+                    set({ liveries: [], error: 'Session expired. Please sign in again.' });
+                } else {
+                    console.error('Failed to load liveries', error);
+                    set({ liveries: [], error: 'Unable to load liveries. Please check your connection.' });
+                }
             } finally {
                 set({ loading: false });
             }
@@ -302,6 +317,7 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
 
 export const useInitializeLiveryStore = () => {
     const initialized = useLiveryStore((state) => state.initialized);
+    const token = useAuthStore((state) => state.token);
     useEffect(() => {
         if (!initialized) {
             useLiveryStore.getState().initialize().catch((error) => {
@@ -309,4 +325,14 @@ export const useInitializeLiveryStore = () => {
             });
         }
     }, [initialized]);
+
+    // When a fresh auth token arrives (after login), fetch liveries with proper authorization.
+    useEffect(() => {
+        if (initialized && token) {
+            useLiveryStore
+                .getState()
+                .refreshLiveries()
+                .catch((error) => console.error('Failed to refresh liveries after login', error));
+        }
+    }, [initialized, token]);
 };
