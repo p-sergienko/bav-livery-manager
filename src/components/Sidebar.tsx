@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { DownloadProgress } from './DownloadProgress';
+import { UpdateBadge } from './UpdateBadge';
 import { APP_VERSION } from '@/constants/appVersion';
 import styles from './Sidebar.module.css';
 
@@ -58,6 +59,7 @@ export const Sidebar = () => {
                         >
                             <Icon name={item.icon} />
                             <span>{item.label}</span>
+                            {item.to === '/downloads' && <UpdateBadge />}
                         </NavLink>
                     ))}
                 </nav>

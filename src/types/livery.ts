@@ -61,3 +61,15 @@ export interface DownloadProgress {
     resolution?: string;
     simulator?: string;
 }
+
+export interface LiveryUpdate {
+    liveryId: string;
+    currentVersion: string;
+    latestVersion: string;
+    hasUpdate: boolean;
+    changelog?: string | null;
+    liveryName?: string;
+    installPath?: string;
+    resolution?: string;
+    simulator?: string;
+}

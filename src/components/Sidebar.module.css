@@ -39,6 +39,7 @@
     font-weight: 500;
     text-decoration: none;
     transition: all 0.2s ease;
+    position: relative;
 }
 
 .panelButton svg {

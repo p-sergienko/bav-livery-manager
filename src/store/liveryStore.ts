@@ -4,13 +4,14 @@ import type {
     DownloadProgress,
     InstalledLiveryRecord,
     Livery,
+    LiveryUpdate,
     Resolution,
     Settings,
     Simulator
 } from '@/types/livery';
 import { useAuthStore } from '@/store/authStore';
 import { buildDownloadRequestUrl, deriveInstallFolderName, joinPaths, normalizeRemoteLivery } from '@/utils/livery';
-import { REMOTE_LIVERY_LIST_URL } from '@shared/constants';
+import { REMOTE_LIVERY_LIST_URL, LIVERY_UPDATES_URL } from '@shared/constants';
 
 const DEFAULT_SETTINGS: Settings = {
     msfs2020Path: '',
@@ -24,17 +25,23 @@ const getAPI = () => (typeof window === 'undefined' ? undefined : window.electro
 interface LiveryState {
     liveries: Livery[];
     installedLiveries: InstalledLiveryRecord[];
+    availableUpdates: LiveryUpdate[];
     settings: Settings;
     downloadStates: Record<string, DownloadProgress>;
     loading: boolean;
     error: string | null;
     initialized: boolean;
     downloadListenerAttached: boolean;
+    checkingUpdates: boolean;
+    lastUpdateCheck: number | null;
     initialize: () => Promise<void>;
     attachDownloadListener: () => void;
     loadSettings: () => Promise<void>;
     refreshLiveries: () => Promise<void>;
     refreshInstalled: () => Promise<void>;
+    checkForUpdates: () => Promise<void>;
+    updateLivery: (update: LiveryUpdate) => Promise<boolean>;
+    dismissUpdate: (liveryId: string) => void;
     updateSettings: (partial: Partial<Settings>) => Promise<void>;
     handleDownload: (livery: Livery, resolution: Resolution, simulator: Simulator) => Promise<boolean>;
     handleUninstall: (livery: Livery, resolution: Resolution, simulator: Simulator) => Promise<boolean>;
@@ -63,12 +70,15 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
     return ({
         liveries: [],
         installedLiveries: [],
+        availableUpdates: [],
         settings: DEFAULT_SETTINGS,
         downloadStates: {},
         loading: false,
         error: null,
         initialized: false,
         downloadListenerAttached: false,
+        checkingUpdates: false,
+        lastUpdateCheck: null,
 
         initialize: async () => {
             if (get().initialized) return;
@@ -166,10 +176,160 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
             try {
                 const entries = await api.getInstalledLiveries();
                 set({ installedLiveries: entries });
+                
+                // Auto-check for updates after refreshing installed liveries
+                const lastCheck = get().lastUpdateCheck;
+                const now = Date.now();
+                const fiveMinutes = 5 * 60 * 1000;
+                
+                if (!lastCheck || now - lastCheck > fiveMinutes) {
+                    get().checkForUpdates().catch((error) => 
+                        console.error('Failed to auto-check for updates', error)
+                    );
+                }
             } catch (error) {
                 console.error('Failed to refresh installed liveries', error);
                 set({ installedLiveries: [] });
             }
+        },
+
+        checkForUpdates: async () => {
+            const api = getAPI();
+            if (!api?.getLocalVersion) {
+                console.warn('Version management not available');
+                return;
+            }
+
+            const { installedLiveries, liveries } = get();
+            
+            if (installedLiveries.length === 0) {
+                set({ availableUpdates: [], lastUpdateCheck: Date.now() });
+                return;
+            }
+
+            set({ checkingUpdates: true });
+
+            try {
+                // Build update check request
+                const updateRequests = await Promise.all(
+                    installedLiveries.map(async (entry) => {
+                        const version = await api.getLocalVersion(entry.liveryId);
+                        return {
+                            liveryId: entry.liveryId,
+                            currentVersion: version || entry.version || '1.0.0',
+                        };
+                    })
+                );
+
+                // Call API to check for updates
+                const authToken = useAuthStore.getState().token;
+                const headers: HeadersInit = {
+                    'Content-Type': 'application/json',
+                };
+                
+                if (authToken) {
+                    headers['Authorization'] = `Bearer ${authToken}`;
+                }
+
+                const response = await fetch(LIVERY_UPDATES_URL, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ liveries: updateRequests }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Update check failed: ${response.statusText}`);
+                }
+
+                const data = await response.json() as { updates: Array<{
+                    liveryId: string;
+                    hasUpdate: boolean;
+                    latestVersion?: string;
+                    currentVersion: string;
+                    changelog?: string | null;
+                }> };
+
+                // Map updates to installed liveries
+                const updates: LiveryUpdate[] = data.updates
+                    .filter((u) => u.hasUpdate)
+                    .map((u) => {
+                        const installed = installedLiveries.find((e) => e.liveryId === u.liveryId);
+                        const livery = liveries.find((l) => l.id === u.liveryId);
+                        
+                        return {
+                            liveryId: u.liveryId,
+                            currentVersion: u.currentVersion,
+                            latestVersion: u.latestVersion || 'unknown',
+                            hasUpdate: true,
+                            changelog: u.changelog,
+                            liveryName: installed?.originalName || livery?.name || 'Unknown',
+                            installPath: installed?.installPath,
+                            resolution: installed?.resolution,
+                            simulator: installed?.simulator,
+                        };
+                    });
+
+                set({ 
+                    availableUpdates: updates, 
+                    lastUpdateCheck: Date.now(),
+                    checkingUpdates: false 
+                });
+            } catch (error) {
+                console.error('Failed to check for updates', error);
+                set({ checkingUpdates: false });
+            }
+        },
+
+        updateLivery: async (update: LiveryUpdate) => {
+            const api = getAPI();
+            const { liveries } = get();
+            
+            const livery = liveries.find((l) => l.id === update.liveryId);
+            if (!livery) {
+                set({ error: 'Livery not found in catalog' });
+                return false;
+            }
+
+            if (!update.resolution || !update.simulator) {
+                set({ error: 'Missing resolution or simulator information' });
+                return false;
+            }
+
+            const resolution = update.resolution as Resolution;
+            const simulator = update.simulator as Simulator;
+
+            // Uninstall old version
+            if (update.installPath) {
+                try {
+                    const uninstallResult = await api?.uninstallLivery?.(update.installPath);
+                    if (!uninstallResult?.success) {
+                        throw new Error('Failed to uninstall old version');
+                    }
+                } catch (error) {
+                    console.error('Failed to uninstall during update', error);
+                    set({ error: 'Failed to remove old version' });
+                    return false;
+                }
+            }
+
+            // Download new version
+            const downloadSuccess = await get().handleDownload(livery, resolution, simulator);
+            
+            if (downloadSuccess) {
+                // Remove this update from the list
+                set((state) => ({
+                    availableUpdates: state.availableUpdates.filter((u) => u.liveryId !== update.liveryId)
+                }));
+                return true;
+            }
+
+            return false;
+        },
+
+        dismissUpdate: (liveryId: string) => {
+            set((state) => ({
+                availableUpdates: state.availableUpdates.filter((u) => u.liveryId !== liveryId)
+            }));
         },
 
         updateSettings: async (partial: Partial<Settings>) => {
@@ -185,7 +345,7 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
             }
         },
 
-        handleDownload: async (livery, resolution, simulator) => {
+        handleDownload: async (livery: Livery, resolution: Resolution, simulator: Simulator) => {
             const api = getAPI();
             if (!api?.downloadLivery) {
                 set({ error: 'Electron APIs are not available.' });
@@ -238,7 +398,7 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
             }
         },
 
-        handleUninstall: async (livery, resolution, simulator) => {
+        handleUninstall: async (livery: Livery, resolution: Resolution, simulator: Simulator) => {
             const api = getAPI();
             if (!api?.uninstallLivery) {
                 set({ error: 'Electron APIs are not available.' });
@@ -268,7 +428,7 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
             }
         },
 
-        uninstallEntry: async (entry) => {
+        uninstallEntry: async (entry: InstalledLiveryRecord) => {
             const api = getAPI();
             if (!api?.uninstallLivery) {
                 set({ error: 'Electron APIs are not available.' });
@@ -289,7 +449,7 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
             }
         },
 
-        uninstallByPath: async (installPath) => {
+        uninstallByPath: async (installPath: string) => {
             const api = getAPI();
             if (!api?.uninstallLivery) {
                 set({ error: 'Electron APIs are not available.' });
@@ -310,7 +470,7 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
             }
         },
 
-        isVariantInstalled: (livery, resolution, simulator) => {
+        isVariantInstalled: (livery: Livery, resolution: Resolution, simulator: Simulator) => {
             return Boolean(matchInstalledEntry(livery, resolution, simulator));
         },
 

@@ -1,0 +1,195 @@
+.container {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 1rem;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.headerContent {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.headerContent svg {
+    color: #3b82f6;
+    flex-shrink: 0;
+}
+
+.title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.refreshButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 6px;
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.refreshButton:hover:not(:disabled) {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+.refreshButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.updateList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.updateItem {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.updateHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.updateHeader:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.updateInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.liveryName {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.versionInfo {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-family: 'Courier New', monospace;
+}
+
+.dismissButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.dismissButton:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text);
+}
+
+.updateDetails {
+    padding: 0 14px 12px 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.changelog {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.changelogLabel {
+    margin: 0;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.changelogText {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 1.5;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border-left: 3px solid rgba(59, 130, 246, 0.5);
+}
+
+.metadata {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.metaItem {
+    font-size: 0.75rem;
+    color: var(--muted);
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.updateButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    border-radius: 8px;
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.updateButton:hover:not(:disabled) {
+    background: rgba(59, 130, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.6);
+}
+
+.updateButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

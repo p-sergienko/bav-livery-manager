@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { DownloadedLiveryCard } from '@/components/DownloadedLiveryCard';
+import { UpdateNotification } from '@/components/UpdateNotification';
 import { useLiveryStore } from '@/store/liveryStore';
 import type { InstalledLiveryRecord } from '@/types/electron-api';
 import styles from './DownloadsPage.module.css';
@@ -183,6 +184,8 @@ export const DownloadsPage = () => {
                     </p>
                 </div>
             </header>
+
+            <UpdateNotification />
 
             <div className={styles.toolbar}>
                 <div className={styles.searchBar}>
