@@ -40,6 +40,7 @@ interface LiveryState {
     handleUninstall: (livery: Livery, resolution: Resolution, simulator: Simulator) => Promise<boolean>;
     uninstallEntry: (entry: InstalledLivery) => Promise<boolean>;
     isVariantInstalled: (livery: Livery, resolution: Resolution, simulator: Simulator) => boolean;
+    clearError: () => void;
 }
 
 export const useLiveryStore = create<LiveryState>((set, get) => {
@@ -311,6 +312,10 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
 
         isVariantInstalled: (livery, resolution, simulator) => {
             return Boolean(matchInstalledEntry(livery, resolution, simulator));
+        },
+
+        clearError: () => {
+            set({ error: null });
         }
     });
 });

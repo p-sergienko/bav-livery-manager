@@ -1,0 +1,145 @@
+.toast {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    transform: translateY(-20px);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+}
+
+.toast.visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.toast.leaving {
+    transform: translateY(-20px) scale(0.95);
+    opacity: 0;
+    transition: transform 0.25s ease-in, opacity 0.25s ease-in;
+}
+
+/* Type variants */
+.error {
+    border-color: rgba(255, 68, 68, 0.4);
+    background: linear-gradient(135deg, rgba(255, 68, 68, 0.08), var(--card));
+}
+
+.error .iconWrapper {
+    color: var(--danger);
+}
+
+.error .progressBar {
+    background: var(--danger);
+}
+
+.success {
+    border-color: rgba(76, 175, 80, 0.4);
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.08), var(--card));
+}
+
+.success .iconWrapper {
+    color: var(--success);
+}
+
+.success .progressBar {
+    background: var(--success);
+}
+
+.info {
+    border-color: rgba(96, 165, 250, 0.4);
+    background: linear-gradient(135deg, rgba(96, 165, 250, 0.08), var(--card));
+}
+
+.info .iconWrapper {
+    color: #60a5fa;
+}
+
+.info .progressBar {
+    background: #60a5fa;
+}
+
+.iconWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.iconWrapper svg {
+    width: 100%;
+    height: 100%;
+}
+
+.message {
+    flex: 1;
+    margin: 0;
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.4;
+}
+
+.closeButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--muted);
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+    flex-shrink: 0;
+}
+
+.closeButton:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text);
+    transform: scale(1.1);
+}
+
+.closeButton:active {
+    transform: scale(0.95);
+}
+
+.closeButton svg {
+    width: 14px;
+    height: 14px;
+}
+
+.progressTrack {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+}
+
+.progressBar {
+    height: 100%;
+    width: 100%;
+    transform-origin: left;
+    animation: shrink linear forwards;
+}
+
+@keyframes shrink {
+    from {
+        transform: scaleX(1);
+    }
+    to {
+        transform: scaleX(0);
+    }
+}

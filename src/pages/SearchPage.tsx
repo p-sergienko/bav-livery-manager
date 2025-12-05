@@ -7,7 +7,7 @@ import { useLiveryStore } from '@/store/liveryStore';
 import { useAuthStore } from '@/store/authStore';
 import { useCatalogQuery } from '@/hooks/useCatalogQuery';
 import { useLiveriesQuery } from '@/hooks/useLiveriesQuery';
-import { StatusBar } from '@/components/StatusBar';
+import { Toast } from '@/components/Toast';
 import styles from './SearchPage.module.css';
 
 type FilterKey = 'developer' | 'aircraft' | 'engine' | 'simulator' | 'resolution' | 'category';
@@ -252,6 +252,7 @@ export const SearchPage = () => {
     const liveries = useLiveryStore((state) => state.liveries);
     const loading = useLiveryStore((state) => state.loading);
     const error = useLiveryStore((state) => state.error);
+    const clearError = useLiveryStore((state) => state.clearError);
     const settings = useLiveryStore((state) => state.settings);
     const downloadStates = useLiveryStore((state) => state.downloadStates);
     const handleDownload = useLiveryStore((state) => state.handleDownload);
@@ -260,6 +261,7 @@ export const SearchPage = () => {
     const installedLiveries = useLiveryStore((state) => state.installedLiveries);
     const authToken = useAuthStore((state) => state.token);
     const authError = useAuthStore((state) => state.error);
+    const clearAuthError = useAuthStore((state) => state.setError);
     const [searchTerm, setSearchTerm] = useState('');
     const pathEnabledSimulators = useMemo<Simulator[]>(() => {
         const sims: Simulator[] = [];
@@ -273,8 +275,7 @@ export const SearchPage = () => {
     const [page, setPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(ITEMS_PER_PAGE);
     const [viewMode, setViewMode] = useState<'all' | 'installed'>('all');
-    const { data: catalog, isFetching: catalogLoading, error: catalogErrorObject } = useCatalogQuery(authToken);
-    const catalogError = catalogErrorObject ? 'Catalog filters are temporarily unavailable.' : null;
+    const { data: catalog, isFetching: catalogLoading } = useCatalogQuery(authToken);
     const { isFetching: liveriesFetching } = useLiveriesQuery();
 
     const fallbackOptions = useMemo(() => buildFallbackOptions(liveries), [liveries]);
@@ -575,13 +576,16 @@ export const SearchPage = () => {
                 </div>
             </header>
 
-            <StatusBar
-                messages={[
-                    authError ? { type: 'error', text: authError } : null,
-                    error ? { type: 'error', text: error } : null,
-                    catalogError ? { type: 'info', text: catalogError } : null
-                ].filter(Boolean) as Array<{ type?: 'info' | 'error' | 'success'; text: string }>}
-            />
+            {(authError || error) && (
+                <Toast
+                    type="error"
+                    message={authError || error || ''}
+                    onClose={() => {
+                        if (authError) clearAuthError(null);
+                        if (error) clearError();
+                    }}
+                />
+            )}
 
             <div className={styles.toolbar}>
                 <div className={styles.searchBar}>
@@ -606,7 +610,6 @@ export const SearchPage = () => {
                 </div>
             </div>
             {catalogLoading && <p className={styles.catalogStatus}>Refreshing catalog metadata…</p>}
-            {catalogError && <p className={classNames(styles.catalogStatus, styles.catalogStatusError)}>{catalogError}</p>}
             {!hasSimulatorPathConfigured && (
                 <p className={classNames(styles.catalogStatus, styles.catalogStatusError)}>
                     Configure a simulator path in Settings to browse and install liveries.
@@ -805,8 +808,6 @@ export const SearchPage = () => {
                     <p className={styles.emptyState}>No liveries match your filters.</p>
                 )}
             </div>
-
-            {error && <div className={styles.statusMessage}>{error}</div>}
         </section>
     );
 };
