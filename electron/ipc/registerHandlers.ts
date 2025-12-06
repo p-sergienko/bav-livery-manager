@@ -6,6 +6,7 @@ import type { AppContext, DownloadResult, Settings } from '../types';
 import { detectSimulatorPaths } from '../services/simulatorPaths';
 import { fetchRemoteLiveryList } from '../services/liveryData';
 import { downloadAndInstallLivery } from '../services/downloadManager';
+import { isSimulatorRunning } from '../services/simulatorMonitor';
 import { loadSettings, saveSettings } from '../services/settingsStore';
 import { 
     getInstalledLiveries, 
@@ -53,6 +54,14 @@ export function registerIpcHandlers(appContext: AppContext) {
             resolution: string,
             authToken: string | null
         ): Promise<DownloadResult> => {
+        const simulatorActive = await isSimulatorRunning();
+        if (simulatorActive) {
+            return {
+                success: false,
+                error: 'Microsoft Flight Simulator appears to be running. Please close the simulator before installing liveries.'
+            } satisfies DownloadResult;
+        }
+
         const settings = loadSettings();
         return downloadAndInstallLivery({
                 downloadEndpoint,
