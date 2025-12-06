@@ -152,6 +152,34 @@ export function registerIpcHandlers(appContext: AppContext) {
         }
     });
 
+    ipcMain.handle('set-taskbar-progress', (_event, progress: number, mode?: 'normal' | 'indeterminate' | 'paused' | 'error' | 'none') => {
+        const targetWindow = appContext.getMainWindow();
+        if (!targetWindow || targetWindow.isDestroyed()) return;
+
+        if (progress < 0) {
+            targetWindow.setProgressBar(-1); // Clear progress
+            targetWindow.setTitle('BAV Livery Manager'); // Reset title
+            return;
+        }
+
+        const progressValue = Math.min(Math.max(progress / 100, 0), 1);
+        
+        // Set progress bar mode based on the mode parameter
+        const options: { mode?: 'normal' | 'indeterminate' | 'paused' | 'error' | 'none' } = {};
+        if (mode) {
+            options.mode = mode;
+        }
+        
+        targetWindow.setProgressBar(progressValue, options);
+    });
+
+    ipcMain.handle('set-window-title', (_event, title: string) => {
+        const targetWindow = appContext.getMainWindow();
+        if (!targetWindow || targetWindow.isDestroyed()) return;
+        
+        targetWindow.setTitle(title);
+    });
+
     handlersRegistered = true;
 }
 

@@ -111,6 +111,9 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
                 downloaded: progress.transferred,
                 total: progress.total
             });
+
+            // Update taskbar progress
+            targetWindow.setProgressBar(progress.percent / 100, { mode: 'normal' });
         }), DOWNLOAD_ATTEMPTS, BACKOFF_MS);
 
         const targetWindow = appContext.getMainWindow();
@@ -120,6 +123,9 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
                 progress: 100,
                 extracting: true
             });
+
+            // Set taskbar to indeterminate mode during extraction
+            targetWindow.setProgressBar(2, { mode: 'indeterminate' });
         }
 
         await extractZipNonBlocking(outputPath, extractPath);
@@ -138,12 +144,30 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
 
         await fs.remove(outputPath);
 
+        // Clear taskbar progress
+        const finalWindow = appContext.getMainWindow();
+        if (finalWindow && !finalWindow.isDestroyed()) {
+            finalWindow.setProgressBar(-1);
+        }
+
         return {
             success: true,
             path: extractPath
         };
     } catch (error) {
         console.error('Download process failed:', error);
+        
+        // Set taskbar to error state briefly, then clear
+        const errorWindow = appContext.getMainWindow();
+        if (errorWindow && !errorWindow.isDestroyed()) {
+            errorWindow.setProgressBar(1, { mode: 'error' });
+            setTimeout(() => {
+                if (errorWindow && !errorWindow.isDestroyed()) {
+                    errorWindow.setProgressBar(-1);
+                }
+            }, 2000);
+        }
+        
         const status = (error as Error & { status?: number }).status;
         return {
             success: false,

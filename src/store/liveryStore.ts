@@ -95,17 +95,44 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
             if (!api?.onDownloadProgress) return;
 
             api.onDownloadProgress((payload) => {
-                set((state) => ({
-                    downloadStates: {
-                        ...state.downloadStates,
-                        [payload.liveryName]: {
-                            progress: payload.progress,
-                            downloaded: payload.downloaded,
-                            total: payload.total,
-                            extracting: payload.extracting
-                        }
+                const newStates = {
+                    ...get().downloadStates,
+                    [payload.liveryName]: {
+                        progress: payload.progress,
+                        downloaded: payload.downloaded,
+                        total: payload.total,
+                        extracting: payload.extracting
                     }
-                }));
+                };
+
+                set({ downloadStates: newStates });
+
+                // Update taskbar progress and window title based on active downloads
+                const activeDownloads = Object.values(newStates);
+                if (activeDownloads.length > 0) {
+                    // Calculate average progress across all active downloads
+                    const totalProgress = activeDownloads.reduce((sum, state) => sum + state.progress, 0);
+                    const avgProgress = totalProgress / activeDownloads.length;
+                    
+                    // Show indeterminate if any download is extracting
+                    const anyExtracting = activeDownloads.some(state => state.extracting);
+                    
+                    if (anyExtracting) {
+                        api.setTaskbarProgress?.(100, 'indeterminate');
+                        api.setWindowTitle?.(`Extracting ${payload.liveryName}... - BAV Livery Manager`);
+                    } else {
+                        api.setTaskbarProgress?.(avgProgress, 'normal');
+                        const count = activeDownloads.length;
+                        const title = count === 1 
+                            ? `Downloading ${payload.liveryName} (${Math.round(avgProgress)}%) - BAV Livery Manager`
+                            : `Downloading ${count} liveries (${Math.round(avgProgress)}%) - BAV Livery Manager`;
+                        api.setWindowTitle?.(title);
+                    }
+                } else {
+                    // Clear taskbar progress and reset title when no downloads
+                    api.setTaskbarProgress?.(-1);
+                    api.setWindowTitle?.('BAV Livery Manager');
+                }
             });
 
             set({ downloadListenerAttached: true });
@@ -388,11 +415,25 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
             } catch (error) {
                 console.error('Download failed', error);
                 set({ error: error instanceof Error ? error.message : 'Download failed' });
+                
+                // Set taskbar to error state briefly
+                api.setTaskbarProgress?.(100, 'error');
+                setTimeout(() => {
+                    api.setTaskbarProgress?.(-1);
+                }, 2000);
+                
                 return false;
             } finally {
                 set((state) => {
                     const clone = { ...state.downloadStates };
                     delete clone[livery.name];
+                    
+                    // Clear taskbar progress and reset title if no more downloads
+                    if (Object.keys(clone).length === 0) {
+                        api.setTaskbarProgress?.(-1);
+                        api.setWindowTitle?.('BAV Livery Manager');
+                    }
+                    
                     return { downloadStates: clone };
                 });
             }

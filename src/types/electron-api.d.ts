@@ -64,6 +64,8 @@ export interface ElectronAPI {
     getLocalVersion: (liveryId: string) => Promise<string | null>;
     setLocalVersion: (liveryId: string, version: string) => Promise<boolean>;
     getInstalledLiveries: () => Promise<InstalledLiveryRecord[]>;
+    setTaskbarProgress: (progress: number, mode?: 'normal' | 'indeterminate' | 'paused' | 'error' | 'none') => Promise<void>;
+    setWindowTitle: (title: string) => Promise<void>;
     onDownloadProgress: (callback: ((event: DownloadProgressEvent) => void) | null) => void;
     removeAllDownloadProgressListeners: () => void;
     openPanelAuth: (url: string) => Promise<void>;

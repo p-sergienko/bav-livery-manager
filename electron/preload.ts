@@ -16,7 +16,9 @@ const INVOKE_CHANNELS = [
     'set-local-version',
     'get-installed-liveries',
     'detect-sim-paths',
-    'auth-open-panel'
+    'auth-open-panel',
+    'set-taskbar-progress',
+    'set-window-title'
 ] as const;
 
 const ON_CHANNELS = ['download-progress', 'auth-token'] as const;
