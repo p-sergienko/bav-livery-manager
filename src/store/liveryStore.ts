@@ -67,6 +67,21 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
         });
     };
 
+    const hasHighResolutionConflict = (livery: Livery, resolution: Resolution, simulator: Simulator) => {
+        const installed = get().installedLiveries;
+        const conflictingResolution: Resolution = resolution === '4K' ? '8K' : '4K';
+
+        return installed.some((entry) => {
+            const idMatch = entry.liveryId === livery.id;
+            const nameMatch = entry.originalName === livery.name;
+            return (
+                (idMatch || nameMatch) &&
+                entry.simulator === simulator &&
+                entry.resolution === conflictingResolution
+            );
+        });
+    };
+
     return ({
         liveries: [],
         installedLiveries: [],
@@ -376,6 +391,11 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
             const api = getAPI();
             if (!api?.downloadLivery) {
                 set({ error: 'Electron APIs are not available.' });
+                return false;
+            }
+
+            if (hasHighResolutionConflict(livery, resolution, simulator)) {
+                set({ error: 'Please uninstall the other high-resolution variant (4K or 8K) before installing this one.' });
                 return false;
             }
 

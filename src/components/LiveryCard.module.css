@@ -286,7 +286,9 @@
 }
 
 .downloadButton:disabled,
-.uninstallButton:disabled {
+.uninstallButton:disabled,
+.downloadButton[aria-disabled='true'],
+.uninstallButton[aria-disabled='true'] {
     opacity: 0.5;
     cursor: not-allowed;
 }

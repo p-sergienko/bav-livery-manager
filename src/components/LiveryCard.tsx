@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { DownloadProgress, Livery, Resolution, Simulator } from '@/types/livery';
 import { useLiveryStore } from '@/store/liveryStore';
 import styles from './LiveryCard.module.css';
@@ -34,6 +34,9 @@ const formatBytes = (bytes?: number) => {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+const isHighResolution = (value: Resolution) => value === '4K' || value === '8K';
+const HIGH_RESOLUTION_CONFLICT_MESSAGE = 'Cannot install the same registration twice for the same simulator version.';
+
 const DownloadIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -62,6 +65,9 @@ export const LiveryCard = ({
     const [simulator, setSimulator] = useState<Simulator>(defaultSimulator);
     const [busy, setBusy] = useState(false);
     const isResolutionForced = Boolean(resolutionFilter && resolutionFilter !== 'all');
+    const showConflictToast = useCallback(() => {
+        useLiveryStore.setState({ error: HIGH_RESOLUTION_CONFLICT_MESSAGE });
+    }, []);
 
     useEffect(() => {
         setSimulator(defaultSimulator);
@@ -95,7 +101,17 @@ export const LiveryCard = ({
         return Array.from(map.values()).sort((a, b) => a.resolution.localeCompare(b.resolution));
     }, [allLiveries, livery]);
 
-    const handleDownload = async (res: Resolution) => {
+    const installedHighResolution = useMemo(() => {
+        return peerResolutions.find((variant) => {
+            return isHighResolution(variant.resolution) && isInstalled(variant.resolution, simulator);
+        });
+    }, [peerResolutions, simulator, isInstalled]);
+
+    const handleDownload = async (res: Resolution, { blocked }: { blocked?: boolean } = {}) => {
+        if (blocked) {
+            showConflictToast();
+            return;
+        }
         setBusy(true);
         try {
             await onDownload(res, simulator);
@@ -202,6 +218,13 @@ export const LiveryCard = ({
                                 const sizeLabel = formatSize(variant.size || livery.size);
                                 const isInstalledVariant = isInstalled(res, simulator);
                                 const label = sizeLabel ? `${res} (${sizeLabel})` : res;
+                                const resolutionConflictLocked =
+                                    !isInstalledVariant &&
+                                    installedHighResolution &&
+                                    installedHighResolution.resolution !== res &&
+                                    isHighResolution(res);
+                                const nativeDisabled = disableDownload;
+                                const ariaDisabled = nativeDisabled || resolutionConflictLocked;
 
                                 if (isInstalledVariant) {
                                     return (
@@ -227,8 +250,10 @@ export const LiveryCard = ({
                                         <button
                                             type="button"
                                             className={styles.downloadButton}
-                                            disabled={disableDownload}
-                                            onClick={() => handleDownload(res)}
+                                            disabled={nativeDisabled}
+                                            aria-disabled={ariaDisabled || undefined}
+                                            title={resolutionConflictLocked ? HIGH_RESOLUTION_CONFLICT_MESSAGE : undefined}
+                                            onClick={() => handleDownload(res, { blocked: resolutionConflictLocked })}
                                         >
                                             <span className={styles.buttonIcon} aria-hidden>
                                                 <DownloadIcon />
