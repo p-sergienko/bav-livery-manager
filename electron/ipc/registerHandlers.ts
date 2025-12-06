@@ -165,12 +165,11 @@ export function registerIpcHandlers(appContext: AppContext) {
         const progressValue = Math.min(Math.max(progress / 100, 0), 1);
         
         // Set progress bar mode based on the mode parameter
-        const options: { mode?: 'normal' | 'indeterminate' | 'paused' | 'error' | 'none' } = {};
         if (mode) {
-            options.mode = mode;
+            targetWindow.setProgressBar(progressValue, { mode });
+        } else {
+            targetWindow.setProgressBar(progressValue);
         }
-        
-        targetWindow.setProgressBar(progressValue, options);
     });
 
     ipcMain.handle('set-window-title', (_event, title: string) => {

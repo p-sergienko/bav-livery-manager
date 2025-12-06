@@ -99,6 +99,14 @@ const api: ElectronAPI = {
         ensureInvokeChannel('auth-open-panel');
         return ipcRenderer.invoke('auth-open-panel', url);
     },
+    setTaskbarProgress: (progress, mode) => {
+        ensureInvokeChannel('set-taskbar-progress');
+        return ipcRenderer.invoke('set-taskbar-progress', progress, mode);
+    },
+    setWindowTitle: (title) => {
+        ensureInvokeChannel('set-window-title');
+        return ipcRenderer.invoke('set-window-title', title);
+    },
     onDownloadProgress: (callback) => {
         ensureOnChannel('download-progress');
         ipcRenderer.removeAllListeners('download-progress');
