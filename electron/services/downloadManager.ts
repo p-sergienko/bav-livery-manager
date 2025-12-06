@@ -144,6 +144,13 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
 
         await fs.remove(outputPath);
 
+        // Track the download completion
+        try {
+            await trackDownloadCompletion(liveryId, simulator, resolution, authToken);
+        } catch (trackError) {
+            console.warn('Failed to track download, but installation succeeded:', trackError);
+        }
+
         // Clear taskbar progress
         const finalWindow = appContext.getMainWindow();
         if (finalWindow && !finalWindow.isDestroyed()) {
@@ -294,4 +301,39 @@ function extractWithAdmZip(zipPath: string, extractPath: string) {
             }
         });
     });
+}
+
+async function trackDownloadCompletion(
+    liveryId: string,
+    simulator: 'MSFS2020' | 'MSFS2024',
+    resolution: string,
+    authToken: string
+): Promise<void> {
+    const simCode = simulator === 'MSFS2024' ? 'FS24' : 'FS20';
+    const baseUrl = process.env.BAV_PANEL_BASE_URL || 'http://localhost:3000';
+    const trackUrl = `${baseUrl}/api/simulator/liveries/${liveryId}/track`;
+    
+    try {
+        const response = await fetchWithTimeout(trackUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({
+                simulator: simCode,
+                resolution
+            })
+        }, 10000);
+
+        if (!response.ok) {
+            const statusText = response.statusText || 'Unknown error';
+            console.warn(`Download tracking failed: ${response.status} ${statusText}`);
+        }
+    } catch (error) {
+        // Log but don't throw - tracking failures shouldn't prevent downloads
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.warn('Failed to track download:', errorMessage);
+        throw error;
+    }
 }
