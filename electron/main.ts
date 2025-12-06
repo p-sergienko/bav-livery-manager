@@ -2,13 +2,16 @@ import { app, BrowserWindow, Menu, ipcMain, shell, nativeImage, type NativeImage
 import path from 'node:path';
 import { URL } from 'node:url';
 import fs from 'fs-extra';
-import { updateElectronApp } from 'update-electron-app';
+import { autoUpdater } from 'electron-updater';
+import type { ProgressInfo, UpdateInfo } from 'electron-updater';
+import log from 'electron-log';
 import { registerIpcHandlers } from './ipc/registerHandlers';
 import type { AppContext } from './types';
 
 const APP_TITLE = 'BAV Livery Manager';
 const AUTH_PROTOCOL = 'bav-livery-manager';
 const ICON_BASENAME = 'BAV-Livery-Manager';
+const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 
 let mainWindow: BrowserWindow | null = null;
 let pendingAuthPayload: {
@@ -26,6 +29,53 @@ app.setName(APP_TITLE);
 const appContext: AppContext = {
     getMainWindow: () => mainWindow
 };
+
+function setupAutoUpdates() {
+    if (!app.isPackaged) {
+        console.log('Auto updates are disabled in development mode.');
+        return;
+    }
+
+    log.transports.file.level = 'info';
+    autoUpdater.logger = log;
+    autoUpdater.autoDownload = true;
+    autoUpdater.autoInstallOnAppQuit = true;
+
+    const resetProgress = () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.setProgressBar(-1);
+        }
+    };
+
+    autoUpdater.on('error', (error: Error) => {
+        log.error('Auto update error:', error);
+        resetProgress();
+    });
+    autoUpdater.on('checking-for-update', () => log.info('Checking for application updates...'));
+    autoUpdater.on('update-available', (info: UpdateInfo) => log.info('Update available:', info.version));
+    autoUpdater.on('update-not-available', () => {
+        log.info('No updates available.');
+        resetProgress();
+    });
+    autoUpdater.on('download-progress', (progress: ProgressInfo) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.setProgressBar(progress.percent / 100, { mode: 'normal' });
+        }
+    });
+    autoUpdater.on('update-downloaded', (info: UpdateInfo) => {
+        log.info('Update downloaded, will install on quit.', info.version);
+        resetProgress();
+    });
+
+    const checkForUpdates = () => {
+        autoUpdater
+            .checkForUpdatesAndNotify()
+            .catch((error: Error) => log.error('Failed to check for updates:', error));
+    };
+
+    checkForUpdates();
+    setInterval(checkForUpdates, UPDATE_CHECK_INTERVAL_MS);
+}
 
 function getRendererPath(): string {
     const distPath = path.resolve(__dirname, '..', '..', 'dist', 'index.html');
@@ -210,16 +260,9 @@ if (!gotLock) {
 
 app.whenReady().then(() => {
     console.log('App ready, creating window...');
-    
-    // Initialize auto-updater (only in production)
-    if (!isDev) {
-        updateElectronApp({
-            updateInterval: '1 hour',
-            logger: console,
-            notifyUser: true
-        });
-    }
-    
+
+    setupAutoUpdates();
+
     createWindow();
     registerIpcHandlers(appContext);
 
