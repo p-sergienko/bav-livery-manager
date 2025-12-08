@@ -10,7 +10,7 @@ export const UpdateBadge = () => {
 
     return (
         <span className={styles.badge} title={`${availableUpdates.length} update${availableUpdates.length === 1 ? '' : 's'} available`}>
-            {availableUpdates.length}
+            {availableUpdates.length} update{availableUpdates.length === 1 ? '' : 's'}
         </span>
     );
 };
