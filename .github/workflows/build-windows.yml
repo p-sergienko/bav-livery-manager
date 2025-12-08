@@ -26,6 +26,7 @@ jobs:
     runs-on: windows-latest
     env:
       BAV_PANEL_BASE_URL: ${{ secrets.BAV_PANEL_BASE_URL }}
+      NODE_ENV: production
       CSC_IDENTITY_AUTO_DISCOVERY: false
       USE_HARD_LINKS: false
     steps:
