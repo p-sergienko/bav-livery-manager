@@ -1,6 +1,6 @@
 {
   "name": "bav-livery-manager",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Livery manager for BAV",
   "main": "dist-electron/electron/main.js",
   "scripts": {
