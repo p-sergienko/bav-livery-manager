@@ -1,4 +1,5 @@
 import type { Livery, Resolution, Simulator } from '@/types/livery';
+import { PANEL_BASE_URL } from '../../shared/constants';
 
 const asString = (value: unknown): string | null => {
     if (value === undefined || value === null) {
@@ -55,7 +56,25 @@ export const buildDownloadRequestUrl = (livery: Livery, resolution: Resolution, 
     if (!livery.downloadEndpoint) {
         throw new Error('Missing download endpoint for livery');
     }
-    const url = new URL(livery.downloadEndpoint);
+    let url: URL;
+    try {
+        // Try to parse as absolute URL first
+        url = new URL(livery.downloadEndpoint);
+    } catch {
+        // If it's a relative path, use the shared PANEL_BASE_URL as the base
+        url = new URL(livery.downloadEndpoint, PANEL_BASE_URL);
+    }
+
+    // If the endpoint points at localhost (or other local dev host), prefer PANEL_BASE_URL
+    try {
+        const host = url.hostname.toLowerCase();
+        if (/^(localhost|127(?:\.[0-9]{1,3}){3}|0\.0\.0\.0)$/.test(host)) {
+            const base = new URL(PANEL_BASE_URL);
+            url = new URL(url.pathname + url.search + url.hash, base.toString());
+        }
+    } catch {
+        // ignore and proceed with parsed url
+    }
     url.searchParams.set('resolution', resolution);
     url.searchParams.set('simulator', simulator);
     url.searchParams.set('name', livery.name);
