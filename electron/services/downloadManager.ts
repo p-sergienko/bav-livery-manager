@@ -7,6 +7,7 @@ import AdmZip from 'adm-zip';
 import type { AppContext, DownloadProgress, DownloadResult, Settings } from '../types';
 import { fetchJson, fetchWithTimeout } from '../utils/network';
 import { recordInstallation } from './installedLiveriesStore';
+import { PANEL_BASE_URL } from '../../shared/constants';
 
 interface DownloadLiveryOptions {
     downloadEndpoint: string;
@@ -310,8 +311,7 @@ async function trackDownloadCompletion(
     authToken: string
 ): Promise<void> {
     const simCode = simulator === 'MSFS2024' ? 'FS24' : 'FS20';
-    const baseUrl = process.env.BAV_PANEL_BASE_URL || 'http://localhost:3000';
-    const trackUrl = `${baseUrl}/api/simulator/liveries/${liveryId}/track`;
+    const trackUrl = `${PANEL_BASE_URL}/api/simulator/liveries/${liveryId}/track`;
     
     try {
         const response = await fetchWithTimeout(trackUrl, {

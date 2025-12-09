@@ -16,8 +16,27 @@
 
 .headerCopy {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 0.35rem;
+}
+
+.title {
+    margin: 0;
+    font-size: 2rem;
+}
+
+.simulatorLogoWrap {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.simulatorLogo {
+    max-height: 34px;
+    width: auto;
+    display: block;
+    filter: none;
+    object-fit: contain;
 }
 
 .headerEyebrow {

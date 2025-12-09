@@ -355,11 +355,16 @@ export const SearchPage = () => {
         return combined;
     }, [catalog?.categories, fallbackOptions.categories, liveries]);
 
-    const hasFS20Path = Boolean(settings.msfs2020Path);
-    const hasFS24Path = Boolean(settings.msfs2024Path);
     const hasSimulatorPathConfigured = pathEnabledSimulators.length > 0;
     const hasSimulatorSelection = allowedSimulatorValues.length > 0;
     const activeSimulatorLabel = simulatorOptions.find((opt) => opt.value === filters.simulator)?.label ?? null;
+
+    const simulatorLogoMap: Record<string, string> = {
+        // FS2020 logo (file page provided by user) - replace with direct image URL if available
+        FS20: 'https://upload.wikimedia.org/wikipedia/commons/e/ed/Microsoft_Flight_Simulator_%282020%29_logo.png',
+        // FS2024/FS24 website logo
+        FS24: 'https://flightsimulator.azureedge.net/wp-content/uploads/2024/09/website-logo-with-MSFS-1-1024x282.png'
+    };
 
     const valueMaps = useMemo<ValueMaps>(() => buildValueMaps({
         developers: developerOptions,
@@ -454,13 +459,13 @@ export const SearchPage = () => {
         () =>
             hasSimulatorSelection
                 ? filterLiveries(
-                      liveries,
-                      filters,
-                      searchTerm,
-                      viewMode,
-                      { defaultResolution: settings.defaultResolution, defaultSimulator: settings.defaultSimulator },
-                      isVariantInstalled
-                  )
+                    liveries,
+                    filters,
+                    searchTerm,
+                    viewMode,
+                    { defaultResolution: settings.defaultResolution, defaultSimulator: settings.defaultSimulator },
+                    isVariantInstalled
+                )
                 : [],
         [filters, hasSimulatorSelection, isVariantInstalled, liveries, searchTerm, settings.defaultResolution, settings.defaultSimulator, viewMode]
     );
@@ -525,7 +530,16 @@ export const SearchPage = () => {
         <section className={styles.page}>
             <header className={styles.pageHeader}>
                 <div className={styles.headerCopy}>
-                    <h1>Liveries{activeSimulatorLabel ? ` for ${activeSimulatorLabel}` : ''}</h1>
+                    <h1 className={styles.title}>Liveries </h1>
+                    {activeSimulatorLabel && (
+                        <div className={styles.simulatorLogoWrap} aria-hidden>
+                            <img
+                                src={simulatorLogoMap[activeSimulatorLabel] ?? ''}
+                                alt={activeSimulatorLabel}
+                                className={styles.simulatorLogo}
+                            />
+                        </div>
+                    )}
                 </div>
                 <div className={styles.viewToggle}>
                     <button
