@@ -1,4 +1,7 @@
-const envIsProduction = typeof process !== 'undefined' && (process.env.NODE_ENV === 'production' || process.env.BUN_ENV === 'production');
+// Treat anything except an explicit NODE_ENV=development as production.
+// This avoids defaulting to localhost in packaged apps where NODE_ENV is unset.
+const envIsDevelopment = typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
+const envIsProduction = !envIsDevelopment;
 
 const rawPanelBase = (() => {
 	if (!envIsProduction) {
