@@ -358,13 +358,17 @@ export const SearchPage = () => {
     const hasSimulatorPathConfigured = pathEnabledSimulators.length > 0;
     const hasSimulatorSelection = allowedSimulatorValues.length > 0;
     const activeSimulatorLabel = simulatorOptions.find((opt) => opt.value === filters.simulator)?.label ?? null;
+    const activeSimulatorCode: Simulator | null = (() => {
+        if (!activeSimulatorLabel) return null;
+        const normalized = activeSimulatorLabel.toUpperCase();
+        return normalized === 'FS24' ? 'FS24' : normalized === 'FS20' ? 'FS20' : null;
+    })();
 
-    const simulatorLogoMap: Record<string, string> = {
-        // FS2020 logo (file page provided by user) - replace with direct image URL if available
+    const simulatorLogoMap: Record<Simulator, string> = {
         FS20: 'https://upload.wikimedia.org/wikipedia/commons/e/ed/Microsoft_Flight_Simulator_%282020%29_logo.png',
-        // FS2024/FS24 website logo
         FS24: 'https://flightsimulator.azureedge.net/wp-content/uploads/2024/09/website-logo-with-MSFS-1-1024x282.png'
     };
+    const simulatorLogoKey: Simulator = activeSimulatorCode ?? settings.defaultSimulator;
 
     const valueMaps = useMemo<ValueMaps>(() => buildValueMaps({
         developers: developerOptions,
@@ -531,11 +535,11 @@ export const SearchPage = () => {
             <header className={styles.pageHeader}>
                 <div className={styles.headerCopy}>
                     <h1 className={styles.title}>Liveries </h1>
-                    {activeSimulatorLabel && (
+                    {simulatorLogoKey && (
                         <div className={styles.simulatorLogoWrap} aria-hidden>
                             <img
-                                src={simulatorLogoMap[activeSimulatorLabel] ?? ''}
-                                alt={activeSimulatorLabel}
+                                src={simulatorLogoMap[simulatorLogoKey] ?? ''}
+                                alt={simulatorLogoKey === 'FS24' ? 'Microsoft Flight Simulator 2024' : 'Microsoft Flight Simulator 2020'}
                                 className={styles.simulatorLogo}
                             />
                         </div>
@@ -805,7 +809,7 @@ export const SearchPage = () => {
                                 key={livery.id ?? livery.name}
                                 livery={livery}
                                 defaultResolution={settings.defaultResolution}
-                                defaultSimulator={settings.defaultSimulator}
+                                defaultSimulator={activeSimulatorCode ?? settings.defaultSimulator}
                                 resolutionFilter={
                                     filters.resolution === 'all'
                                         ? 'all'
