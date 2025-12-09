@@ -1,4 +1,5 @@
-export const PANEL_AUTH_ENDPOINT =
-    import.meta.env.VITE_PANEL_AUTH_URL || 'http://localhost:3000/api/auth';
+import { PANEL_BASE_URL } from '../../shared/constants';
 
-export const PANEL_PORTAL_URL = import.meta.env.VITE_PANEL_PORTAL_URL || 'http://localhost:3000';
+export const PANEL_AUTH_ENDPOINT = `${PANEL_BASE_URL}/api/auth`;
+
+export const PANEL_PORTAL_URL = PANEL_BASE_URL;

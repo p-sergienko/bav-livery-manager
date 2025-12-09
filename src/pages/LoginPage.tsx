@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { PANEL_PORTAL_URL } from '@/config/auth';
+import { PANEL_BASE_URL } from '../../shared/constants';
 import { useAuthStore } from '@/store/authStore';
 import styles from './LoginPage.module.css';
 
 const buildPortalUrl = () => {
-    const url = new URL(PANEL_PORTAL_URL);
+    const url = new URL(PANEL_BASE_URL);
     url.searchParams.set('client', 'bav-livery-manager');
     return url.toString();
 };
