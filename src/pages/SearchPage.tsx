@@ -416,19 +416,6 @@ export const SearchPage = () => {
             });
         }
 
-        if (aircraftOptions.length) {
-            groups.push({
-                key: 'aircraft',
-                label: 'Aircraft',
-                options: aircraftOptions.map((option) => ({
-                    value: option.value,
-                    label: option.label,
-                    hint: formatHint('aircraft', option.value)
-                })),
-                limit: 6
-            });
-        }
-
         if (resolutionOptions.length) {
             groups.push({
                 key: 'resolution',
@@ -442,34 +429,17 @@ export const SearchPage = () => {
             });
         }
 
-        if (developerOptions.length) {
-            groups.push({
-                key: 'developer',
-                label: 'Developers',
-                options: developerOptions.map((option) => ({
-                    value: option.value,
-                    label: option.label,
-                    hint: formatHint('developer', option.value)
-                })),
-                limit: 6
-            });
-        }
-
-        if (categoryOptions.length) {
-            groups.push({
-                key: 'category',
-                label: 'Categories',
-                options: categoryOptions.map((category) => ({
-                    value: category.value,
-                    label: category.label,
-                    hint: formatHint('category', category.value)
-                })),
-                limit: 8
-            });
-        }
-
         return groups;
-    }, [categoryOptions, simulatorOptions, developerOptions, resolutionOptions, filterCounts]);
+    }, [simulatorOptions, resolutionOptions, filterCounts]);
+
+    const quickSelectConfigs = useMemo(
+        () => [
+            { key: 'developer' as const, label: 'Developers', options: developerOptions, counts: filterCounts.developer },
+            { key: 'aircraft' as const, label: 'Aircraft', options: aircraftOptions, counts: filterCounts.aircraft },
+            { key: 'category' as const, label: 'Categories', options: categoryOptions, counts: filterCounts.category }
+        ],
+        [aircraftOptions, categoryOptions, developerOptions, filterCounts]
+    );
 
     const options = useMemo(() => ({
         developers: developerOptions,
@@ -615,9 +585,9 @@ export const SearchPage = () => {
                 </p>
             )}
 
-            {quickFilterGroups.length ? (
-                <div className={styles.quickFilterRail}>
-                    {quickFilterGroups.map((group) => (
+            <div className={styles.quickFilterRail}>
+                {quickFilterGroups.length ? (
+                    quickFilterGroups.map((group) => (
                         <div key={group.key} className={styles.quickFilterGroup}>
                             <div className={styles.quickFilterHeader}>
                                 <span>{group.label}</span>
@@ -640,24 +610,55 @@ export const SearchPage = () => {
                                 {group.options.slice(0, group.limit ?? group.options.length).map((option) => {
                                     const disabled = group.key === 'simulator' && !pathEnabledSimulators.includes(option.label.toUpperCase() as Simulator);
                                     return (
-                                    <button
-                                        key={option.value}
-                                        type="button"
-                                        className={classNames(styles.chip, filters[group.key] === option.value && styles.chipActive)}
-                                        disabled={disabled}
-                                        onClick={() => !disabled && handleQuickSelect(group.key, option.value)}
-                                    >
-                                        <span>{option.label}</span>
-                                    </button>
+                                        <button
+                                            key={option.value}
+                                            type="button"
+                                            className={classNames(styles.chip, filters[group.key] === option.value && styles.chipActive)}
+                                            disabled={disabled}
+                                            onClick={() => !disabled && handleQuickSelect(group.key, option.value)}
+                                        >
+                                            <span>{option.label}</span>
+                                        </button>
                                     );
                                 })}
                             </div>
                         </div>
+                    ))
+                ) : (
+                    <div className={styles.quickFilterPlaceholder}>Catalog metadata syncs here for instant pivots.</div>
+                )}
+
+                <div className={styles.quickSelectCluster}>
+                    {quickSelectConfigs.map(({ key, label, options: optionList, counts }) => (
+                        <div key={key} className={styles.quickSelectGroup}>
+                            <div className={styles.quickFilterHeader}>
+                                <span>{label}</span>
+                                {filters[key] !== 'all' && (
+                                    <button type="button" onClick={() => updateFilter(key, 'all')} className={styles.clearLink}>
+                                        Clear
+                                    </button>
+                                )}
+                            </div>
+                            <div className={styles.quickSelectShell}>
+                                <select
+                                    className={styles.quickSelectControl}
+                                    value={filters[key]}
+                                    onChange={(event) => updateFilter(key, event.target.value)}
+                                >
+                                    <option value="all">All</option>
+                                    {optionList.map((option) => {
+                                        return (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                            </div>
+                        </div>
                     ))}
                 </div>
-            ) : (
-                <div className={styles.quickFilterPlaceholder}>Catalog metadata syncs here for instant pivots.</div>
-            )}
+            </div>
 
             <div className={classNames(styles.advancedPanel, showFilters && styles.advancedPanelVisible)}>
                 <div className={styles.advancedGrid}>
@@ -763,7 +764,7 @@ export const SearchPage = () => {
             <div className={styles.scrollContainer}>
                 <div className={styles.paginationBar}>
                     <span className={styles.paginationText}>
-                        Page <strong>{page}</strong> of <strong>{totalPages}</strong>
+                        Found: <strong>{dedupedLiveries.length}</strong> liver{dedupedLiveries.length !== 1 ? 'ies' : 'y'}. Page <strong>{page}</strong> of <strong>{totalPages}</strong>.
                     </span>
                     <div className={styles.paginationButtons}>
                         <button type="button" onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={page === 1}>
