@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LiveryCard } from '@/components/LiveryCard';
-import { RangeSlider } from '@/components/RangeSlider';
 import { ITEMS_PER_PAGE } from '@/utils/livery';
 import type { Livery, Resolution, Simulator } from '@/types/livery';
 import { useLiveryStore } from '@/store/liveryStore';
@@ -19,15 +18,6 @@ const baseFilters: Record<FilterKey, string> = {
     simulator: '',
     resolution: 'all',
     category: 'all'
-};
-
-const filterLabels: Record<FilterKey, string> = {
-    developer: 'Developer',
-    aircraft: 'Aircraft',
-    engine: 'Engine',
-    simulator: 'Simulator',
-    resolution: 'Resolution',
-    category: 'Category'
 };
 
 const createDefaultFilters = (simulator: string): FilterState => ({ ...baseFilters, simulator });
@@ -84,7 +74,10 @@ const buildFallbackOptions = (liveries: Livery[]) => {
         developers: dedupeOptions(liveries.map((l) => ({ value: l.developerId, label: l.developerName }))),
         aircraft: dedupeOptions(liveries.map((l) => ({ value: l.aircraftProfileId, label: l.aircraftProfileName }))),
         engines: uniqueStrings(liveries.map((l) => l.engine)),
-        simulators: dedupeOptions(liveries.map((l) => ({ value: l.simulatorId, label: l.simulatorCode || l.simulatorId }))),
+        simulators: dedupeOptions(liveries.map((l) => ({
+            value: l.simulatorId,
+            label: l.simulatorCode || l.simulatorId
+        }))),
         resolutions: dedupeOptions(liveries.map((l) => ({ value: l.resolutionId, label: l.resolutionValue }))),
         categories
     };
@@ -238,13 +231,8 @@ const classNames = (...tokens: Array<string | false>) => tokens.filter(Boolean).
 
 const SearchIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-        <path d="M11 3a8 8 0 0 1 8 8c0 1.848-.627 3.55-1.68 4.905l3.386 3.388a1 1 0 0 1-1.414 1.414l-3.388-3.386A7.96 7.96 0 0 1 11 19a8 8 0 1 1 0-16z" />
-    </svg>
-);
-
-const FilterIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-        <path d="M4 21V14M4 10V3M12 21V12M12 8V3M20 21V16M20 12V3M1 14h6M9 8h6M17 16h6" />
+        <path
+            d="M11 3a8 8 0 0 1 8 8c0 1.848-.627 3.55-1.68 4.905l3.386 3.388a1 1 0 0 1-1.414 1.414l-3.388-3.386A7.96 7.96 0 0 1 11 19a8 8 0 1 1 0-16z"/>
     </svg>
 );
 
@@ -258,7 +246,6 @@ export const SearchPage = () => {
     const handleDownload = useLiveryStore((state) => state.handleDownload);
     const handleUninstall = useLiveryStore((state) => state.handleUninstall);
     const isVariantInstalled = useLiveryStore((state) => state.isVariantInstalled);
-    const installedLiveries = useLiveryStore((state) => state.installedLiveries);
     const authToken = useAuthStore((state) => state.token);
     const authError = useAuthStore((state) => state.error);
     const clearAuthError = useAuthStore((state) => state.setError);
@@ -271,15 +258,12 @@ export const SearchPage = () => {
     }, [settings.msfs2020Path, settings.msfs2024Path]);
 
     const [filters, setFilters] = useState<FilterState>(() => createDefaultFilters(''));
-    const [showFilters, setShowFilters] = useState(false);
     const [page, setPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(ITEMS_PER_PAGE);
     const [viewMode, setViewMode] = useState<'all' | 'installed'>('all');
     const { data: catalog, isFetching: catalogLoading } = useCatalogQuery(authToken);
     const { isFetching: liveriesFetching } = useLiveriesQuery();
 
     const fallbackOptions = useMemo(() => buildFallbackOptions(liveries), [liveries]);
-
 
     const developerOptions = useMemo<ChipOption[]>(() => {
         if (catalog?.developers?.length) {
@@ -443,21 +427,17 @@ export const SearchPage = () => {
 
     const quickSelectConfigs = useMemo(
         () => [
-            { key: 'developer' as const, label: 'Developers', options: developerOptions, counts: filterCounts.developer },
+            {
+                key: 'developer' as const,
+                label: 'Developers',
+                options: developerOptions,
+                counts: filterCounts.developer
+            },
             { key: 'aircraft' as const, label: 'Aircraft', options: aircraftOptions, counts: filterCounts.aircraft },
             { key: 'category' as const, label: 'Categories', options: categoryOptions, counts: filterCounts.category }
         ],
         [aircraftOptions, categoryOptions, developerOptions, filterCounts]
     );
-
-    const options = useMemo(() => ({
-        developers: developerOptions,
-        aircraft: aircraftOptions,
-        engines: engineOptions,
-        simulators: simulatorOptions,
-        resolutions: resolutionOptions,
-        categories: categoryOptions
-    }), [developerOptions, aircraftOptions, engineOptions, simulatorOptions, resolutionOptions, categoryOptions]);
 
     const filteredLiveries = useMemo(
         () =>
@@ -475,27 +455,15 @@ export const SearchPage = () => {
     );
 
     const dedupedLiveries = useMemo(
-        () => dedupeLiveriesForDisplay(filteredLiveries, settings.defaultResolution),
+        () => dedupeLiveriesForDisplay(filteredLiveries, settings.defaultResolution).sort((liveryA, liveryB) => liveryA.name.localeCompare(liveryB.name)),
         [filteredLiveries, settings.defaultResolution]
     );
 
-    const totalPages = Math.max(1, Math.ceil(dedupedLiveries.length / itemsPerPage));
-    const paginated = dedupedLiveries.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+    const totalPages = Math.max(1, Math.ceil(dedupedLiveries.length / ITEMS_PER_PAGE));
+    const paginated = dedupedLiveries.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
     const updateFilter = (key: FilterKey, value: string) => {
         setFilters((prev) => ({ ...prev, [key]: value }));
-        setPage(1);
-    };
-
-    const resetFilters = () => {
-        const defaultSimulatorValue = allowedSimulatorValues[0] ?? filters.simulator;
-        setFilters(createDefaultFilters(defaultSimulatorValue));
-        setItemsPerPage(ITEMS_PER_PAGE);
-        setPage(1);
-    };
-
-    const handleSliderChange = (value: number) => {
-        setItemsPerPage(value);
         setPage(1);
     };
 
@@ -510,25 +478,6 @@ export const SearchPage = () => {
         }
         updateFilter(key, filters[key] === value ? 'all' : value);
     };
-
-    const activeFilters = useMemo(() => {
-        return (Object.keys(filters) as FilterKey[])
-            .filter((key) => filters[key] !== 'all' && filters[key] !== '')
-            .map((key) => ({
-                key,
-                label: filterLabels[key],
-                value: valueMaps[key].get(filters[key]) ?? filters[key]
-            }));
-    }, [filters, valueMaps]);
-
-    const insights = useMemo(
-        () => [
-            { label: 'Available', value: liveries.length, hint: 'Synced from panel' },
-            { label: 'Matching', value: dedupedLiveries.length, hint: viewMode === 'installed' ? 'Filtered & installed' : 'After filters' },
-            { label: 'Installed', value: installedLiveries.length, hint: 'Detected locally' }
-        ],
-        [dedupedLiveries.length, installedLiveries.length, liveries.length, viewMode]
-    );
 
     return (
         <section className={styles.page}>
@@ -591,8 +540,9 @@ export const SearchPage = () => {
                         className={styles.searchInput}
                         type="search"
                     />
-                    <button type="button" className={styles.iconButton} aria-label="Search" onClick={handleSearchSubmit}>
-                        <SearchIcon />
+                    <button type="button" className={styles.iconButton} aria-label="Search"
+                            onClick={handleSearchSubmit}>
+                        <SearchIcon/>
                     </button>
                 </div>
             </div>
@@ -610,7 +560,8 @@ export const SearchPage = () => {
                             <div className={styles.quickFilterHeader}>
                                 <span>{group.label}</span>
                                 {group.key !== 'simulator' && filters[group.key] !== 'all' && (
-                                    <button type="button" onClick={() => updateFilter(group.key, 'all')} className={styles.clearLink}>
+                                    <button type="button" onClick={() => updateFilter(group.key, 'all')}
+                                            className={styles.clearLink}>
                                         Clear
                                     </button>
                                 )}
@@ -647,12 +598,13 @@ export const SearchPage = () => {
                 )}
 
                 <div className={styles.quickSelectCluster}>
-                    {quickSelectConfigs.map(({ key, label, options: optionList, counts }) => (
+                    {quickSelectConfigs.map(({ key, label, options: optionList }) => (
                         <div key={key} className={styles.quickSelectGroup}>
                             <div className={styles.quickFilterHeader}>
                                 <span>{label}</span>
                                 {filters[key] !== 'all' && (
-                                    <button type="button" onClick={() => updateFilter(key, 'all')} className={styles.clearLink}>
+                                    <button type="button" onClick={() => updateFilter(key, 'all')}
+                                            className={styles.clearLink}>
                                         Clear
                                     </button>
                                 )}
@@ -678,121 +630,24 @@ export const SearchPage = () => {
                 </div>
             </div>
 
-            <div className={classNames(styles.advancedPanel, showFilters && styles.advancedPanelVisible)}>
-                <div className={styles.advancedGrid}>
-                    <label className={styles.advancedField}>
-                        <span className={styles.advancedLabel}>Developer</span>
-                        <select className={styles.filterSelect} value={filters.developer} onChange={(e) => updateFilter('developer', e.target.value)}>
-                            <option value="all">All</option>
-                            {options.developers.map((developer) => {
-                                const count = filterCounts.developer.get(developer.value);
-                                return (
-                                    <option key={developer.value} value={developer.value}>
-                                        {count ? `${developer.label} (${numberFormatter.format(count)})` : developer.label}
-                                    </option>
-                                );
-                            })}
-                        </select>
-                    </label>
-                    <label className={styles.advancedField}>
-                        <span className={styles.advancedLabel}>Aircraft</span>
-                        <select className={styles.filterSelect} value={filters.aircraft} onChange={(e) => updateFilter('aircraft', e.target.value)}>
-                            <option value="all">All</option>
-                            {options.aircraft.map((aircraftType) => {
-                                const count = filterCounts.aircraft.get(aircraftType.value);
-                                return (
-                                    <option key={aircraftType.value} value={aircraftType.value}>
-                                        {count ? `${aircraftType.label} (${numberFormatter.format(count)})` : aircraftType.label}
-                                    </option>
-                                );
-                            })}
-                        </select>
-                    </label>
-                    <label className={styles.advancedField}>
-                        <span className={styles.advancedLabel}>Engine</span>
-                        <select className={styles.filterSelect} value={filters.engine} onChange={(e) => updateFilter('engine', e.target.value)}>
-                            <option value="all">All</option>
-                            {options.engines.map((engine) => {
-                                const count = filterCounts.engine.get(engine);
-                                return (
-                                    <option key={engine} value={engine}>
-                                        {count ? `${engine} (${numberFormatter.format(count)})` : engine}
-                                    </option>
-                                );
-                            })}
-                        </select>
-                    </label>
-                    <label className={styles.advancedField}>
-                        <span className={styles.advancedLabel}>Simulator</span>
-                        <select className={styles.filterSelect} value={filters.simulator} onChange={(e) => updateFilter('simulator', e.target.value)}>
-                            {options.simulators.map((simulator) => {
-                                const count = filterCounts.simulator.get(simulator.value);
-                                const disabled = !pathEnabledSimulators.includes(simulator.label.toUpperCase() as Simulator);
-                                return (
-                                    <option key={simulator.value} value={simulator.value} disabled={disabled}>
-                                        {count ? `${simulator.label} (${numberFormatter.format(count)})` : simulator.label}
-                                    </option>
-                                );
-                            })}
-                        </select>
-                    </label>
-                    <label className={styles.advancedField}>
-                        <span className={styles.advancedLabel}>Resolution</span>
-                        <select className={styles.filterSelect} value={filters.resolution} onChange={(e) => updateFilter('resolution', e.target.value)}>
-                            <option value="all">All</option>
-                            {options.resolutions.map((resolution) => {
-                                const count = filterCounts.resolution.get(resolution.value);
-                                return (
-                                    <option key={resolution.value} value={resolution.value}>
-                                        {count ? `${resolution.label} (${numberFormatter.format(count)})` : resolution.label}
-                                    </option>
-                                );
-                            })}
-                        </select>
-                    </label>
-                    <label className={styles.advancedField}>
-                        <span className={styles.advancedLabel}>Category</span>
-                        <select className={styles.filterSelect} value={filters.category} onChange={(e) => updateFilter('category', e.target.value)}>
-                            <option value="all">All</option>
-                            {options.categories.map((category) => {
-                                const count = filterCounts.category.get(category.value);
-                                const label = count
-                                    ? `${category.label} (${numberFormatter.format(count)})`
-                                    : category.label;
-                                return (
-                                    <option key={category.value} value={category.value}>
-                                        {label}
-                                    </option>
-                                );
-                            })}
-                        </select>
-                    </label>
-                </div>
-                <div className={styles.advancedFooter}>
-                    <div className={styles.sliderStack}>
-                        <RangeSlider label="Results per page" min={6} max={30} step={3} value={itemsPerPage} onChange={handleSliderChange} />
-                        <span className={styles.sliderValue}>{itemsPerPage} per grid</span>
-                    </div>
-                    <button className={styles.resetButton} type="button" onClick={resetFilters}>
-                        Reset filters
-                    </button>
-                </div>
-            </div>
-
             <div className={styles.scrollContainer}>
                 <div className={styles.paginationBar}>
                     <span className={styles.paginationText}>
                         Found: <strong>{dedupedLiveries.length}</strong> liver{dedupedLiveries.length !== 1 ? 'ies' : 'y'}. Page <strong>{page}</strong> of <strong>{totalPages}</strong>.
                     </span>
                     <div className={styles.paginationButtons}>
-                        <button type="button" onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={page === 1}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                                <path d="M15 18l-6-6 6-6" />
+                        <button type="button" onClick={() => setPage((value) => Math.max(1, value - 1))}
+                                disabled={page === 1}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 strokeWidth="1.5" aria-hidden>
+                                <path d="M15 18l-6-6 6-6"/>
                             </svg>
                         </button>
-                        <button type="button" onClick={() => setPage((value) => Math.min(totalPages, value + 1))} disabled={page === totalPages}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                                <path d="M9 18l6-6-6-6" />
+                        <button type="button" onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+                                disabled={page === totalPages}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 strokeWidth="1.5" aria-hidden>
+                                <path d="M9 18l6-6-6-6"/>
                             </svg>
                         </button>
                     </div>
