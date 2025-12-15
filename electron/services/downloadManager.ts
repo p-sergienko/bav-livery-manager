@@ -273,12 +273,7 @@ async function extractZipNonBlocking(zipPath: string, extractPath: string) {
             console.log('PowerShell process failed, falling back to AdmZip:', error);
             extractWithAdmZip(zipPath, extractPath).then(resolve).catch(reject);
         });
-
-        child.on('error', (error) => {
-            console.log('Native unzip failed, falling back to AdmZip:', error);
-            extractWithAdmZip(zipPath, extractPath).then(resolve).catch(reject);
-        });
-    })
+    });
 }
 
 function extractWithAdmZip(zipPath: string, extractPath: string) {
