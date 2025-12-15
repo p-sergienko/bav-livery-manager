@@ -56,6 +56,7 @@ export function loadSettings(): Settings {
 
 export function saveSettings(settings: Settings): boolean {
     try {
+        console.log(settings)
         const filePath = resolveSettingsPath();
         fs.ensureFileSync(filePath);
         fs.writeJsonSync(filePath, settings, { spaces: 2 });

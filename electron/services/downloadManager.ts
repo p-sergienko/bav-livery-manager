@@ -97,8 +97,6 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
     const outputPath = path.join(baseFolder, zipFilename);
     const extractPath = path.join(baseFolder, folderName);
 
-    console.log('Starting download', { downloadUrl, outputPath, extractPath });
-
     try {
         await retryAsync(() => downloadFile(downloadUrl, outputPath, (progress) => {
             const targetWindow = appContext.getMainWindow();
@@ -164,7 +162,7 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
         };
     } catch (error) {
         console.error('Download process failed:', error);
-        
+
         // Set taskbar to error state briefly, then clear
         const errorWindow = appContext.getMainWindow();
         if (errorWindow && !errorWindow.isDestroyed()) {
@@ -175,7 +173,7 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
                 }
             }, 2000);
         }
-        
+
         const status = (error as Error & { status?: number }).status;
         return {
             success: false,
@@ -249,45 +247,38 @@ async function resolveDownloadEndpoint(endpoint: string, authToken: string | nul
 
 async function extractZipNonBlocking(zipPath: string, extractPath: string) {
     return new Promise<void>((resolve, reject) => {
-        const isWindows = process.platform === 'win32';
+        const psCommand = [
+            '-NoProfile',
+            '-ExecutionPolicy', 'Bypass',
+            '-Command',
+            `& {
+                    param($ZipPath, $DestPath)
+                    Expand-Archive -LiteralPath $ZipPath -DestinationPath $DestPath -Force
+                    if ($?) { exit 0 } else { exit 1 }
+                } -ZipPath '${zipPath.replace(/'/g, "''")}' -DestPath '${extractPath.replace(/'/g, "''")}'`
+        ];
 
-        if (isWindows) {
-            const psCommand = [
-                '-Command',
-                `Expand-Archive -Path "${zipPath}" -DestinationPath "${extractPath}" -Force`
-            ];
+        const child = spawn('powershell.exe', psCommand);
 
-            const child = spawn('powershell', psCommand);
-
-            child.on('close', (code) => {
-                if (code === 0) {
-                    resolve();
-                } else {
-                    extractWithAdmZip(zipPath, extractPath).then(resolve).catch(reject);
-                }
-            });
-
-            child.on('error', (error) => {
-                console.log('PowerShell extraction failed, falling back to AdmZip:', error);
+        child.on('close', (code) => {
+            if (code === 0) {
+                resolve();
+            } else {
+                console.log('PowerShell extraction failed, falling back to AdmZip');
                 extractWithAdmZip(zipPath, extractPath).then(resolve).catch(reject);
-            });
-        } else {
-            const child = spawn('unzip', ['-o', zipPath, '-d', extractPath]);
+            }
+        });
 
-            child.on('close', (code) => {
-                if (code === 0) {
-                    resolve();
-                } else {
-                    extractWithAdmZip(zipPath, extractPath).then(resolve).catch(reject);
-                }
-            });
+        child.on('error', (error) => {
+            console.log('PowerShell process failed, falling back to AdmZip:', error);
+            extractWithAdmZip(zipPath, extractPath).then(resolve).catch(reject);
+        });
 
-            child.on('error', (error) => {
-                console.log('Native unzip failed, falling back to AdmZip:', error);
-                extractWithAdmZip(zipPath, extractPath).then(resolve).catch(reject);
-            });
-        }
-    });
+        child.on('error', (error) => {
+            console.log('Native unzip failed, falling back to AdmZip:', error);
+            extractWithAdmZip(zipPath, extractPath).then(resolve).catch(reject);
+        });
+    })
 }
 
 function extractWithAdmZip(zipPath: string, extractPath: string) {
@@ -312,7 +303,7 @@ async function trackDownloadCompletion(
 ): Promise<void> {
     const simCode = simulator === 'MSFS2024' ? 'FS24' : 'FS20';
     const trackUrl = `${PANEL_BASE_URL}/api/simulator/liveries/${liveryId}/track`;
-    
+
     try {
         const response = await fetchWithTimeout(trackUrl, {
             method: 'POST',
