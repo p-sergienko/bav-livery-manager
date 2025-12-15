@@ -147,7 +147,6 @@
     flex-shrink: 0;
     width: 32px;
     margin: -8px 0 -8px;
-    color: var(--muted);
 }
 
 .footerButton:hover {

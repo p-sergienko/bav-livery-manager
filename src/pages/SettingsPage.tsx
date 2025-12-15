@@ -159,7 +159,7 @@ export const SettingsPage = () => {
                         </button>
                     </div>
                 </label>
-                <p className={styles.description}>Note: if you don't use community folder, you can change the path to your custom community directory.</p>
+                <p className={styles.description}>Note: if you don't use the community folder, you can change the path to your custom community directory.</p>
                 <div className={styles.formActions}>
                     <button type="submit" className={styles.submitButton}>
                         Save Settings
@@ -172,7 +172,7 @@ export const SettingsPage = () => {
 
             <footer className={styles.footer}>
                 <p className={styles.footerText}>
-                    Created by <span className={styles.footerAuthor}>Pavel Sergienko</span>, inspired by <span className={styles.footerAuthor}>Laurie Cooper</span>, made for <span className={styles.footerAuthor}> BAV Community</span>
+                    Created by <span className={styles.footerAuthor}>Pavel Sergienko</span>, inspired by <span className={styles.footerAuthor}>Laurie Cooper</span>, made for <span className={styles.footerAuthor}>BAV Community</span>
                 </p>
                 <p className={styles.secondFooterText}>© {new Date().getFullYear()} - BAV Livery Manager</p>
                 <div className={styles.footerButtons}>
@@ -185,7 +185,7 @@ export const SettingsPage = () => {
                     <button type="button" className={styles.footerButton} onClick={handleOpenBAV}>
                         <img
                             src="/bav-icon.svg"
-                            alt="bav-icon"
+                            alt="BAV Virtual logo"
                         />
                         BAV website
                     </button>
