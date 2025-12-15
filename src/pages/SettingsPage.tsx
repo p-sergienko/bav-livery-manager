@@ -184,7 +184,7 @@ export const SettingsPage = () => {
                         View on GitHub
                     </button>
                     <button type="button" className={styles.footerButton} onClick={handleOpenBAV}>
-                        <BAVIcon width={26} height={26} color={"#ffffff"}/>
+                        <BAVIcon width={26} height={26}/>
                         BAV website
                     </button>
                 </div>

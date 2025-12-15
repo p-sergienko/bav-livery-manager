@@ -4,7 +4,7 @@ type BAVIconProps = {
     color: string,
 }
 
-export const BAVIcon = ({width, height, color}: BAVIconProps) => {
+export const BAVIcon = ({width, height}: BAVIconProps) => {
     return (
         <>
             <svg width={width} height={height} style={{margin: "-1000px 0 -1000px"}} viewBox={`0 0 512 512`} fill="currentColor">
