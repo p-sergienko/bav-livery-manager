@@ -431,10 +431,9 @@ export const SearchPage = () => {
                 key: 'developer' as const,
                 label: 'Developers',
                 options: developerOptions,
-                counts: filterCounts.developer
             },
-            { key: 'aircraft' as const, label: 'Aircraft', options: aircraftOptions, counts: filterCounts.aircraft },
-            { key: 'category' as const, label: 'Categories', options: categoryOptions, counts: filterCounts.category }
+            { key: 'aircraft' as const, label: 'Aircraft', options: aircraftOptions },
+            { key: 'category' as const, label: 'Categories', options: categoryOptions }
         ],
         [aircraftOptions, categoryOptions, developerOptions, filterCounts]
     );
