@@ -107,13 +107,22 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 0;
 }
 
 .footerText {
     margin: 0;
     font-size: 0.75rem;
     color: var(--muted);
+}
+
+.secondFooterText {
+    margin: 12px;
+}
+
+.footerButtons {
+    display: flex;
+    gap: 8px;
 }
 
 .footerAuthor {
@@ -132,6 +141,13 @@
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
+}
+
+.footerButton img {
+    flex-shrink: 0;
+    width: 32px;
+    margin: -8px 0 -8px;
+    color: var(--muted);
 }
 
 .footerButton:hover {
