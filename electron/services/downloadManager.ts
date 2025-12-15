@@ -1,9 +1,9 @@
-import path from 'node:path';
+import * as path from 'node:path';
 import { spawn } from 'node:child_process';
 import { Readable } from 'node:stream';
 import type { ReadableStream as NodeReadableStream } from 'node:stream/web';
-import fs from 'fs-extra';
-import AdmZip from 'adm-zip';
+import * as fs from 'fs-extra';
+import * as AdmZip from 'adm-zip';
 import type { AppContext, DownloadProgress, DownloadResult, Settings } from '../types';
 import { fetchJson, fetchWithTimeout } from '../utils/network';
 import { recordInstallation } from './installedLiveriesStore';
