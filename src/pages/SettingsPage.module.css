@@ -161,23 +161,22 @@
     border-color: #666666;
 }
 
-.secondaryButton {
+.detectButton {
     padding: 8px 16px;
     background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--border);
+    color: #ffffff;
+    border: 1px solid #17a61c;
     border-radius: 6px;
     cursor: pointer;
     font-size: 0.85rem;
     transition: all 0.2s ease;
 }
 
-.secondaryButton:hover:not(:disabled) {
-    color: var(--text);
-    border-color: #666666;
+.detectButton:hover:not(:disabled) {
+    background: #17a61c;
 }
 
-.secondaryButton:disabled {
+.detectButton:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }

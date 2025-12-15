@@ -144,12 +144,12 @@ export const SettingsPage = () => {
                         </button>
                     </div>
                 </label>
-
+                <p className={styles.description}>Note: if you don't use community folder, you can change the path to your custom community directory.</p>
                 <div className={styles.formActions}>
                     <button type="submit" className={styles.submitButton}>
                         Save Settings
                     </button>
-                    <button type="button" className={styles.secondaryButton} onClick={handleAutoDetect} disabled={detecting}>
+                    <button type="button" className={styles.detectButton} onClick={handleAutoDetect} disabled={detecting}>
                         {detecting ? 'Detecting…' : 'Auto-detect paths'}
                     </button>
                 </div>
