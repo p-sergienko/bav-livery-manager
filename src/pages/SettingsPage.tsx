@@ -4,6 +4,7 @@ import { useLiveryStore } from '@/store/liveryStore';
 import { useAuthStore } from '@/store/authStore';
 import { Toast } from '@/components/Toast';
 import styles from './SettingsPage.module.css';
+import { BAVIcon } from "@/components/Icons/BAVIcon";
 
 export const SettingsPage = () => {
     const settings = useLiveryStore((state) => state.settings);
@@ -183,10 +184,7 @@ export const SettingsPage = () => {
                         View on GitHub
                     </button>
                     <button type="button" className={styles.footerButton} onClick={handleOpenBAV}>
-                        <img
-                            src="/bav-icon.svg"
-                            alt="BAV Virtual logo"
-                        />
+                        <BAVIcon width={26} height={26} color={"#ffffff"}/>
                         BAV website
                     </button>
                 </div>
