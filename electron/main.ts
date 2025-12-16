@@ -41,6 +41,12 @@ function setupAutoUpdates() {
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = true;
 
+    const sendUpdateEvent = (channel: string, data?: any) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send(channel, data);
+        }
+    };
+
     const resetProgress = () => {
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.setProgressBar(-1);
@@ -50,21 +56,50 @@ function setupAutoUpdates() {
     autoUpdater.on('error', (error: Error) => {
         log.error('Auto update error:', error);
         resetProgress();
+        sendUpdateEvent('update-error', error.message);
     });
-    autoUpdater.on('checking-for-update', () => log.info('Checking for application updates...'));
-    autoUpdater.on('update-available', (info: UpdateInfo) => log.info('Update available:', info.version));
+
+    autoUpdater.on('checking-for-update', () => {
+        log.info('Checking for application updates...');
+        sendUpdateEvent('update-checking');
+    });
+
+    autoUpdater.on('update-available', (info: UpdateInfo) => {
+        log.info('Update available:', info.version);
+        sendUpdateEvent('update-available', {
+            version: info.version,
+            releaseDate: info.releaseDate,
+            releaseNotes: info.releaseNotes
+        });
+    });
+
     autoUpdater.on('update-not-available', () => {
         log.info('No updates available.');
         resetProgress();
+        sendUpdateEvent('update-not-available');
     });
+
     autoUpdater.on('download-progress', (progress: ProgressInfo) => {
+        log.info(`Download progress: ${progress.percent}%`);
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.setProgressBar(progress.percent / 100, { mode: 'normal' });
         }
+        sendUpdateEvent('update-progress', {
+            percent: progress.percent,
+            bytesPerSecond: progress.bytesPerSecond,
+            total: progress.total,
+            transferred: progress.transferred
+        });
     });
+
     autoUpdater.on('update-downloaded', (info: UpdateInfo) => {
-        log.info('Update downloaded, will install on quit.', info.version);
+        log.info('Update downloaded, ready to install.', info.version);
         resetProgress();
+        sendUpdateEvent('update-downloaded', {
+            version: info.version,
+            releaseDate: info.releaseDate,
+            releaseNotes: info.releaseNotes
+        });
     });
 
     const checkForUpdates = () => {
@@ -325,4 +360,16 @@ ipcMain.handle('open-external', async (_event, targetUrl: string) => {
     } catch (error) {
         console.error('Failed to open external URL:', error);
     }
+});
+
+ipcMain.handle('install-update', () => {
+    autoUpdater.quitAndInstall();
+});
+
+ipcMain.handle('check-for-updates', async () => {
+    return await autoUpdater.checkForUpdates();
+});
+
+ipcMain.handle('restart-and-update', () => {
+    autoUpdater.quitAndInstall(true, true);
 });
