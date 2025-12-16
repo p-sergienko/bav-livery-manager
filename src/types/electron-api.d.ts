@@ -44,6 +44,15 @@ export interface InstalledLiveryRecord {
 }
 
 export interface ElectronAPI {
+    onUpdateChecking: (callback: () => void) => void;
+    onUpdateAvailable: (callback: (info: AppUpdateInfo) => void) => void;
+    onUpdateNotAvailable: (callback: () => void) => void;
+    onUpdateProgress: (callback: (progress: AppUpdateProgress) => void) => void;
+    onUpdateDownloaded: (callback: (info: AppUpdateInfo) => void) => void;
+    onUpdateError: (callback: (error: string) => void) => void;
+    checkForUpdates: () => Promise<void>;
+    installUpdate: () => Promise<void>;
+    restartAndUpdate: () => Promise<void>;
     fetchLiveries: (authToken?: string | null) => Promise<{ version?: string; liveries: Livery[] }>;
     downloadLivery: (
         downloadEndpoint: string,
