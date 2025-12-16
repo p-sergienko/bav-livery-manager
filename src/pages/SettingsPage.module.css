@@ -290,3 +290,17 @@
     color: #dc3545;
     background: rgba(220, 53, 69, 0.1);
 }
+
+
+.updates {
+    display: flex;
+    flex-direction: row;
+    align-content: center;
+}
+
+.updatesButtons {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: center;
+}

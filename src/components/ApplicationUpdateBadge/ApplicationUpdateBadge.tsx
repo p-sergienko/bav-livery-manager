@@ -5,7 +5,7 @@ export const ApplicationUpdateBadge = () => {
 
     const { updateAvailable, updateInfo } = useAppUpdateStore();
 
-    if (!updateAvailable && !updateInfo) {
+    if (updateAvailable && !updateInfo) {
         return null;
     }
 
