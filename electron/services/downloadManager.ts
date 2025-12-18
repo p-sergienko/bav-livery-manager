@@ -55,7 +55,7 @@ function deriveZipFilename(downloadUrl: string): string {
 
     try {
         const parsed = new URL(downloadUrl);
-        const fromPath = buildName(path.basename(parsed.pathname));
+        const fromPath = buildName(path.basename(parsed.pathname)).replace(/^[^-]+-[^-]+-/, '');
         if (fromPath) {
             return fromPath;
         }
