@@ -1,4 +1,4 @@
-# BAV Livery Manager
+# BAVirtual Livery Manager
 
 A desktop utility that helps **BAV (British Airways Virtual)** pilots install, update, and manage aircraft liveries in a few clicks.
 

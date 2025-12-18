@@ -167,7 +167,7 @@ export function registerIpcHandlers(appContext: AppContext) {
 
         if (progress < 0) {
             targetWindow.setProgressBar(-1); // Clear progress
-            targetWindow.setTitle('BAV Livery Manager'); // Reset title
+            targetWindow.setTitle('BAVirtual Livery Manager'); // Reset title
             return;
         }
 

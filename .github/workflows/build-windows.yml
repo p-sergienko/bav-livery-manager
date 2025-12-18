@@ -151,7 +151,7 @@ jobs:
                   else
                     echo "Creating new release $TAG..."
                     gh release create "$TAG" "${ASSETS[@]}" \
-                      --title "BAV Livery Manager ${{ steps.version.outputs.APP_VERSION }}" \
+                      --title "BAVirtual Livery Manager ${{ steps.version.outputs.APP_VERSION }}" \
                       --notes "Release ${{ steps.version.outputs.APP_VERSION }}" \
                       --repo "$REPO" \
                       --target "${{ github.sha }}"
