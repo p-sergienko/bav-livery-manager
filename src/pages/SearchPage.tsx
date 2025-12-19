@@ -171,8 +171,7 @@ const filterLiveries = (
     filters: FilterState,
     searchTerm: string,
     viewMode: 'all' | 'installed',
-    settings: { defaultResolution: Resolution; defaultSimulator: Simulator },
-    installedLiveries:  InstalledLiveryRecord[]
+    installedLiveries: InstalledLiveryRecord[]
 ) => {
     const term = searchTerm.toLowerCase();
     const matches = liveries.filter((livery) => {
@@ -214,8 +213,7 @@ const filterLiveries = (
     if (viewMode === 'installed') {
         const isVariantInstalled = (livery: Livery) => {
             return !!installedLiveries.find((l) => l.liveryId === livery.id);
-        }
-        console.log(matches)
+        };
         return matches.filter((livery) => isVariantInstalled(livery));
     }
 
@@ -451,9 +449,7 @@ export const SearchPage = () => {
                     filters,
                     searchTerm,
                     viewMode,
-                    { defaultResolution: settings.defaultResolution, defaultSimulator: settings.defaultSimulator },
                     installedLiveries,
-                    isVariantInstalled
                 )
                 : [],
         [filters, hasSimulatorSelection, isVariantInstalled, liveries, searchTerm, settings.defaultResolution, settings.defaultSimulator, viewMode]
