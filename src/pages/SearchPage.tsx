@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LiveryCard } from '@/components/LiveryCard';
 import { ITEMS_PER_PAGE } from '@/utils/livery';
-import type { Livery, Resolution, Simulator } from '@/types/livery';
+import type { Livery, InstalledLiveryRecord, Resolution, Simulator } from '@/types/livery';
 import { useLiveryStore } from '@/store/liveryStore';
 import { useAuthStore } from '@/store/authStore';
 import { useCatalogQuery } from '@/hooks/useCatalogQuery';
@@ -172,7 +172,7 @@ const filterLiveries = (
     searchTerm: string,
     viewMode: 'all' | 'installed',
     settings: { defaultResolution: Resolution; defaultSimulator: Simulator },
-    isVariantInstalled: (livery: Livery, resolution: Resolution, simulator: Simulator) => boolean
+    installedLiveries:  InstalledLiveryRecord[]
 ) => {
     const term = searchTerm.toLowerCase();
     const matches = liveries.filter((livery) => {
@@ -212,7 +212,11 @@ const filterLiveries = (
     });
 
     if (viewMode === 'installed') {
-        return matches.filter((livery) => isVariantInstalled(livery, settings.defaultResolution, settings.defaultSimulator));
+        const isVariantInstalled = (livery: Livery) => {
+            return !!installedLiveries.find((l) => l.liveryId === livery.id);
+        }
+        console.log(matches)
+        return matches.filter((livery) => isVariantInstalled(livery));
     }
 
     return matches;
@@ -238,6 +242,7 @@ const SearchIcon = () => (
 
 export const SearchPage = () => {
     const liveries = useLiveryStore((state) => state.liveries);
+    const installedLiveries = useLiveryStore((state) => state.installedLiveries);
     const loading = useLiveryStore((state) => state.loading);
     const error = useLiveryStore((state) => state.error);
     const clearError = useLiveryStore((state) => state.clearError);
@@ -447,6 +452,7 @@ export const SearchPage = () => {
                     searchTerm,
                     viewMode,
                     { defaultResolution: settings.defaultResolution, defaultSimulator: settings.defaultSimulator },
+                    installedLiveries,
                     isVariantInstalled
                 )
                 : [],
