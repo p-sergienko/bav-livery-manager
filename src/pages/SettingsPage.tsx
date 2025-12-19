@@ -173,9 +173,9 @@ export const SettingsPage = () => {
 
             <footer className={styles.footer}>
                 <p className={styles.footerText}>
-                    Created by <span className={styles.footerAuthor}>Pavel Sergienko</span>, inspired by <span className={styles.footerAuthor}>Laurie Cooper</span>, made for <span className={styles.footerAuthor}>BAV Community</span>
+                    Created by <span className={styles.footerAuthor}>Pavel Sergienko</span>, inspired by <span className={styles.footerAuthor}>Laurie Cooper</span>, made for <span className={styles.footerAuthor}>BAVirtual Community</span>
                 </p>
-                <p className={styles.secondFooterText}>© {new Date().getFullYear()} - BAV Livery Manager</p>
+                <p className={styles.secondFooterText}>© {new Date().getFullYear()} - BAVirtual Livery Manager</p>
                 <div className={styles.footerButtons}>
                     <button type="button" className={styles.footerButton} onClick={handleOpenGitHub}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">

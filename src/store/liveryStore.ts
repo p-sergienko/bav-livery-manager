@@ -134,19 +134,19 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
                     
                     if (anyExtracting) {
                         api.setTaskbarProgress?.(100, 'indeterminate');
-                        api.setWindowTitle?.(`Extracting ${payload.liveryName}... - BAV Livery Manager`);
+                        api.setWindowTitle?.(`Extracting ${payload.liveryName}... - BAVirtual Livery Manager`);
                     } else {
                         api.setTaskbarProgress?.(avgProgress, 'normal');
                         const count = activeDownloads.length;
                         const title = count === 1 
-                            ? `Downloading ${payload.liveryName} (${Math.round(avgProgress)}%) - BAV Livery Manager`
-                            : `Downloading ${count} liveries (${Math.round(avgProgress)}%) - BAV Livery Manager`;
+                            ? `Downloading ${payload.liveryName} (${Math.round(avgProgress)}%) - BAVirtual Livery Manager`
+                            : `Downloading ${count} liveries (${Math.round(avgProgress)}%) - BAVirtual Livery Manager`;
                         api.setWindowTitle?.(title);
                     }
                 } else {
                     // Clear taskbar progress and reset title when no downloads
                     api.setTaskbarProgress?.(-1);
-                    api.setWindowTitle?.('BAV Livery Manager');
+                    api.setWindowTitle?.('BAVirtual Livery Manager');
                 }
             });
 
@@ -451,7 +451,7 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
                     // Clear taskbar progress and reset title if no more downloads
                     if (Object.keys(clone).length === 0) {
                         api.setTaskbarProgress?.(-1);
-                        api.setWindowTitle?.('BAV Livery Manager');
+                        api.setWindowTitle?.('BAVirtual Livery Manager');
                     }
                     
                     return { downloadStates: clone };

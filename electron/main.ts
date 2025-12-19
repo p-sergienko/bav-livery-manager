@@ -8,7 +8,7 @@ import log from 'electron-log';
 import { registerIpcHandlers } from './ipc/registerHandlers';
 import type { AppContext } from './types';
 
-const APP_TITLE = 'BAV Livery Manager';
+const APP_TITLE = 'BAVirtual Livery Manager';
 const AUTH_PROTOCOL = 'bav-livery-manager';
 const ICON_BASENAME = 'BAV-Livery-Manager';
 const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour

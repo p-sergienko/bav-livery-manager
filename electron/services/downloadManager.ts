@@ -55,7 +55,8 @@ function deriveZipFilename(downloadUrl: string): string {
 
     try {
         const parsed = new URL(downloadUrl);
-        const fromPath = buildName(path.basename(parsed.pathname));
+        //regex removes unnecessary data added after uploading to S3
+        const fromPath = buildName(path.basename(parsed.pathname)).replace(/^[^-]+-[^-]+-/, '');
         if (fromPath) {
             return fromPath;
         }
