@@ -1,6 +1,6 @@
 # BAVirtual Livery Manager
 
-A desktop utility that helps **BAV (British Airways Virtual)** pilots install, update, and manage aircraft liveries in a few clicks.
+A desktop utility that helps **BAVirtual (British Airways Virtual)** pilots install, update, and manage aircraft liveries in a few clicks.
 
 ![Downloads](https://img.shields.io/github/downloads/p-sergienko/bav-livery-manager/total)
 ![Latest release](https://img.shields.io/github/v/release/p-sergienko/bav-livery-manager)
@@ -14,8 +14,8 @@ A desktop utility that helps **BAV (British Airways Virtual)** pilots install, u
 
 ## ✨ Features
 
-- Browse the full list of available BAV liveries
-- Install liveries into Microsoft Flight Simulator  
+- Browse the full list of available BAVirtual liveries
+- Install liveries into Microsoft Flight Simulator 2020 & 2024
 - Detect installed liveries and compare versions  
 - Update outdated liveries with one click  
 - Lightweight Electron-based UI
