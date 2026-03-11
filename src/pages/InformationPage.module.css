@@ -1,6 +1,6 @@
 .headerSection {
     display: grid;
-    grid-template-columns: 1fr auto; 
+    grid-template-columns: 1fr auto;
     border: 1px solid var(--border);
     background: rgba(255, 255, 255, 0.04);
     color: var(--text);
@@ -23,15 +23,44 @@
 }
 
 .textContainer {
-  display: flex;
-  flex-direction: column;            /* keeps h1 and h3 stacked */
+    display: flex;
+    flex-direction: column;
 }
 
 .devLogo {
-  height: 80px;
-  width: 80px;
-  border-radius: 50%;
-  overflow: hidden;
-  align-self: center;
-  margin: 12px 12px;
+    height: 80px;
+    width: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    align-self: center;
+    margin: 12px 12px;
+}
+
+.mainBody {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 2fr));
+    gap: 10px 12px;
+    margin: 0 0 8px;
+    margin-top: 2%;
+}
+
+.changesBox {
+    grid-column: span 2;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.liveryBox {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.imageContainer {
+    margin: 0;
 }

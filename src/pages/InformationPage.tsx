@@ -6,7 +6,7 @@ import styles from "@/pages/InformationPage.module.css"
 
 const DeveloperLogo = ({ developerName }: { developerName: string }) => {
     const logoSrc = `public/${developerName}.png`;
-    return <img src={logoSrc} alt={`${developerName} logo`} className={styles.developerLogo} />;
+    return <img src={logoSrc} alt={`${developerName} logo`} />;
 };
 
 export function InformationPage() {
@@ -45,6 +45,17 @@ export function InformationPage() {
                 <div className={styles.devLogo}>
                     <DeveloperLogo developerName={selectedLivery.developerName} />
                 </div>
+            </div>
+            <div className={styles.mainBody}>
+                <div className={styles.changesBox}>
+                    {/* Add livery details here – description, download link, etc. */}
+                    <p>Description</p>
+                </div> 
+                <div className={styles.liveryBox}>
+                    <div className={styles.imageContainer}>
+                        <img src={selectedLivery.preview ?? ""} alt={`${selectedLivery.name} preview`} loading="lazy" />
+                    </div>
+                </div>                    
             </div>
         </div>
     );
