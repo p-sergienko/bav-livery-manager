@@ -76,6 +76,15 @@
     border: 1px solid var(--border);
     color: var(--text);
     border-radius: 4px;
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.inputRow input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(23, 166, 28, 0.2);
+    font-weight: 400;
 }
 
 .inputRow button {
