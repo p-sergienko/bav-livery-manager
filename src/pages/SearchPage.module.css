@@ -1,11 +1,12 @@
 .page {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1rem;
     height: 100%;
     overflow: hidden;
 }
 
+/* ─── Header ─── */
 .pageHeader {
     display: flex;
     justify-content: space-between;
@@ -14,10 +15,16 @@
     align-items: flex-end;
 }
 
-.headerCopy {
+.headerLeft {
     display: flex;
-    flex-direction: row;
-    gap: 0.35rem;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.headerTitleRow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 .title {
@@ -39,27 +46,27 @@
     object-fit: contain;
 }
 
-.headerEyebrow {
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.2em;
+.resultCount {
+    margin: 0;
+    font-size: 0.85rem;
     color: var(--muted);
 }
 
-.pageHeader h1 {
-    margin: 0;
-    font-size: 2rem;
+.searchTermHint {
+    color: var(--text);
+    font-style: italic;
 }
 
-.headerSubtitle {
-    margin: 0;
-    color: var(--muted);
+.headerRight {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 .viewToggle {
     display: inline-flex;
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 10px;
     background: var(--card);
     overflow: hidden;
 }
@@ -68,77 +75,60 @@
     border: none;
     background: transparent;
     color: var(--muted);
-    padding: 0.45rem 1rem;
+    padding: 0.45rem 1.1rem;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     transition: background 0.2s ease, color 0.2s ease;
 }
 
-.viewToggleButton+.viewToggleButton {
+.viewToggleButton + .viewToggleButton {
     border-left: 1px solid var(--border);
 }
 
 .viewToggleButtonActive {
     color: var(--text);
     background: rgba(255, 255, 255, 0.08);
-    box-shadow: none;
 }
 
-.summaryGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 0.75rem;
-}
-
-.summaryCard {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 0.75rem;
-    background: rgba(255, 255, 255, 0.02);
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-}
-
-.summaryCard span {
-    font-size: 0.75rem;
-    color: var(--muted);
-}
-
-.summaryCard strong {
-    font-size: 1.5rem;
-}
-
-.summaryCard p {
-    margin: 0;
-    font-size: 0.72rem;
-    color: var(--muted);
-}
-
+/* ─── Toolbar ─── */
 .toolbar {
     display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    align-items: stretch;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .searchBar {
     display: flex;
     gap: 10px;
-    flex: 1;
-    min-width: 280px;
     align-items: stretch;
+}
+
+.searchInputWrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.searchIconInline {
+    position: absolute;
+    left: 14px;
+    display: flex;
+    align-items: center;
+    color: var(--muted);
+    pointer-events: none;
 }
 
 .searchInput {
     flex: 1;
-    padding: 0 15px;
+    padding: 0 42px 0 44px;
     border: 1px solid var(--border);
     border-radius: 12px;
     background: var(--card);
     color: var(--text);
-    font-size: 16px;
+    font-size: 15px;
     height: 48px;
+    transition: border-color 0.2s ease;
 }
 
 .searchInput:focus {
@@ -146,277 +136,254 @@
     border-color: var(--text);
 }
 
-.iconButton {
-    width: 48px;
+.searchInput::placeholder {
+    color: var(--muted);
+    opacity: 0.7;
+}
+
+/* Clear the browser's default search cancel button */
+.searchInput::-webkit-search-cancel-button {
+    display: none;
+}
+
+.clearSearchButton {
+    position: absolute;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.clearSearchButton:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text);
+}
+
+.filterToggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 18px;
     height: 48px;
     border: 1px solid var(--border);
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.04);
-    color: #ffffff;
-    display: flex;
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.filterToggle:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+}
+
+.filterToggleActive {
+    border-color: var(--text);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+}
+
+.filterCount {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.15);
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+/* ─── Simulator / Resolution selector row ─── */
+.simSelectorRow {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.simChip {
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 6px 16px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.04);
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
-.iconButton:hover {
+.simChip:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.simChip:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.simChipActive {
+    border-color: var(--text);
     background: rgba(255, 255, 255, 0.12);
 }
 
-.toolbarActions {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+.simDivider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 4px;
 }
 
-.transparentButton {
+/* ─── Collapsible filter panel ─── */
+.filterPanel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.25s ease;
+}
+
+.filterPanel > * {
+    overflow: hidden;
+}
+
+.filterPanelOpen {
+    grid-template-rows: 1fr;
+}
+
+.filterGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    padding: 0;
+}
+
+.filterPanelOpen .filterGrid {
+    padding: 6px 0 2px;
+}
+
+.filterField {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.filterLabel {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.filterSelect {
+    padding: 7px 32px 7px 12px;
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 0.4rem 1rem;
-    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--text);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23b3b3b3' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+}
+
+.filterSelect:focus {
+    outline: none;
+    border-color: var(--text);
+}
+
+.filterSelect option {
+    background: var(--card);
+    color: var(--text);
+}
+
+/* ─── Active filter badges ─── */
+.activeFilters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.filterBadge {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.06);
     color: var(--text);
     cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.15s ease;
 }
 
-.transparentButtonActive {
-    border-color: #60a5fa;
+.filterBadge:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
 }
 
+.filterBadgeLabel {
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.filterBadge svg {
+    opacity: 0.5;
+    transition: opacity 0.15s;
+}
+
+.filterBadge:hover svg {
+    opacity: 1;
+}
+
+.clearAllLink {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    text-decoration: underline;
+    padding: 4px 8px;
+    transition: color 0.2s;
+}
+
+.clearAllLink:hover {
+    color: var(--text);
+}
+
+/* ─── Status messages ─── */
 .catalogStatus {
     font-size: 0.85rem;
     color: var(--muted);
+    margin: 0;
 }
 
 .catalogStatusError {
     color: #f87171;
 }
 
-.quickFilterRail {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    align-items: stretch;
-}
-
-.quickFilterGroup {
-    /* border: 1px solid var(--border); */
-    border-radius: 14px;
-    padding: 0 0.5rem;
-    /* background: rgba(255, 255, 255, 0.02); */
-}
-
-.quickFilterHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 0.75rem;
-    color: var(--muted);
-    margin-bottom: 0.75rem;
-}
-
-.clearLink {
-    background: none;
-    border: none;
-    color: var(--accent, #5bbcff);
-    cursor: pointer;
-    font-size: 12px;
-    margin-bottom: -2px;
-}
-
-.chipList {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    overflow-x: auto;
-    padding-bottom: 4px;
-}
-
-.chipList::-webkit-scrollbar {
-    height: 6px;
-}
-
-.chipList::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
-}
-
-
-.chip {
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
-    padding: 7px 14px;
-    font-size: 0.85rem;
-    color: var(--text);
-    background: rgba(255, 255, 255, 0.04);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: max-content;
-}
-
-.chip small {
-    font-size: 0.7rem;
-    color: var(--muted);
-}
-
-.chipActive {
-    border-color: var(--text);
-    background: rgba(255, 255, 255, 0.12);
-}
-
-.quickFilterPlaceholder {
-    border: 1px dashed var(--border);
-    border-radius: 14px;
-    padding: 0.85rem 1rem;
-    color: var(--muted);
-    text-align: center;
-    flex: 1 1 240px;
-}
-
-.quickSelectCluster {
-    flex: 1 1 320px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 0.75rem;
-}
-
-.quickSelectField {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 0.85rem;
-    background: rgba(255, 255, 255, 0.02);
-    transition: border-color 0.2s ease;
-}
-
-.quickSelectField:focus-within {
-    border-color: var(--text);
-}
-
-.quickSelectLabel {
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-}
-
-.quickSelect {
-    border: none;
-    background: transparent;
-    color: var(--text);
-    font-size: 0.95rem;
-    font-family: 'Poppins', sans-serif;
-    appearance: none;
-}
-
-.quickSelect:focus {
-    outline: none;
-}
-
-.advancedPanel {
-    border: 1px solid transparent;
-    border-radius: 14px;
-    background: var(--card);
-    max-height: 0;
-    overflow: hidden;
-    padding: 0 1.2rem;
-    transition: max-height 0.35s ease, padding 0.35s ease, border-color 0.35s ease;
-}
-
-.advancedPanelVisible {
-    border-color: var(--border);
-    max-height: 600px;
-    padding: 1.1rem 1.2rem 1.2rem;
-}
-
-.advancedGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 14px;
-}
-
-.advancedField {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.advancedLabel {
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-}
-
-.filterSelect {
-    padding: 8px 12px;
-    background: var(--bg);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-family: 'Poppins', sans-serif;
-}
-
-.advancedFooter {
-    margin-top: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.sliderStack {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-}
-
-.sliderValue {
-    font-size: 0.85rem;
-    color: var(--muted);
-}
-
-.resetButton {
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 0.4rem 1.2rem;
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-}
-
-.activeFilters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.filterBadge {
-    display: inline-flex;
-    gap: 8px;
-    align-items: center;
-    padding: 6px 12px;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text);
-    cursor: pointer;
-    font-size: 13px;
-}
-
-.filterBadgeClear {
-    border-style: dashed;
-    color: var(--muted);
-}
-
+/* ─── Scroll / results area ─── */
 .scrollContainer {
     flex: 1;
     display: flex;
@@ -429,7 +396,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
+    flex-shrink: 0;
 }
 
 .paginationText {
@@ -467,10 +435,35 @@
     color: var(--muted);
 }
 
+.pageButton {
+    width: auto !important;
+    min-width: 32px;
+    padding: 0 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.pageButtonActive {
+    background: rgba(255, 255, 255, 0.18) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.paginationEllipsis {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    user-select: none;
+}
+
 .grid {
     flex: 1;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     grid-auto-rows: min-content;
     gap: 20px;
     overflow-y: auto;
@@ -478,46 +471,70 @@
     margin-right: -8px;
 }
 
-.loading,
-.emptyState {
+/* ─── Loading state ─── */
+.loadingState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 4rem 2rem;
     color: var(--muted);
 }
 
-.statusMessage {
-    margin-top: 16px;
-    padding: 12px;
-    border-radius: 4px;
-    background: rgba(255, 68, 68, 0.1);
-    color: var(--danger);
-    border: 1px solid rgba(255, 68, 68, 0.2);
+.loadingState p {
+    margin: 0;
+    font-size: 0.95rem;
 }
 
-.quickSelectControl {
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
-    padding: 7px 14px;
-    font-size: 0.85rem;
-    color: var(--text);
-    background: rgba(255, 255, 255, 0.04);
-    cursor: pointer;
-    transition: all 0.2s ease;
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--text);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ─── Empty state ─── */
+.emptyState {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 4rem 2rem;
+    color: var(--muted);
+    text-align: center;
 }
 
-.quickSelectControl:focus {
-    border-color: var(--text);
-    outline: none;
+.emptyState svg {
+    opacity: 0.3;
 }
 
-.quickSelectControl:active {
-    border-color: var(--text);
-    outline: none;
+.emptyState p {
+    margin: 0;
+    font-size: 0.95rem;
 }
 
-.quickSelectControl option {
-    background: var(--card);
+.emptyStateAction {
+    padding: 8px 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
     color: var(--text);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
+
+.emptyStateAction:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+

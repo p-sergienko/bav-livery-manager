@@ -212,6 +212,25 @@ export const DownloadsPage = () => {
     const totalPages = Math.max(1, Math.ceil(sorted.length / DOWNLOADS_PER_PAGE));
     const paginated = sorted.slice((page - 1) * DOWNLOADS_PER_PAGE, page * DOWNLOADS_PER_PAGE);
 
+    const pageNumbers = useMemo(() => {
+        const pages: Array<number | 'ellipsis'> = [];
+        if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            const start = Math.max(2, page - 1);
+            const end = Math.min(totalPages - 1, page + 1);
+            if (start > 2) pages.push('ellipsis');
+            for (let i = start; i <= end; i++) pages.push(i);
+            if (end < totalPages - 1) pages.push('ellipsis');
+            pages.push(totalPages);
+        }
+        return pages;
+    }, [page, totalPages]);
+
+    const startItem = (page - 1) * DOWNLOADS_PER_PAGE + 1;
+    const endItem = Math.min(page * DOWNLOADS_PER_PAGE, sorted.length);
+
     const updateFilter = (key: FilterKey, value: string) => {
         setFilters((prev) => ({ ...prev, [key]: value }));
         setPage(1);
@@ -373,20 +392,40 @@ export const DownloadsPage = () => {
             <div className={styles.scrollContainer}>
                 <div className={styles.paginationBar}>
                     <span className={styles.paginationText}>
-                        Page <strong>{page}</strong> of <strong>{totalPages}</strong>
+                        {sorted.length > 0 ? (
+                            <>Showing <strong>{startItem}–{endItem}</strong> of <strong>{sorted.length}</strong></>
+                        ) : (
+                            <>No results</>
+                        )}
                     </span>
-                    <div className={styles.paginationButtons}>
-                        <button type="button" onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={page === 1}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                                <path d="M15 18l-6-6 6-6" />
-                            </svg>
-                        </button>
-                        <button type="button" onClick={() => setPage((value) => Math.min(totalPages, value + 1))} disabled={page === totalPages}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                                <path d="M9 18l6-6-6-6" />
-                            </svg>
-                        </button>
-                    </div>
+                    {totalPages > 1 && (
+                        <div className={styles.paginationButtons}>
+                            <button type="button" onClick={() => setPage((v) => Math.max(1, v - 1))} disabled={page === 1} aria-label="Previous page">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+                                    <path d="M15 18l-6-6 6-6" />
+                                </svg>
+                            </button>
+                            {pageNumbers.map((p, i) =>
+                                p === 'ellipsis' ? (
+                                    <span key={`e${i}`} className={styles.paginationEllipsis}>…</span>
+                                ) : (
+                                    <button
+                                        key={p}
+                                        type="button"
+                                        className={classNames(styles.pageButton, p === page && styles.pageButtonActive)}
+                                        onClick={() => setPage(p)}
+                                    >
+                                        {p}
+                                    </button>
+                                )
+                            )}
+                            <button type="button" onClick={() => setPage((v) => Math.min(totalPages, v + 1))} disabled={page === totalPages} aria-label="Next page">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+                                    <path d="M9 18l6-6-6-6" />
+                                </svg>
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {paginated.length ? (

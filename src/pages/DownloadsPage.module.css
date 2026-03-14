@@ -321,6 +321,31 @@
     color: var(--muted);
 }
 
+.pageButton {
+    width: auto !important;
+    min-width: 32px;
+    padding: 0 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.pageButtonActive {
+    background: rgba(255, 255, 255, 0.18) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.paginationEllipsis {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    user-select: none;
+}
+
 .grid {
     flex: 1;
     display: grid;
