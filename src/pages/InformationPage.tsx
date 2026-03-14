@@ -96,6 +96,76 @@ export function InformationPage() {
                     <img className={styles.liveryPreview} src={selectedLivery.preview ?? ""} alt={`${selectedLivery.name} preview`} loading="lazy" />
                 </div>
             </div>
+            <div className={styles.secondaryBody}>
+                <div className={styles.informationContainer}>
+                    <p className={styles.changelogHeader}>Livery Changelog:</p>
+                    <div className={styles.changelog}>
+                        <div className={styles.changelogEntry}>
+                            <h4>Version: v1.0.0 <span>(Current)</span></h4>
+                            <p>
+                                - Initial release
+                            </p>
+                            <p>
+                                - Added support for 10 liveries
+                            </p>
+                            <h5>20 June 2027 - 230.03MB</h5>
+                        </div>
+                        <div className={styles.changelogEntry}>
+                            <h4>Version: v1.0.0 <span>(Current)</span></h4>
+                            <p>
+                                - Initial release
+                            </p>
+                            <p>
+                                - Added support for 10 liveries
+                            </p>
+                            <h5>20 June 2027 - 230.03MB</h5>
+                        </div>
+                        <div className={styles.changelogEntry}>
+                            <h4>Version: v1.0.0 <span>(Current)</span></h4>
+                            <p>
+                                - Initial release
+                            </p>
+                            <p>
+                                - Added support for 10 liveries
+                            </p>
+                            <h5>20 June 2027 - 230.03MB</h5>
+                        </div>
+                        <div className={styles.changelogEntry}>
+                            <h4>Version: v1.0.0 <span>(Current)</span></h4>
+                            <p>
+                                - Initial release
+                            </p>
+                            <p>
+                                - Added support for 10 liveries
+                            </p>
+                            <h5>20 June 2027 - 230.03MB</h5>
+                        </div>
+                        <div className={styles.changelogEntry}>
+                            <h4>Version: v1.0.0 <span>(Current)</span></h4>
+                            <p>
+                                - Initial release
+                            </p>
+                            <p>
+                                - Added support for 10 liveries
+                            </p>
+                            <h5>20 June 2027 - 230.03MB</h5>
+                        </div>
+                        <div className={styles.changelogEntry}>
+                            <h4>Version: v1.0.0 <span>(Current)</span></h4>
+                            <p>
+                                - Initial release
+                            </p>
+                            <p>
+                                - Added support for 10 liveries
+                            </p>
+                            <h5>20 June 2027 - 230.03MB</h5>
+                        </div>
+                    </div>
+                </div>
+                <div className={styles.informationContainer}>
+                    123
+                </div>
+            </div>
         </div>
     );
 }

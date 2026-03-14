@@ -2,6 +2,11 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    height: 100%;
+}
+
+.pageContainer {
+    padding: 0 !important;
 }
 
 .headerSection {
@@ -49,6 +54,7 @@
     grid-template-columns: 1fr auto;
     gap: 16px;
     align-items: stretch;
+    min-height: 0;
 }
 
 .mainBody h2 {
@@ -69,6 +75,7 @@
     gap: 8px;
     flex: 1;
     min-width: 0;
+    overflow: hidden;
 }
 
 .informationContainer p {
@@ -139,7 +146,7 @@
     gap: 8px;
     align-items: center;
     border: 1px solid var(--border);
-    background: rgba(0, 0, 0, 0.04); 
+    background: rgba(0, 0, 0, 0.04);
     color: var(--text);
     border-radius: 8px;
     padding: 4px 12px 4px 8px;
@@ -158,4 +165,74 @@
 .radarButton:hover {
     background: #2a2a2a;
     border-color: #ffffff;
+}
+
+.secondaryBody {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.changelog {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.changelog::-webkit-scrollbar {
+    width: 8px;
+}
+
+.changelog::-webkit-scrollbar-track {
+    background-color: var(--card);
+    border-radius: 100px;
+    overflow: hidden;
+}
+
+.changelog::-webkit-scrollbar-thumb {
+    background: #111;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+}
+
+.changelogEntry {
+    border: 1px solid var(--border);
+    background: #050505;
+    border-radius: 8px;
+    padding: 4px 12px;
+    margin-right: 6px;
+}
+
+.changelogEntry h4 {
+    margin: 4px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.changelogEntry h4 span {
+    font-size: 14px;
+    color: #c1ff74;
+    font-weight: 400;
+}
+
+.changelogEntry p {
+    margin: 0;
+    font-size: 14px;
+    color: #e3e3e3;
+}
+
+.changelogEntry h5 {
+    margin: 8px 0 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.changelogHeader {
+    padding-left: 6px;
 }
