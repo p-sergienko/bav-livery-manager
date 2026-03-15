@@ -330,8 +330,8 @@ export const SearchPage = () => {
     })();
 
     const simulatorLogoMap: Record<Simulator, string> = {
-        FS20: 'https://upload.wikimedia.org/wikipedia/commons/e/ed/Microsoft_Flight_Simulator_%282020%29_logo.png',
-        FS24: 'https://flightsimulator.azureedge.net/wp-content/uploads/2024/09/website-logo-with-MSFS-1-1024x282.png'
+        FS20: 'FS20.webp',
+        FS24: 'FS24.webp'
     };
     const simulatorLogoKey: Simulator = activeSimulatorCode ?? settings.defaultSimulator;
 
@@ -475,7 +475,6 @@ export const SearchPage = () => {
             <header className={styles.pageHeader}>
                 <div className={styles.headerLeft}>
                     <div className={styles.headerTitleRow}>
-                        <h1 className={styles.title}>Liveries</h1>
                         {simulatorLogoKey && (
                             <div className={styles.simulatorLogoWrap} aria-hidden>
                                 <img
@@ -483,15 +482,19 @@ export const SearchPage = () => {
                                     alt={simulatorLogoKey === 'FS24' ? 'Microsoft Flight Simulator 2024' : 'Microsoft Flight Simulator 2020'}
                                     className={styles.simulatorLogo}
                                 />
+                                <div className={styles.headerCount}>
+                                    <h1 className={styles.title}>Liveries</h1>
+                                    {hasSimulatorSelection && (
+                                        <p className={styles.resultCount}>
+                                            <strong>{numberFormatter.format(dedupedLiveries.length)}</strong> {dedupedLiveries.length === 1 ? 'livery' : 'liveries'} found
+                                            {searchTerm && <span className={styles.searchTermHint}> for &ldquo;{searchTerm}&rdquo;</span>}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>
-                    {hasSimulatorSelection && (
-                        <p className={styles.resultCount}>
-                            <strong>{numberFormatter.format(dedupedLiveries.length)}</strong> {dedupedLiveries.length === 1 ? 'livery' : 'liveries'} found
-                            {searchTerm && <span className={styles.searchTermHint}> for &ldquo;{searchTerm}&rdquo;</span>}
-                        </p>
-                    )}
+
                 </div>
                 <div className={styles.headerRight}>
                     <div className={styles.viewToggle}>
