@@ -1,52 +1,32 @@
 .page {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 10px;
     height: 100%;
     min-height: 0;
-}
-
-.bottomSection {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.bottomSectionHeader {
-    flex-shrink: 0;
-}
-
-.bottomSectionContent {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding-right: 2px;
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 12px;
+    gap: 8px;
     flex-wrap: wrap;
 }
 
 .header h1 {
     margin: 0;
+    font-size: 1.15rem;
 }
 
 .description {
-    margin: 4px 0 0;
+    margin: 2px 0 0;
     color: var(--muted);
+    font-size: 0.78rem;
 }
 
 .autoDetectButton {
-    padding: 10px 16px;
+    padding: 8px 14px;
     border-radius: 6px;
     border: 1px solid var(--border);
     background: #2a2a2a;
@@ -65,44 +45,45 @@
     border-color: #666666;
 }
 
+/* ─── Form ─── */
 .form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 10px;
     background: var(--card);
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid var(--border);
-    padding: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    padding: 14px 16px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
 }
 
 .pathInput {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 5px;
 }
 
 .label {
-    font-size: 14px;
+    font-size: 0.78rem;
     color: var(--text);
 }
 
 .inputRow {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
 }
 
 .inputRow input {
     flex: 1;
-    padding: 10px 15px;
+    padding: 7px 10px;
     background: var(--bg);
     border: 1px solid var(--border);
     color: var(--text);
     border-radius: 4px;
     font-family: "JetBrains Mono", monospace;
     font-weight: 500;
-    font-size: 14px;
+    font-size: 0.78rem;
 }
 
 .inputRow input:focus {
@@ -111,12 +92,13 @@
 }
 
 .inputRow button {
-    padding: 10px 15px;
+    padding: 7px 12px;
     background: #2a2a2a;
     color: #ffffff;
     border: 1px solid var(--border);
     border-radius: 4px;
     cursor: pointer;
+    font-size: 0.78rem;
     transition: all 0.2s ease;
 }
 
@@ -127,87 +109,19 @@
 
 .formActions {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     align-items: center;
     flex-wrap: wrap;
 }
 
-/* Footer */
-.footer {
-    flex-shrink: 0;
-    padding-top: 12px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0;
-}
-
-/* Section title */
-.sectionTitle {
-    margin: 0;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text);
-}
-
-.footerText {
-    margin: 0;
-    font-size: 0.75rem;
-    color: var(--muted);
-}
-
-.secondFooterText {
-    margin: 12px;
-}
-
-.footerButtons {
-    display: flex;
-    gap: 8px;
-}
-
-.footerAuthor {
-    color: var(--text);
-}
-
-.footerButton {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    font-size: 0.75rem;
-    color: var(--muted);
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.footerButton img {
-    flex-shrink: 0;
-    width: 32px;
-    margin: -8px 0 -8px;
-}
-
-.footerButton:hover {
-    color: var(--text);
-    border-color: var(--text);
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.footerButton svg {
-    flex-shrink: 0;
-}
-
 .submitButton {
-    padding: 8px 16px;
+    padding: 6px 14px;
     background: #2a2a2a;
     color: #ffffff;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 5px;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     font-weight: 500;
     transition: all 0.2s ease;
 }
@@ -218,13 +132,13 @@
 }
 
 .detectButton {
-    padding: 8px 16px;
+    padding: 6px 14px;
     background: transparent;
     color: #ffffff;
     border: 1px solid #17a61c;
-    border-radius: 6px;
+    border-radius: 5px;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     transition: all 0.2s ease;
 }
 
@@ -237,30 +151,30 @@
     cursor: not-allowed;
 }
 
-/* Account Card */
+/* ─── Account Card ─── */
 .accountCard {
     background: linear-gradient(135deg, rgba(220, 53, 69, 0.06), var(--card));
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid rgba(220, 53, 69, 0.25);
-    padding: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    padding: 10px 14px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
 }
 
 .accountHeader {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .accountAvatar {
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     background: linear-gradient(135deg, #dc3545, #ff6b7a);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 700;
     color: #fff;
     flex-shrink: 0;
@@ -273,7 +187,7 @@
 
 .accountName {
     margin: 0;
-    font-size: 0.95rem;
+    font-size: 0.82rem;
     font-weight: 600;
     color: var(--text);
     white-space: nowrap;
@@ -282,45 +196,45 @@
 }
 
 .accountId {
-    margin: 2px 0 0;
-    font-size: 0.75rem;
+    margin: 1px 0 0;
+    font-size: 0.68rem;
     color: var(--muted);
 }
 
 .accountStats {
     display: flex;
-    gap: 20px;
-    margin-top: 12px;
-    padding-top: 12px;
+    gap: 16px;
+    margin-top: 8px;
+    padding-top: 8px;
     border-top: 1px solid rgba(220, 53, 69, 0.15);
 }
 
 .statItem {
     display: flex;
     align-items: baseline;
-    gap: 6px;
+    gap: 4px;
 }
 
 .statValue {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: #dc3545;
 }
 
 .statLabel {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--muted);
 }
 
 .signOutButton {
-    padding: 6px 12px;
-    border-radius: 6px;
+    padding: 4px 10px;
+    border-radius: 5px;
     border: 1px solid rgba(220, 53, 69, 0.3);
     background: transparent;
     color: var(--muted);
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     cursor: pointer;
     transition: all 0.2s ease;
     flex-shrink: 0;
@@ -330,4 +244,96 @@
     border-color: #dc3545;
     color: #dc3545;
     background: rgba(220, 53, 69, 0.1);
+}
+
+/* ─── Bottom section (App Updates & Changelog) ─── */
+.bottomSection {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.bottomSectionHeader {
+    flex-shrink: 0;
+}
+
+.bottomSectionContent {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-right: 2px;
+}
+
+.sectionTitle {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* ─── Footer ─── */
+.footer {
+    flex-shrink: 0;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.footerText {
+    margin: 0;
+    font-size: 0.68rem;
+    color: var(--muted);
+}
+
+.secondFooterText {
+    margin: 4px 0;
+    font-size: 0.68rem;
+    color: var(--muted);
+}
+
+.footerButtons {
+    display: flex;
+    gap: 6px;
+}
+
+.footerAuthor {
+    color: var(--text);
+}
+
+.footerButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    font-size: 0.68rem;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.footerButton img {
+    flex-shrink: 0;
+    width: 28px;
+    margin: -6px 0;
+}
+
+.footerButton:hover {
+    color: var(--text);
+    border-color: var(--text);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.footerButton svg {
+    flex-shrink: 0;
 }
