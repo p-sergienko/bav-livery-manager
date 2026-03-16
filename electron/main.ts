@@ -38,8 +38,14 @@ function setupAutoUpdates() {
 
     log.transports.file.level = 'info';
     autoUpdater.logger = log;
-    autoUpdater.autoDownload = true;
+    autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = true;
+
+    const sendToRenderer = (channel: string, data?: unknown) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send(channel, data);
+        }
+    };
 
     const resetProgress = () => {
         if (mainWindow && !mainWindow.isDestroyed()) {
@@ -50,31 +56,98 @@ function setupAutoUpdates() {
     autoUpdater.on('error', (error: Error) => {
         log.error('Auto update error:', error);
         resetProgress();
+        sendToRenderer('app-update-status', {
+            status: 'error',
+            error: error.message
+        });
     });
-    autoUpdater.on('checking-for-update', () => log.info('Checking for application updates...'));
-    autoUpdater.on('update-available', (info: UpdateInfo) => log.info('Update available:', info.version));
-    autoUpdater.on('update-not-available', () => {
-        log.info('No updates available.');
+
+    autoUpdater.on('checking-for-update', () => {
+        log.info('Checking for application updates...');
+        sendToRenderer('app-update-status', { status: 'checking' });
+    });
+
+    autoUpdater.on('update-available', (info: UpdateInfo) => {
+        log.info('Update available:', info.version);
+        sendToRenderer('app-update-status', {
+            status: 'available',
+            version: info.version,
+            releaseDate: info.releaseDate,
+            releaseNotes: info.releaseNotes
+        });
+    });
+
+    autoUpdater.on('update-not-available', (info: UpdateInfo) => {
+        log.info('No updates available. Current version:', info.version);
         resetProgress();
+        sendToRenderer('app-update-status', {
+            status: 'not-available',
+            version: info.version
+        });
     });
+
     autoUpdater.on('download-progress', (progress: ProgressInfo) => {
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.setProgressBar(progress.percent / 100, { mode: 'normal' });
         }
+        sendToRenderer('app-update-status', {
+            status: 'downloading',
+            percent: progress.percent,
+            bytesPerSecond: progress.bytesPerSecond,
+            transferred: progress.transferred,
+            total: progress.total
+        });
     });
+
     autoUpdater.on('update-downloaded', (info: UpdateInfo) => {
         log.info('Update downloaded, will install on quit.', info.version);
         resetProgress();
+        sendToRenderer('app-update-status', {
+            status: 'downloaded',
+            version: info.version
+        });
     });
 
-    const checkForUpdates = () => {
-        autoUpdater
-            .checkForUpdatesAndNotify()
-            .catch((error: Error) => log.error('Failed to check for updates:', error));
-    };
+    // IPC handlers for manual update control
+    ipcMain.handle('check-for-app-update', async () => {
+        try {
+            const result = await autoUpdater.checkForUpdates();
+            return { success: true, version: result?.updateInfo?.version };
+        } catch (error) {
+            log.error('Manual update check failed:', error);
+            return { success: false, error: (error as Error).message };
+        }
+    });
 
-    checkForUpdates();
-    setInterval(checkForUpdates, UPDATE_CHECK_INTERVAL_MS);
+    ipcMain.handle('download-app-update', async () => {
+        try {
+            await autoUpdater.downloadUpdate();
+            return { success: true };
+        } catch (error) {
+            log.error('Download update failed:', error);
+            return { success: false, error: (error as Error).message };
+        }
+    });
+
+    ipcMain.handle('install-app-update', () => {
+        autoUpdater.quitAndInstall(false, true);
+    });
+
+    ipcMain.handle('get-app-version', () => {
+        return app.getVersion();
+    });
+
+    // Initial check on startup
+    autoUpdater
+        .checkForUpdates()
+        .catch((error: Error) => log.error('Failed to check for updates on startup:', error));
+
+    // Periodic background checks
+    setInterval(() => {
+        autoUpdater
+            .checkForUpdates()
+            .catch((error: Error) => log.error('Failed to check for updates:', error));
+    }, UPDATE_CHECK_INTERVAL_MS);
 }
 
 function getRendererPath(): string {

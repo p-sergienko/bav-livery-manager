@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useLiveryStore } from '@/store/liveryStore';
 import { useAuthStore } from '@/store/authStore';
 import { Toast } from '@/components/Toast';
+import { AppUpdater } from '@/components/AppUpdater';
+import { Changelog } from '@/components/Changelog';
 import styles from './SettingsPage.module.css';
 import { BAVIcon } from "@/components/Icons/BAVIcon";
 
@@ -170,6 +172,16 @@ export const SettingsPage = () => {
                     </button>
                 </div>
             </form>
+
+            <div className={styles.bottomSection}>
+                <div className={styles.bottomSectionHeader}>
+                    <h2 className={styles.sectionTitle}>App Updates & Changelog</h2>
+                </div>
+                <div className={styles.bottomSectionContent}>
+                    <AppUpdater />
+                    <Changelog />
+                </div>
+            </div>
 
             <footer className={styles.footer}>
                 <p className={styles.footerText}>

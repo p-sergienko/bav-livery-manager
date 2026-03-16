@@ -1,0 +1,254 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.empty {
+    color: var(--muted);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 24px 0;
+}
+
+/* ─── Entry ─── */
+.entry {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.15);
+    transition: border-color 0.2s ease;
+}
+
+.entryExpanded {
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.entryHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 14px;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.2s ease;
+    text-align: left;
+}
+
+.entryHeader:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.entryHeaderExpanded {
+    border-bottom: 1px solid var(--border);
+    background: rgba(59, 130, 246, 0.04);
+}
+
+.entryVersion {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.versionTag {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text);
+    padding: 2px 8px;
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.02em;
+}
+
+.latestBadge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #4caf50;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 1px 6px;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    border-radius: 3px;
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.releaseDate {
+    font-size: 0.7rem;
+    color: var(--muted);
+    opacity: 0.7;
+}
+
+.chevron {
+    color: var(--muted);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.chevronExpanded {
+    transform: rotate(180deg);
+    color: rgba(59, 130, 246, 0.7);
+}
+
+/* ─── Content ─── */
+.entryContent {
+    padding: 14px 16px 16px;
+}
+
+/* ─── Markdown: Headings ─── */
+.mdH1 {
+    display: none;
+}
+
+.mdH2 {
+    margin: 16px 0 6px;
+    padding-bottom: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mdH3 {
+    margin: 12px 0 6px;
+    padding-left: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+    border-left: 2px solid rgba(59, 130, 246, 0.5);
+}
+
+.entryContent > :first-child {
+    margin-top: 0 !important;
+}
+
+/* ─── Markdown: Text ─── */
+.mdP {
+    margin: 4px 0;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.55;
+}
+
+.mdStrong {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.mdEm {
+    color: var(--muted);
+    font-style: italic;
+    opacity: 0.85;
+}
+
+/* ─── Markdown: Links ─── */
+.mdA {
+    color: #5b9cf6;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(91, 156, 246, 0.3);
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.mdA:hover {
+    color: #7db4fb;
+    border-bottom-color: rgba(91, 156, 246, 0.6);
+}
+
+/* ─── Markdown: Lists ─── */
+.mdUl {
+    margin: 4px 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.mdOl {
+    margin: 4px 0;
+    padding-left: 20px;
+}
+
+.mdOl > .mdLi {
+    padding-left: 0;
+}
+
+.mdOl > .mdLi::before {
+    display: none;
+}
+
+.mdLi {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.55;
+    padding: 2px 0 2px 14px;
+    position: relative;
+}
+
+.mdLi::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 10px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(59, 130, 246, 0.55);
+}
+
+/* ─── Markdown: Code ─── */
+.mdCode {
+    background: rgba(255, 255, 255, 0.07);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78em;
+    color: #c9d1d9;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mdCodeBlock {
+    display: block;
+    padding: 10px 14px;
+    border-radius: 5px;
+    overflow-x: auto;
+    line-height: 1.5;
+    white-space: pre;
+}
+
+.mdPre {
+    margin: 8px 0;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.mdPre > .mdCode,
+.mdPre > .mdCodeBlock {
+    background: transparent;
+    border: none;
+}
+
+/* ─── Markdown: Blockquote ─── */
+.mdBlockquote {
+    margin: 8px 0;
+    padding: 8px 14px;
+    border-left: 3px solid rgba(59, 130, 246, 0.4);
+    background: rgba(59, 130, 246, 0.05);
+    border-radius: 0 4px 4px 0;
+}
+
+.mdBlockquote .mdP {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.78rem;
+}
+
+/* ─── Markdown: Horizontal rule ─── */
+.mdHr {
+    border: none;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+    margin: 12px 0;
+}

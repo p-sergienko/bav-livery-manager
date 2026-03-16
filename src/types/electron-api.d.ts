@@ -31,6 +31,18 @@ export interface AuthTokenPayload {
     totalFlights?: number | null;
 }
 
+export interface AppUpdateStatus {
+    status: 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
+    version?: string;
+    releaseDate?: string;
+    releaseNotes?: string | { version: string; note: string }[] | null;
+    percent?: number;
+    bytesPerSecond?: number;
+    transferred?: number;
+    total?: number;
+    error?: string;
+}
+
 /** Record of an installed livery from the local store */
 export interface InstalledLiveryRecord {
     liveryId: string;
@@ -73,6 +85,12 @@ export interface ElectronAPI {
     openPanelAuth: (url: string) => Promise<void>;
     openExternalLink: (url: string) => Promise<void>;
     onAuthToken: (callback: ((payload: AuthTokenPayload) => void) | null) => void;
+    checkForAppUpdate: () => Promise<{ success: boolean; version?: string; error?: string }>;
+    downloadAppUpdate: () => Promise<{ success: boolean; error?: string }>;
+    installAppUpdate: () => Promise<void>;
+    getAppVersion: () => Promise<string>;
+    onAppUpdateStatus: (callback: ((status: AppUpdateStatus) => void) | null) => void;
+    removeAppUpdateListeners: () => void;
 }
 
 declare global {
