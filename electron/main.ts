@@ -16,6 +16,7 @@ const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 let mainWindow: BrowserWindow | null = null;
 let pendingAuthPayload: {
     token: string;
+    session?: string | null;
     role?: string | null;
     bawId?: string | null;
     pilotId?: string | null;
@@ -286,6 +287,7 @@ function parseAuthPayload(rawUrl: string) {
 
         return {
             token,
+            session: parsed.searchParams.get('session'),
             role: parsed.searchParams.get('role'),
             bawId: parsed.searchParams.get('bawId'),
             pilotId: parsed.searchParams.get('pilotId'),

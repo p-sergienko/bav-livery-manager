@@ -5,6 +5,7 @@ import { PANEL_AUTH_ENDPOINT } from '@/config/auth';
 
 export interface BrowserTokenPayload {
     token: string;
+    session?: string | null;
     role?: string | null;
     bawId?: string | null;
     pilotId?: string | null;
@@ -118,8 +119,23 @@ export const useAuthStore = create<AuthState>()(
                         throw new Error(`Verification failed: ${response.status}`);
                     }
 
-                    // Session is valid, we could update user details here if needed
-                    set({ status: 'idle' });
+                    const data = await response.json();
+
+                    set({
+                        role: mapRole(data.role),
+                        userId: data.bawId ?? null,
+                        pilotId: data.pilotId ?? null,
+                        fullName: data.fullName ?? null,
+                        rank: data.rank ?? null,
+                        totalTimeMins: (() => {
+                            if (data.totalTime === undefined || data.totalTime === null) {
+                                return null;
+                            }
+                            const numeric = Number(data.totalTime);
+                            return Number.isFinite(numeric) ? numeric : null;
+                        })(),
+                        status: 'idle'
+                    });
                 } catch (error) {
                     console.error('Failed to verify session:', error);
                     // Strict enforcement: if we can't verify, we assume invalid.
