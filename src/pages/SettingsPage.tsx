@@ -8,7 +8,7 @@ import { Changelog } from '@/components/Changelog';
 import styles from './SettingsPage.module.css';
 import { BAVIcon } from "@/components/Icons/BAVIcon";
 import { Book, Folder, LogOut, Save, User, Zap } from 'react-feather';
-import { useTour } from '@/hooks/useTour';
+import { useTour } from '@/tour/useTour';
 import { MAIN_TOUR_STEPS } from "@/tour/steps";
 
 export const SettingsPage = () => {

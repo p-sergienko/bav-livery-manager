@@ -15,11 +15,11 @@
     border: 1px solid var(--border);
     border-radius: 12px;
     width: 100%;
-    max-width: 440px;
+    max-width: 85%;
     overflow: hidden;
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 3fr 2fr;
     animation: slideUp 0.3s ease;
 }
 
@@ -35,11 +35,16 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    justify-content: space-between;
+}
+
+.body {
+    padding-bottom: 26px;
 }
 
 .title {
     margin: 0;
-    font-size: 22px;
+    font-size: 28px;
     font-weight: 600;
     color: var(--text);
 }
@@ -74,6 +79,70 @@
     border: 1px solid var(--border);
 }
 
+.slide {
+    position: relative;
+    padding: 8px;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+}
+
+.logo {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.logo h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.subHeader {
+    margin-top: -4px;
+}
+
+.subHeader p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+    padding-left: 4px;
+}
+
+.slideGradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(230deg, rgba(0, 0, 0, 0) 40%, rgba(2, 17, 52, 0.6) 77%, rgb(43, 2, 26) 100%);
+    pointer-events: none;
+    width: 100%;
+}
+
+.slideDescription {
+    font-size: 14px;
+    color: var(--text);
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    padding: 6px 8px;
+}
+
+.slideDescription h3 {
+    margin: 0;
+    font-size: 22x;
+    font-weight: 600;
+}
+
+.slideDescription p {
+    margin: 0;
+    filter: brightness(70%);
+}
+
 .btnSecondary:hover {
     background: var(--card);
 }
@@ -89,8 +158,13 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes slideUp {
@@ -98,6 +172,7 @@
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
