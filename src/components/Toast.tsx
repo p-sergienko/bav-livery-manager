@@ -1,46 +1,30 @@
 import { useEffect, useState } from 'react';
+import type React from 'react';
 import styles from './Toast.module.css';
+import {AlertCircle, AlertTriangle, Info, Smile, X} from "react-feather";
 
 export interface ToastProps {
-    message: string;
-    type?: 'error' | 'success' | 'info';
+    message: React.ReactNode;
+    type?: 'error' | 'success' | 'info' | 'warning';
     duration?: number;
     onClose: () => void;
 }
 
-const CloseIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-        <path d="M18 6L6 18M6 6l12 12" />
-    </svg>
-);
+const CloseIcon = () => <X/>;
 
-const ErrorIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="12" />
-        <line x1="12" y1="16" x2="12.01" y2="16" />
-    </svg>
-);
+const ErrorIcon = () => <AlertCircle/>;
 
-const SuccessIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-        <polyline points="22 4 12 14.01 9 11.01" />
-    </svg>
-);
+const SuccessIcon = () => <Smile/>;
 
-const InfoIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="16" x2="12" y2="12" />
-        <line x1="12" y1="8" x2="12.01" y2="8" />
-    </svg>
-);
+const InfoIcon = () => <Info/>;
+
+const WarningIcon = () => <AlertTriangle/>;
 
 const iconMap = {
     error: ErrorIcon,
     success: SuccessIcon,
-    info: InfoIcon
+    info: InfoIcon,
+    warning: WarningIcon
 };
 
 export const Toast = ({ message, type = 'error', duration = 6000, onClose }: ToastProps) => {

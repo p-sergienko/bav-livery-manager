@@ -4,6 +4,7 @@
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
+    margin-bottom: 14px;
     border-radius: 12px;
     background: var(--card);
     border: 1px solid var(--border);
@@ -63,6 +64,19 @@
 
 .info .progressBar {
     background: #60a5fa;
+}
+
+.warning {
+    border-color: rgba(245, 158, 11, 0.4);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), var(--card));
+}
+
+.warning .iconWrapper {
+    color: #f59e0b;
+}
+
+.warning .progressBar {
+    background: #f59e0b;
 }
 
 .iconWrapper {

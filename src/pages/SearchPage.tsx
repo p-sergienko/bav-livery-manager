@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useCatalogQuery } from '@/hooks/useCatalogQuery';
 import { useLiveriesQuery } from '@/hooks/useLiveriesQuery';
 import { Toast } from '@/components/Toast';
+import type { ReactNode } from 'react';
 import styles from './SearchPage.module.css';
 
 type FilterKey = 'developer' | 'aircraft' | 'engine' | 'simulator' | 'resolution' | 'category';
@@ -231,6 +232,7 @@ export const SearchPage = () => {
     const clearAuthError = useAuthStore((state) => state.setError);
     const [searchTerm, setSearchTerm] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+    const [warningMessage, setWarningMessage] = useState<ReactNode | null>(null);
 
     const pathEnabledSimulators = useMemo<Simulator[]>(() => {
         const sims: Simulator[] = [];
@@ -528,6 +530,14 @@ export const SearchPage = () => {
                         }}
                     />
                 )}
+                
+                {warningMessage && (
+                    <Toast
+                        type="warning"
+                        message={warningMessage}
+                        onClose={() => setWarningMessage(null)}
+                    />
+                )}
 
                 {/* Search + Filters toolbar */}
                 <div className={styles.toolbar}>
@@ -768,7 +778,19 @@ export const SearchPage = () => {
                                 }
                                 downloadState={downloadStates[livery.name]}
                                 isInstalled={(resolution, simulator) => isVariantInstalled(livery, resolution, simulator)}
-                                onDownload={(resolution: Resolution, simulator: Simulator) => handleDownload(livery, resolution, simulator)}
+                                onDownload={(resolution: Resolution, simulator: Simulator) => {
+                                    if (livery.aircraftProfileName === 'A35K') {
+                                        setWarningMessage(
+                                            <>
+                                                Note: The A350-1000 livery require additional configuration. Learn more:{' '}
+                                                <a href="https://flightsim.to/addon/105315/a35k-speedcore" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>
+                                                    A35K Speedcore
+                                                </a>
+                                            </>
+                                        );
+                                    }
+                                    return handleDownload(livery, resolution, simulator);
+                                }}
                                 onCancelDownload={() => cancelDownload(livery.id, livery.name)}
                                 onUninstall={(resolution: Resolution, simulator: Simulator) => handleUninstall(livery, resolution, simulator)}
                             />
