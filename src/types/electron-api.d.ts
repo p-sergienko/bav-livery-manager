@@ -67,6 +67,7 @@ export interface ElectronAPI {
         resolution: string,
         authToken?: string | null
     ) => Promise<DownloadResult>;
+    cancelDownload: (liveryId: string) => Promise<boolean>;
     uninstallLivery: (installPath: string) => Promise<{ success: boolean; error?: string }>;
     getSettings: () => Promise<Settings>;
     saveSettings: (settings: Settings) => Promise<boolean>;

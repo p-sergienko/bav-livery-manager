@@ -4,6 +4,7 @@ import type { ElectronAPI } from '../src/types/electron-api';
 const INVOKE_CHANNELS = [
     'fetch-liveries',
     'download-livery',
+    'cancel-download',
     'uninstall-livery',
     'get-settings',
     'save-settings',
@@ -50,6 +51,10 @@ const api: ElectronAPI = {
     downloadLivery: (downloadEndpoint, liveryId, liveryName, liveryDeveloper, aircraft, simulator, resolution, authToken) => {
         ensureInvokeChannel('download-livery');
         return ipcRenderer.invoke('download-livery', downloadEndpoint, liveryId, liveryName, liveryDeveloper, aircraft, simulator, resolution, authToken ?? null);
+    },
+    cancelDownload: (liveryId) => {
+        ensureInvokeChannel('cancel-download');
+        return ipcRenderer.invoke('cancel-download', liveryId);
     },
     uninstallLivery: (installPath) => {
         ensureInvokeChannel('uninstall-livery');

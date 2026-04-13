@@ -80,10 +80,9 @@
 }
 
 .overlaySubtitle {
-    font-size: 12px;
-    font-weight: 500;
-    opacity: 0.7;
-    margin-top: 4px;
+    font-size: 0.75rem;
+    opacity: 0.9;
+    margin-top: 0.25rem;
 }
 
 .overlayExtracting {
@@ -107,6 +106,7 @@
 
 .progressBar {
     width: 80%;
+    max-width: 200px;
     height: 6px;
     background: rgba(255, 255, 255, 0.15);
     border-radius: 3px;
@@ -276,6 +276,7 @@
 
 .downloadButton:disabled,
 .uninstallButton:disabled,
+.cancelDownloadButton:disabled,
 .downloadButton[aria-disabled='true'],
 .uninstallButton[aria-disabled='true'] {
     opacity: 0.4;
@@ -289,6 +290,29 @@
 }
 
 .uninstallButton:hover:not(:disabled) {
+    background: rgba(255, 68, 68, 0.18);
+    border-color: rgba(255, 68, 68, 0.4);
+}
+
+.cancelDownloadButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 68, 68, 0.08);
+    border: 1px solid rgba(255, 68, 68, 0.25);
+    color: var(--danger);
+    border-radius: 8px;
+    padding: 9px 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-weight: 500;
+    font-size: 13px;
+    white-space: nowrap;
+    width: 100%;
+    justify-content: center;
+}
+
+.cancelDownloadButton:hover {
     background: rgba(255, 68, 68, 0.18);
     border-color: rgba(255, 68, 68, 0.4);
 }

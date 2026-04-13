@@ -29,16 +29,35 @@ const BACKOFF_MS = 800;
 
 const INVALID_FILENAME_CHARS = /[<>:"/\\|?*]+/g;
 
+const activeDownloads = new Map<string, AbortController>();
+
+export function cancelDownload(liveryId: string): boolean {
+    const controller = activeDownloads.get(liveryId);
+    if (controller) {
+        controller.abort(new Error('Download cancelled by user'));
+        activeDownloads.delete(liveryId);
+        return true;
+    }
+    return false;
+}
+
 async function retryAsync<T>(
     fn: () => Promise<T>,
     attempts: number,
-    backoffMs: number
+    backoffMs: number,
+    signal?: AbortSignal
 ): Promise<T> {
     let lastError: Error | undefined;
     for (let i = 0; i < attempts; i++) {
+        if (signal?.aborted) {
+            throw new Error('Download cancelled');
+        }
         try {
             return await fn();
         } catch (error) {
+            if (signal?.aborted) {
+                throw new Error('Download cancelled');
+            }
             lastError = error instanceof Error ? error : new Error(String(error));
             if (i < attempts - 1) {
                 await new Promise((resolve) => setTimeout(resolve, backoffMs * (i + 1)));
@@ -83,8 +102,8 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
         return { success: false, error: 'Missing authentication token. Please sign in again.' };
     }
 
-    const signedDownload = await retryAsync(() => resolveDownloadEndpoint(downloadEndpoint, authToken), RESOLVE_ATTEMPTS, BACKOFF_MS);
-    const downloadUrl = signedDownload.downloadUrl;
+    const abortController = new AbortController();
+    activeDownloads.set(liveryId, abortController);
 
     const baseFolder = simulator === 'MSFS2024' && settings.msfs2024Path ? settings.msfs2024Path : settings.msfs2020Path;
 
@@ -96,13 +115,19 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
 
     await fs.ensureDir(baseFolder);
 
-    const zipFilename = deriveZipFilename(downloadUrl);
-    const folderName = zipFilename.replace(/\.zip$/i, '');
-    const outputPath = path.join(baseFolder, zipFilename);
-    let extractPath = path.join(baseFolder, folderName);
+    let outputPath = '';
+    let extractPath = '';
 
     try {
-        await retryAsync(() => downloadFile(downloadUrl, outputPath, (progress) => {
+        const signedDownload = await retryAsync(() => resolveDownloadEndpoint(downloadEndpoint, authToken, abortController.signal), RESOLVE_ATTEMPTS, BACKOFF_MS, abortController.signal);
+        const downloadUrl = signedDownload.downloadUrl;
+
+        const zipFilename = deriveZipFilename(downloadUrl);
+        const folderName = zipFilename.replace(/\.zip$/i, '');
+        outputPath = path.join(baseFolder, zipFilename);
+        extractPath = path.join(baseFolder, folderName);
+
+        await retryAsync(() => downloadFile(downloadUrl, outputPath, abortController.signal, (progress) => {
             const targetWindow = appContext.getMainWindow();
             if (!targetWindow || targetWindow.isDestroyed()) {
                 return;
@@ -164,11 +189,23 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
             finalWindow.setProgressBar(-1);
         }
 
+        activeDownloads.delete(liveryId);
+
         return {
             success: true,
             path: extractPath
         };
     } catch (error) {
+        activeDownloads.delete(liveryId);
+
+        if (abortController.signal.aborted) {
+             const finalWindow = appContext.getMainWindow();
+             if (finalWindow && !finalWindow.isDestroyed()) {
+                 finalWindow.setProgressBar(-1);
+             }
+             return { success: false, error: 'Download cancelled by user' };
+        }
+
         console.error('Download process failed:', error);
 
         // Set taskbar to error state briefly, then clear
@@ -191,9 +228,12 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
     }
 }
 
-async function downloadFile(url: string, filePath: string, onProgress?: (progress: DownloadProgress) => void) {
+async function downloadFile(url: string, filePath: string, signal: AbortSignal, onProgress?: (progress: DownloadProgress) => void) {
+    if (signal.aborted) {
+        throw new Error('Download cancelled');
+    }
     const writer = fs.createWriteStream(filePath);
-    const response = await fetchWithTimeout(url, { method: 'GET' }, 30000);
+    const response = await fetchWithTimeout(url, { method: 'GET', signal }, 30000);
 
     if (!response.body) {
         writer.close();
@@ -237,6 +277,14 @@ async function downloadFile(url: string, filePath: string, onProgress?: (progres
             resolve();
         });
 
+        if (signal.aborted) {
+             handleError(new Error('Download cancelled'));
+        } else {
+             signal.addEventListener('abort', () => {
+                 handleError(new Error('Download cancelled'));
+             }, { once: true });
+        }
+
         nodeStream.pipe(writer);
     });
 }
@@ -248,9 +296,9 @@ interface SignedDownloadPayload {
     version?: string;
 }
 
-async function resolveDownloadEndpoint(endpoint: string, authToken: string | null): Promise<SignedDownloadPayload> {
+async function resolveDownloadEndpoint(endpoint: string, authToken: string | null, signal?: AbortSignal): Promise<SignedDownloadPayload> {
     const headers: HeadersInit = authToken ? { Authorization: `Bearer ${authToken}` } : {};
-    return fetchJson<SignedDownloadPayload>(endpoint, { headers }, 15000);
+    return fetchJson<SignedDownloadPayload>(endpoint, { headers, signal }, 15000);
 }
 
 async function installPMDG(zipPath: string, extractPath: string, simulator: 'MSFS2020' | 'MSFS2024', aircraft: string, liveryDeveloper: string, liveryName: string, folderName: string) {

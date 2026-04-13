@@ -11,6 +11,7 @@ interface LiveryCardProps {
     downloadState?: DownloadProgress;
     isInstalled: (resolution: Resolution, simulator: Simulator) => boolean;
     onDownload: (resolution: Resolution, simulator: Simulator) => Promise<boolean>;
+    onCancelDownload?: () => void;
     onUninstall: (resolution: Resolution, simulator: Simulator) => Promise<boolean>;
 }
 
@@ -59,6 +60,7 @@ export const LiveryCard = ({
     downloadState,
     isInstalled,
     onDownload,
+    onCancelDownload,
     onUninstall
 }: LiveryCardProps) => {
     const allLiveries = useLiveryStore((state) => state.liveries);
@@ -103,6 +105,12 @@ export const LiveryCard = ({
 
         return Array.from(map.values()).sort((a, b) => a.resolution.localeCompare(b.resolution));
     }, [allLiveries, livery]);
+
+    const handleCancelDownload = () => {
+        if (onCancelDownload) {
+            onCancelDownload();
+        }
+    };
 
     const installedHighResolution = useMemo(() => {
         return peerResolutions.find((variant) => {
@@ -226,6 +234,8 @@ export const LiveryCard = ({
                             isHighResolution(res);
                         const nativeDisabled = disableDownload;
                         const ariaDisabled = nativeDisabled || resolutionConflictLocked;
+                        
+                        const isDownloadingThisResolution = downloadState && downloadState.resolution === res && downloadState.simulator === simulator;
 
                         if (isInstalledVariant) {
                             return (
@@ -241,6 +251,22 @@ export const LiveryCard = ({
                                         </span>
                                         <span className={styles.btnLabelFull}>Uninstall {label}</span>
                                         <span className={styles.btnLabelShort}>{label}</span>
+                                    </button>
+                                </div>
+                            );
+                        }
+
+                        if (isDownloadingThisResolution) {
+                            return (
+                                <div key={res} className={styles.downloadChip}>
+                                    <button
+                                        type="button"
+                                        className={styles.cancelDownloadButton}
+                                        onClick={handleCancelDownload}
+                                        style={{ marginTop: 0, width: '100%', justifyContent: 'center' }}
+                                    >
+                                        <span className={styles.btnLabelFull}>Cancel {label}</span>
+                                        <span className={styles.btnLabelShort}>Cancel</span>
                                     </button>
                                 </div>
                             );

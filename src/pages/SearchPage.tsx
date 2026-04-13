@@ -223,6 +223,7 @@ export const SearchPage = () => {
     const settings = useLiveryStore((state) => state.settings);
     const downloadStates = useLiveryStore((state) => state.downloadStates);
     const handleDownload = useLiveryStore((state) => state.handleDownload);
+    const cancelDownload = useLiveryStore((state) => state.cancelDownload);
     const handleUninstall = useLiveryStore((state) => state.handleUninstall);
     const isVariantInstalled = useLiveryStore((state) => state.isVariantInstalled);
     const authToken = useAuthStore((state) => state.token);
@@ -768,6 +769,7 @@ export const SearchPage = () => {
                                 downloadState={downloadStates[livery.name]}
                                 isInstalled={(resolution, simulator) => isVariantInstalled(livery, resolution, simulator)}
                                 onDownload={(resolution: Resolution, simulator: Simulator) => handleDownload(livery, resolution, simulator)}
+                                onCancelDownload={() => cancelDownload(livery.id, livery.name)}
                                 onUninstall={(resolution: Resolution, simulator: Simulator) => handleUninstall(livery, resolution, simulator)}
                             />
                         ))}
