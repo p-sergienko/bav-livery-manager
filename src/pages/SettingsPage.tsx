@@ -159,7 +159,7 @@ export const SettingsPage = () => {
                 />
             )}
 
-            <form className={styles.form} onSubmit={handleSubmit}>
+            <form id="simDirectorySection" className={styles.form} onSubmit={handleSubmit}>
                 <label className={styles.pathInput}>
                     <span className={styles.label}>MSFS 2020 Community Folder</span>
                     <div className={styles.inputRow}>

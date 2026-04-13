@@ -26,6 +26,30 @@ function buildStepOptions(
         scrollTo: { behavior: "smooth", block: "center" },
         modalOverlayOpeningPadding: 4,
         modalOverlayOpeningRadius: 4,
+        beforeShowPromise: stepDef.route ? function() {
+            return new Promise<void>((resolve) => {
+                const targetHash = `#${stepDef.route}`;
+
+                if (!window.location.hash.startsWith(targetHash)) {
+                    window.location.hash = targetHash;
+                }
+
+                let attempts = 0;
+                const checkElement = () => {
+                    const el = document.querySelector(stepDef.element);
+                    if (el) {
+                        setTimeout(resolve, 100);
+                    } else if (attempts < 20) {
+                        attempts++;
+                        setTimeout(checkElement, 50);
+                    } else {
+                        resolve();
+                    }
+                };
+                
+                checkElement();
+            });
+        } : undefined,
         buttons: [
             ...(!isFirst
                 ? [{ text: "← Back", secondary: true, action(this: Tour) { this.back(); } }]
