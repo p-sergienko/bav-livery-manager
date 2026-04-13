@@ -1,73 +1,157 @@
-.driver-popover {
-    border-radius: 8px;
-    padding: 20px;
-    max-width: 320px;
-    background-color: var(--panel);
-    color: var(--text);
+/* ─── Main popover (Shepherd uses a <dialog> element) ─── */
+.shepherd-element {
+    background: var(--panel);
     border: 1px solid var(--border);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    color: var(--text);
+    font-family: inherit;
+    max-width: 640px;
+    outline: none;
+    padding: 0;
 }
 
-.driver-popover-title {
+/* ─── Content wrapper ─── */
+.shepherd-content {
+    border-radius: 8px;
+    outline: none;
+    padding: 20px;
+}
+
+/* ─── Header — reset Shepherd's gray title-bar ─── */
+.shepherd-header,
+.shepherd-has-title .shepherd-content .shepherd-header {
+    align-items: flex-start;
+    background: transparent;
+    border-radius: 0;
+    line-height: normal;
+    padding: 0 0 8px 0;
+}
+
+.shepherd-title {
+    color: var(--text);
+    flex: 1 0 auto;
     font-size: 16px;
     font-weight: 600;
-    color: var(--text);
-    margin-bottom: 8px;
+    margin: 0;
+    padding: 0;
 }
 
-.driver-popover-description {
+/* ─── Cancel icon ─── */
+.shepherd-cancel-icon,
+.shepherd-has-title .shepherd-content .shepherd-cancel-icon {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1;
+    margin: 0 0 0 8px;
+    opacity: 0.6;
+    padding: 0;
+    transition: opacity 0.2s ease;
+}
+
+.shepherd-cancel-icon:hover,
+.shepherd-has-title .shepherd-content .shepherd-cancel-icon:hover {
+    color: var(--text);
+    opacity: 1;
+}
+
+/* ─── Body text ─── */
+.shepherd-text {
+    color: var(--muted);
     font-size: 14px;
     line-height: 1.6;
-    color: var(--muted);
+    padding: 0;
 }
 
-.driver-popover-progress-text {
-    font-size: 12px;
-    color: var(--muted);
+.shepherd-text p {
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
-.driver-popover-arrow-side-left.driver-popover-arrow   { border-right-color: var(--panel); }
-.driver-popover-arrow-side-right.driver-popover-arrow  { border-left-color: var(--panel); }
-.driver-popover-arrow-side-top.driver-popover-arrow    { border-bottom-color: var(--panel); }
-.driver-popover-arrow-side-bottom.driver-popover-arrow { border-top-color: var(--panel); }
+.shepherd-text video {
+    display: block;
+    width: 100%;
+    border: none;
+    outline: none;
+}
 
-.driver-popover-footer {
-    margin-top: 16px;
+/* ─── Footer ─── */
+.shepherd-footer {
+    align-items: center;
+    border-radius: 0;
+    display: flex;
     gap: 8px;
+    justify-content: flex-start;
+    padding: 16px 0 0 0;
 }
 
-.driver-popover-prev-btn,
-.driver-popover-next-btn,
-.driver-popover-close-btn {
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    padding: 6px 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+.shepherd-footer .shepherd-button:last-child {
+    margin-right: 0;
 }
 
-.driver-popover-prev-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text);
+/* ─── Progress text ─── */
+.shepherd-progress {
+    color: var(--muted);
+    flex: 1;
+    font-size: 12px;
 }
 
-.driver-popover-next-btn {
+/* ─── Primary button ─── */
+.shepherd-button {
     background: var(--primary);
     border: 1px solid transparent;
+    border-radius: 6px;
     color: var(--bg);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    margin-right: 0;
+    padding: 6px 14px;
+    transition: opacity 0.2s ease;
 }
 
-.driver-popover-prev-btn:hover,
-.driver-popover-close-btn:hover {
-    background: var(--card);
-}
-
-.driver-popover-next-btn:hover {
+.shepherd-button:not(:disabled):hover {
+    background: var(--primary);
+    color: var(--bg);
     opacity: 0.85;
 }
 
-.driver-overlay {
-    background: rgba(0, 0, 0, 0.65) !important;
+/* ─── Secondary button ─── */
+.shepherd-button.shepherd-button-secondary {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text);
+    opacity: 1;
+}
+
+.shepherd-button.shepherd-button-secondary:not(:disabled):hover {
+    background: var(--card);
+    color: var(--text);
+    opacity: 1;
+}
+
+/* ─── Arrow — match panel background and border ─── */
+.shepherd-arrow:before {
+    background: var(--panel);
+    border: 1px solid var(--border);
+}
+
+/* Shepherd overrides the arrow bg for titled bottom steps — reset it */
+.shepherd-element.shepherd-has-title[data-popper-placement^="bottom"] > .shepherd-arrow:before {
+    background-color: var(--panel);
+}
+
+/* ─── Modal overlay ─── */
+.shepherd-modal-overlay-container {
+    fill: rgba(0, 0, 0, 0.7);
+}
+
+.shepherd-modal-overlay-container.shepherd-modal-is-visible {
+    opacity: 1;
 }

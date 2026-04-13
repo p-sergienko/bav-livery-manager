@@ -1,9 +1,58 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { driver, DriveStep, Driver } from "driver.js";
-import "driver.js/dist/driver.css";
+import Shepherd from "shepherd.js";
+import type { Tour, Step, StepOptions } from "shepherd.js";
 
-let driverInstance: Driver | null = null;
+const ShepherdTour = Shepherd.Tour;
+import type { TourStepDef } from "@/tour/steps";
+
+let tour: Tour | null = null;
+
+function buildStepOptions(
+    stepDef: TourStepDef,
+    index: number,
+    total: number,
+    syncStep: (i: number) => void,
+): StepOptions {
+    const isFirst = index === 0;
+    const isLast = index === total - 1;
+
+    return {
+        id: `step-${index}`,
+        title: stepDef.title,
+        text: stepDef.text,
+        attachTo: { element: stepDef.element, on: stepDef.placement },
+        cancelIcon: { enabled: true },
+        scrollTo: { behavior: "smooth", block: "center" },
+        modalOverlayOpeningPadding: 4,
+        modalOverlayOpeningRadius: 4,
+        buttons: [
+            ...(!isFirst
+                ? [{ text: "← Back", secondary: true, action(this: Tour) { this.back(); } }]
+                : []),
+            {
+                text: isLast ? "Finish" : "Next →",
+                action(this: Tour) { isLast ? this.complete() : this.next(); },
+            },
+        ],
+        when: {
+            show(this: Step) {
+                const idx = this.tour.steps.indexOf(this);
+                syncStep(idx);
+
+                const footer = this.el?.querySelector(".shepherd-footer");
+                if (!footer) return;
+                let prog = footer.querySelector<HTMLElement>(".shepherd-progress");
+                if (!prog) {
+                    prog = document.createElement("span");
+                    prog.className = "shepherd-progress";
+                    footer.insertBefore(prog, footer.firstChild);
+                }
+                prog.textContent = `${idx + 1} of ${this.tour.steps.length}`;
+            },
+        },
+    };
+}
 
 interface TourState {
     hasSeenTour: boolean;
@@ -15,9 +64,9 @@ interface TourState {
 
 interface TourActions {
     openWelcome: () => void;
-    acceptTour: (steps: DriveStep[]) => void;
+    acceptTour: (steps: TourStepDef[]) => void;
     declineTour: () => void;
-    startTour: (steps: DriveStep[]) => void;
+    startTour: (steps: TourStepDef[]) => void;
     stopTour: () => void;
     resetTour: () => void;
     nextStep: () => void;
@@ -48,65 +97,45 @@ export const useTourStore = create<TourState & TourActions>()(
             },
 
             startTour: (steps) => {
-                driverInstance?.destroy();
+                const t = tour;
+                tour = null;
+                t?.cancel();
 
-                driverInstance = driver({
-                    showProgress: true,
-                    allowClose: true,
-                    steps,
-                    onDestroyStarted: () => {
-                        const instance = driverInstance;
-                        get()._onTourEnd();
-                        instance?.destroy();
-                    },
-                    onNextClick: () => {
-                        driverInstance?.moveNext();
-                        get()._syncStep(driverInstance?.getActiveIndex() ?? 0);
-                    },
-                    onPrevClick: () => {
-                        driverInstance?.movePrevious();
-                        get()._syncStep(driverInstance?.getActiveIndex() ?? 0);
-                    },
-                    onHighlightStarted: (_el, _step, opts) => {
-                        get()._syncStep(opts.state.activeIndex ?? 0);
-                    },
+                tour = new ShepherdTour({ useModalOverlay: true });
+
+                steps.forEach((stepDef, i) => {
+                    tour!.addStep(buildStepOptions(stepDef, i, steps.length, get()._syncStep));
                 });
 
+                tour.on("cancel", () => get()._onTourEnd());
+                tour.on("complete", () => get()._onTourEnd());
+
                 set({ isActive: true, currentStep: 0, totalSteps: steps.length });
-                driverInstance.drive();
+                tour.start();
             },
 
             stopTour: () => {
-                driverInstance?.destroy();
-                driverInstance = null;
+                const t = tour;
+                tour = null;
+                t?.cancel();
                 set({ isActive: false, currentStep: 0 });
             },
 
             resetTour: () => {
-                driverInstance?.destroy();
-                driverInstance = null;
+                const t = tour;
+                tour = null;
+                t?.cancel();
                 set({ hasSeenTour: false, isActive: false, currentStep: 0 });
             },
 
-            nextStep: () => {
-                driverInstance?.moveNext();
-                get()._syncStep(driverInstance?.getActiveIndex() ?? 0);
-            },
-
-            prevStep: () => {
-                driverInstance?.movePrevious();
-                get()._syncStep(driverInstance?.getActiveIndex() ?? 0);
-            },
-
-            moveTo: (index) => {
-                driverInstance?.drive(index);
-                get()._syncStep(index);
-            },
+            nextStep: () => { tour?.next(); },
+            prevStep: () => { tour?.back(); },
+            moveTo: (index) => { tour?.show(`step-${index}`); },
 
             _syncStep: (index) => set({ currentStep: index }),
 
             _onTourEnd: () => {
-                driverInstance = null;
+                tour = null;
                 set({ isActive: false, currentStep: 0 });
             },
         }),

@@ -26,7 +26,6 @@
   "packageManager": "bun@1.2.21",
   "dependencies": {
     "@tanstack/react-query": "^5.59.0",
-    "driver.js": "^1.4.0",
     "electron-log": "^5.1.4",
     "electron-updater": "^6.3.9",
     "embla-carousel-autoplay": "^8.6.0",
@@ -40,6 +39,7 @@
     "react-feather": "^2.0.10",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^6.28.0",
+    "shepherd.js": "^15.2.2",
     "zustand": "^5.0.8"
   },
   "devDependencies": {

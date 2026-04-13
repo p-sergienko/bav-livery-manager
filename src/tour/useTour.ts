@@ -1,8 +1,8 @@
 import { useTourStore } from "@/store/tourStore";
 import { MAIN_TOUR_STEPS } from "./steps";
-import { DriveStep } from "driver.js";
+import type { TourStepDef } from "./steps";
 
-export function useTour(customSteps?: DriveStep[]) {
+export function useTour(customSteps?: TourStepDef[]) {
     const steps = customSteps ?? MAIN_TOUR_STEPS;
 
     const isActive     = useTourStore((s) => s.isActive);

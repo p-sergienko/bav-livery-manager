@@ -472,135 +472,138 @@ export const SearchPage = () => {
     return (
         <section className={styles.page}>
             {/* Header */}
-            <header className={styles.pageHeader}>
-                <div className={styles.headerLeft}>
-                    <div className={styles.headerTitleRow}>
-                        {simulatorLogoKey && (
-                            <div className={styles.simulatorLogoWrap} aria-hidden>
-                                <img
-                                    src={simulatorLogoMap[simulatorLogoKey] ?? ''}
-                                    alt={simulatorLogoKey === 'FS24' ? 'Microsoft Flight Simulator 2024' : 'Microsoft Flight Simulator 2020'}
-                                    className={styles.simulatorLogo}
-                                />
-                                <div className={styles.headerCount}>
-                                    <h1 className={styles.title}>Liveries</h1>
-                                    {hasSimulatorSelection && (
-                                        <p className={styles.resultCount}>
-                                            <strong>{numberFormatter.format(dedupedLiveries.length)}</strong> {dedupedLiveries.length === 1 ? 'livery' : 'liveries'} found
-                                            {searchTerm && <span className={styles.searchTermHint}> for &ldquo;{searchTerm}&rdquo;</span>}
-                                        </p>
-                                    )}
+            <div id="filterSection" >
+                <header className={styles.pageHeader}>
+                    <div className={styles.headerLeft}>
+                        <div className={styles.headerTitleRow}>
+                            {simulatorLogoKey && (
+                                <div className={styles.simulatorLogoWrap} aria-hidden>
+                                    <img
+                                        src={simulatorLogoMap[simulatorLogoKey] ?? ''}
+                                        alt={simulatorLogoKey === 'FS24' ? 'Microsoft Flight Simulator 2024' : 'Microsoft Flight Simulator 2020'}
+                                        className={styles.simulatorLogo}
+                                    />
+                                    <div className={styles.headerCount}>
+                                        <h1 className={styles.title}>Liveries</h1>
+                                        {hasSimulatorSelection && (
+                                            <p className={styles.resultCount}>
+                                                <strong>{numberFormatter.format(dedupedLiveries.length)}</strong> {dedupedLiveries.length === 1 ? 'livery' : 'liveries'} found
+                                                {searchTerm && <span className={styles.searchTermHint}> for &ldquo;{searchTerm}&rdquo;</span>}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
+
                     </div>
-
-                </div>
-                <div className={styles.headerRight}>
-                    <div className={styles.viewToggle}>
-                        <button
-                            type="button"
-                            className={classNames(styles.viewToggleButton, viewMode === 'all' && styles.viewToggleButtonActive)}
-                            onClick={() => { setViewMode('all'); setPage(1); }}
-                        >
-                            All
-                        </button>
-                        <button
-                            type="button"
-                            className={classNames(styles.viewToggleButton, viewMode === 'installed' && styles.viewToggleButtonActive)}
-                            onClick={() => { setViewMode('installed'); setPage(1); }}
-                        >
-                            Installed
-                        </button>
-                    </div>
-                </div>
-            </header>
-
-            {(authError || error) && (
-                <Toast
-                    type="error"
-                    message={authError || error || ''}
-                    onClose={() => {
-                        if (authError) clearAuthError(null);
-                        if (error) clearError();
-                    }}
-                />
-            )}
-
-            {/* Search + Filters toolbar */}
-            <div className={styles.toolbar}>
-                <div className={styles.searchBar}>
-                    <div className={styles.searchInputWrap}>
-                        <span className={styles.searchIconInline}><SearchIcon /></span>
-                        <input
-                            value={searchTerm}
-                            onChange={(event) => {
-                                setSearchTerm(event.target.value);
-                                setPage(1);
-                            }}
-                            onKeyDown={(event) => {
-                                if (event.key === 'Enter') handleSearchSubmit();
-                            }}
-                            placeholder="Search by name, developer, or aircraft…"
-                            className={styles.searchInput}
-                            type="search"
-                        />
-                        {searchTerm && (
+                    <div className={styles.headerRight}>
+                        <div className={styles.viewToggle}>
                             <button
                                 type="button"
-                                className={styles.clearSearchButton}
-                                onClick={() => { setSearchTerm(''); setPage(1); }}
-                                aria-label="Clear search"
+                                className={classNames(styles.viewToggleButton, viewMode === 'all' && styles.viewToggleButtonActive)}
+                                onClick={() => { setViewMode('all'); setPage(1); }}
                             >
-                                <CloseIcon />
+                                All
                             </button>
-                        )}
-                    </div>
-                    <button
-                        type="button"
-                        className={classNames(styles.filterToggle, (showFilters || activeFilterCount > 0) && styles.filterToggleActive)}
-                        onClick={() => setShowFilters(!showFilters)}
-                        aria-label="Toggle filters"
-                    >
-                        <FilterIcon />
-                        <span>Filters</span>
-                        {activeFilterCount > 0 && (
-                            <span className={styles.filterCount}>{activeFilterCount}</span>
-                        )}
-                    </button>
-                </div>
-
-                {/* Simulator selector - always visible */}
-                <div className={styles.simSelectorRow}>
-                    {simulatorOptions.map((option) => {
-                        const disabled = !pathEnabledSimulators.includes(option.label.toUpperCase() as Simulator);
-                        return (
                             <button
-                                key={option.value}
                                 type="button"
-                                className={classNames(styles.simChip, filters.simulator === option.value && styles.simChipActive)}
-                                disabled={disabled}
-                                onClick={() => !disabled && handleQuickSelect('simulator', option.value)}
+                                className={classNames(styles.viewToggleButton, viewMode === 'installed' && styles.viewToggleButtonActive)}
+                                onClick={() => { setViewMode('installed'); setPage(1); }}
                             >
-                                {option.label}
+                                Installed
                             </button>
-                        );
-                    })}
-                    {resolutionOptions.length > 0 && (
-                        <>
-                            <span className={styles.simDivider} />
-                            {resolutionOptions.map((option) => (
+                        </div>
+                    </div>
+                </header>
+
+                {(authError || error) && (
+                    <Toast
+                        type="error"
+                        message={authError || error || ''}
+                        onClose={() => {
+                            if (authError) clearAuthError(null);
+                            if (error) clearError();
+                        }}
+                    />
+                )}
+
+                {/* Search + Filters toolbar */}
+                <div className={styles.toolbar}>
+                    <div className={styles.searchBar}>
+                        <div className={styles.searchInputWrap}>
+                            <span className={styles.searchIconInline}><SearchIcon /></span>
+                            <input
+                                value={searchTerm}
+                                onChange={(event) => {
+                                    setSearchTerm(event.target.value);
+                                    setPage(1);
+                                }}
+                                onKeyDown={(event) => {
+                                    if (event.key === 'Enter') handleSearchSubmit();
+                                }}
+                                placeholder="Search by name, developer, or aircraft…"
+                                className={styles.searchInput}
+                                type="search"
+                            />
+                            {searchTerm && (
+                                <button
+                                    type="button"
+                                    className={styles.clearSearchButton}
+                                    onClick={() => { setSearchTerm(''); setPage(1); }}
+                                    aria-label="Clear search"
+                                >
+                                    <CloseIcon />
+                                </button>
+                            )}
+                        </div>
+                        <button
+                            id="filters"
+                            type="button"
+                            className={classNames(styles.filterToggle, (showFilters || activeFilterCount > 0) && styles.filterToggleActive)}
+                            onClick={() => setShowFilters(!showFilters)}
+                            aria-label="Toggle filters"
+                        >
+                            <FilterIcon />
+                            <span>Filters</span>
+                            {activeFilterCount > 0 && (
+                                <span className={styles.filterCount}>{activeFilterCount}</span>
+                            )}
+                        </button>
+                    </div>
+
+                    {/* Simulator selector - always visible */}
+                    <div id="simulatorResolutionSelect" className={styles.simSelectorRow}>
+                        {simulatorOptions.map((option) => {
+                            const disabled = !pathEnabledSimulators.includes(option.label.toUpperCase() as Simulator);
+                            return (
                                 <button
                                     key={option.value}
                                     type="button"
-                                    className={classNames(styles.simChip, filters.resolution === option.value && styles.simChipActive)}
-                                    onClick={() => handleQuickSelect('resolution', option.value)}
+                                    className={classNames(styles.simChip, filters.simulator === option.value && styles.simChipActive)}
+                                    disabled={disabled}
+                                    onClick={() => !disabled && handleQuickSelect('simulator', option.value)}
                                 >
                                     {option.label}
                                 </button>
-                            ))}
-                        </>
-                    )}
+                            );
+                        })}
+                        {resolutionOptions.length > 0 && (
+                            <>
+                                <span className={styles.simDivider} />
+                                {resolutionOptions.map((option) => (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        className={classNames(styles.simChip, filters.resolution === option.value && styles.simChipActive)}
+                                        onClick={() => handleQuickSelect('resolution', option.value)}
+                                    >
+                                        {option.label}
+                                    </button>
+                                ))}
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 
