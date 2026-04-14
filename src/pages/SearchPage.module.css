@@ -1,7 +1,6 @@
 .page {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
     height: 100%;
     overflow: hidden;
 }
@@ -31,12 +30,12 @@
 .title {
     margin: 0;
     font-size: 2rem;
+    line-height: 0.98;
 }
 
 .simulatorLogoWrap {
     display: inline-flex;
     align-items: center;
-    margin-top: 6px;
     gap: 14px;
 }
 
@@ -264,6 +263,7 @@
     display: grid;
     grid-template-rows: 0fr;
     transition: grid-template-rows 0.25s ease;
+    padding-top: 0.5rem;
 }
 
 .filterPanel>* {
@@ -331,6 +331,7 @@
     flex-wrap: wrap;
     gap: 8px;
     align-items: center;
+    padding-top: 12px;
 }
 
 .filterBadge {
@@ -386,6 +387,7 @@
     font-size: 0.85rem;
     color: var(--muted);
     margin: 0;
+    padding-top: 1rem;
 }
 
 .catalogStatusError {
@@ -399,6 +401,7 @@
     flex-direction: column;
     overflow: hidden;
     min-height: 0;
+    padding-top: 12px;
 }
 
 .paginationBar {

@@ -530,7 +530,7 @@ export const SearchPage = () => {
                         }}
                     />
                 )}
-                
+
                 {warningMessage && (
                     <Toast
                         type="warning"
@@ -626,88 +626,88 @@ export const SearchPage = () => {
             )}
 
             {/* Expandable filter panel */}
-            <div className={classNames(styles.filterPanel, showFilters && styles.filterPanelOpen)}>
-                <div className={styles.filterGrid}>
-                    <div className={styles.filterField}>
-                        <label className={styles.filterLabel}>Developer</label>
-                        <select
-                            className={styles.filterSelect}
-                            value={filters.developer}
-                            onChange={(e) => updateFilter('developer', e.target.value)}
-                        >
-                            <option value="all">All developers</option>
-                            {developerOptions.map((opt) => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className={styles.filterField}>
-                        <label className={styles.filterLabel}>Aircraft</label>
-                        <select
-                            className={styles.filterSelect}
-                            value={filters.aircraft}
-                            onChange={(e) => updateFilter('aircraft', e.target.value)}
-                        >
-                            <option value="all">All aircraft</option>
-                            {aircraftOptions.map((opt) => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className={styles.filterField}>
-                        <label className={styles.filterLabel}>Category</label>
-                        <select
-                            className={styles.filterSelect}
-                            value={filters.category}
-                            onChange={(e) => updateFilter('category', e.target.value)}
-                        >
-                            <option value="all">All categories</option>
-                            {categoryOptions.map((opt) => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                        </select>
-                    </div>
-                    {engineOptions.length > 0 && (
+            <div>
+                <div className={classNames(styles.filterPanel, showFilters && styles.filterPanelOpen, activeFilterBadges.length > 0 && showFilters && styles.filterPanelWithBadges)}>
+                    <div className={styles.filterGrid}>
                         <div className={styles.filterField}>
-                            <label className={styles.filterLabel}>Engine</label>
+                            <label className={styles.filterLabel}>Developer</label>
                             <select
                                 className={styles.filterSelect}
-                                value={filters.engine}
-                                onChange={(e) => updateFilter('engine', e.target.value)}
+                                value={filters.developer}
+                                onChange={(e) => updateFilter('developer', e.target.value)}
                             >
-                                <option value="all">All engines</option>
-                                {engineOptions.map((eng) => (
-                                    <option key={eng} value={eng}>{eng}</option>
+                                <option value="all">All developers</option>
+                                {developerOptions.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
                                 ))}
                             </select>
                         </div>
-                    )}
+                        <div className={styles.filterField}>
+                            <label className={styles.filterLabel}>Aircraft</label>
+                            <select
+                                className={styles.filterSelect}
+                                value={filters.aircraft}
+                                onChange={(e) => updateFilter('aircraft', e.target.value)}
+                            >
+                                <option value="all">All aircraft</option>
+                                {aircraftOptions.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className={styles.filterField}>
+                            <label className={styles.filterLabel}>Category</label>
+                            <select
+                                className={styles.filterSelect}
+                                value={filters.category}
+                                onChange={(e) => updateFilter('category', e.target.value)}
+                            >
+                                <option value="all">All categories</option>
+                                {categoryOptions.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                        {engineOptions.length > 0 && (
+                            <div className={styles.filterField}>
+                                <label className={styles.filterLabel}>Engine</label>
+                                <select
+                                    className={styles.filterSelect}
+                                    value={filters.engine}
+                                    onChange={(e) => updateFilter('engine', e.target.value)}
+                                >
+                                    <option value="all">All engines</option>
+                                    {engineOptions.map((eng) => (
+                                        <option key={eng} value={eng}>{eng}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+                    </div>
                 </div>
+                {activeFilterBadges.length > 0 && (
+                    <div className={styles.activeFilters}>
+                        {activeFilterBadges.map(({ key, label, displayValue }) => (
+                            <button
+                                key={key}
+                                type="button"
+                                className={styles.filterBadge}
+                                onClick={() => updateFilter(key, 'all')}
+                                title={`Remove ${label} filter`}
+                            >
+                                <span className={styles.filterBadgeLabel}>{label}:</span>
+                                <span>{displayValue}</span>
+                                <CloseIcon />
+                            </button>
+                        ))}
+                        {activeFilterBadges.length > 1 && (
+                            <button type="button" className={styles.clearAllLink} onClick={clearAllFilters}>
+                                Clear all
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
-
-            {/* Active filter badges */}
-            {activeFilterBadges.length > 0 && (
-                <div className={styles.activeFilters}>
-                    {activeFilterBadges.map(({ key, label, displayValue }) => (
-                        <button
-                            key={key}
-                            type="button"
-                            className={styles.filterBadge}
-                            onClick={() => updateFilter(key, 'all')}
-                            title={`Remove ${label} filter`}
-                        >
-                            <span className={styles.filterBadgeLabel}>{label}:</span>
-                            <span>{displayValue}</span>
-                            <CloseIcon />
-                        </button>
-                    ))}
-                    {activeFilterBadges.length > 1 && (
-                        <button type="button" className={styles.clearAllLink} onClick={clearAllFilters}>
-                            Clear all
-                        </button>
-                    )}
-                </div>
-            )}
 
             {/* Results */}
             <div className={styles.scrollContainer}>

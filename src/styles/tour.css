@@ -41,8 +41,6 @@
 .shepherd-cancel-icon,
 .shepherd-has-title .shepherd-content .shepherd-cancel-icon {
     background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 6px;
     width: 20px;
     color: var(--muted);
     cursor: pointer;
@@ -60,7 +58,6 @@
 .shepherd-has-title .shepherd-content .shepherd-cancel-icon:hover {
     color: var(--danger);
     opacity: 1;
-    border-color: var(--danger);
 }
 
 /* ─── Body text ─── */

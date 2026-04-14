@@ -206,7 +206,7 @@ export const SettingsPage = () => {
 
             <footer className={styles.footer}>
                 <p className={styles.footerText}>
-                    Created by <span className={styles.footerAuthor}>Pavel Sergienko</span>, inspired by <span className={styles.footerAuthor}>Laurie Cooper</span>, made for <span className={styles.footerAuthor}>BAVirtual Community</span>
+                    Created by <span className={styles.footerAuthor}>Pavel Sergienko</span>, inspired by <span className={styles.footerAuthor}>Laurie Cooper</span>, made for the <span className={styles.footerAuthor}>BAVirtual Community</span>
                 </p>
                 <p className={styles.secondFooterText}>© {new Date().getFullYear()} - BAVirtual Livery Manager</p>
                 <div className={styles.footerButtons}>

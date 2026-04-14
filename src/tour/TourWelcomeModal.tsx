@@ -11,8 +11,8 @@ import { BAVIcon } from "@/components/Icons/BAVIcon";
 const SlidesDescriptions = [
     {
         image: "/slides/slide1.webp",
-        title: "ALB ALB ALB G-EUUA",
-        author: "BAW6 Laurie Cooper"
+        title: "A380 arrives in Anchorage",
+        author: "Laurie Cooper BAW6"
     },
     {
         image: "/slides/slide2.webp",
