@@ -193,7 +193,7 @@ export const LiveryCard = ({
                         <h3 className={styles.title}>{livery.name}</h3>
                         <NavLink to={'/information/' + livery.id} className={styles.infoContainer}>
                             <p className={styles.infoButton}>More details</p>
-                            <Info width={16} height={16} color='#7dcff0' />
+                            <Info width={14} height={14} />
                         </NavLink>
                     </div>
                     {livery.version && <span className={styles.badge}>v{livery.version}</span>}

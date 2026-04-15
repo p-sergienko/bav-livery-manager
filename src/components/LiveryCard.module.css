@@ -153,14 +153,27 @@
 }
 
 .infoContainer {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 4px;
     text-decoration: none;
+    color: #7dcff0;
+    width: fit-content;
+    margin-top: 4px;
+    transition: opacity 0.15s ease;
+}
+
+.infoContainer:hover {
+    opacity: 0.75;
+}
+
+.infoContainer:hover .infoButton {
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 
 .infoButton {
-    color: #7dcff0;
+    color: inherit;
     margin: 0;
     font-size: 12px;
     text-transform: uppercase;

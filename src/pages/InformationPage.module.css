@@ -1,68 +1,112 @@
 .informationPage {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
     height: 100%;
+    min-height: 0;
 }
 
-.pageContainer {
-    padding: 0 !important;
-}
-
-.headerSection {
-    background: var(--card);
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 8px;
-    padding: 10px 16px;
-}
-
-.headerSection h1 {
-    font-size: 32px;
-    margin: 0;
-}
-
-.headerSection h3 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 400;
+.emptyPage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
     color: var(--muted);
 }
 
-.textContainer {
+.headerSection {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    background: var(--card);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 14px 18px;
 }
 
-.logoAndTitle {
+.headerLeft {
     display: flex;
-    gap: 8px;
     align-items: center;
+    gap: 14px;
+    min-width: 0;
 }
 
 .devLogo {
-    height: 40px;
-    width: 40px;
+    height: 48px;
+    width: 48px;
     border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
     overflow: hidden;
+    flex-shrink: 0;
+    object-fit: cover;
+}
+
+.headerText {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.titleRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.title {
+    margin: 0;
+    font-size: 1.75rem;
+    line-height: 1.1;
+    font-weight: 600;
+}
+
+.versionBadge {
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    font-family: "JetBrains Mono", monospace;
+    letter-spacing: 0.02em;
+}
+
+.subtitle {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+.headerRight {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.regTag {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 8px;
+    letter-spacing: 0.05em;
 }
 
 .mainBody {
     display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 16px;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+    gap: 14px;
     align-items: stretch;
     min-height: 0;
-}
-
-.mainBody h2 {
-    font-size: 15px;
-    font-weight: 300;
-    margin-bottom: 0;
-    margin-left: 10px;
-    color: #a0a0a0;
 }
 
 .informationContainer {
@@ -70,107 +114,143 @@
     flex-direction: column;
     border: 1px solid var(--border);
     background: var(--card);
-    border-radius: 8px;
-    padding: 12px;
-    gap: 8px;
-    flex: 1;
+    border-radius: 10px;
+    padding: 14px 16px;
+    gap: 12px;
     min-width: 0;
+    min-height: 0;
     overflow: hidden;
 }
 
-.informationContainer p {
+.sectionTitle {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
     margin: 0;
 }
 
 .factsSheet {
     display: grid;
-    grid-column: span 2;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0;
 }
 
-.factsSheet dl {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 2fr));
-    gap: 10px 12px;
-    margin: 0 0 8px;
-}
-
-.liveryBox {
+.factCell {
     display: flex;
-    align-items: stretch;
-    justify-content: center;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    padding: 8px 12px;
     border: 1px solid var(--border);
-    background: var(--card);
     border-radius: 8px;
-}
-
-.liveryPreview {
-    border-radius: 8px;
-    max-width: 320px;
-    height: auto;
-}
-
-.changesBox {
-    grid-column: span 2;
-    border: 1px solid var(--border);
-    background: var(--card);
-    border-radius: 8px;
-    padding: 12px;
+    background: rgba(255, 255, 255, 0.02);
 }
 
 .metaLabel {
-    font-size: 12px;
+    font-size: 0.65rem;
     color: var(--muted);
-    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+    margin: 0;
 }
 
 .metaValue {
     font-size: 14px;
-    color: #e3e3e3;
+    color: var(--text);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+}
+
+.radarRow {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: auto;
+}
+
+.radarButton {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 6px 12px 6px 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    min-width: 0;
+}
+
+.radarButton span {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.buttonsContainer {
+.radarIcon {
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.radarButton:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.liveryBox {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.liveryBoxName {
     display: flex;
     justify-content: space-between;
 }
 
-.radarButtonsGroup {
-    display: flex;
-    gap: 8px;
-}
-
-.radarButton {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    border: 1px solid var(--border);
-    background: rgba(0, 0, 0, 0.04);
-    color: var(--text);
-    border-radius: 8px;
-    padding: 4px 12px 4px 8px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.radarIcon {
+.liveryBoxName p {
+    color: var(--muted);
+    font-size: 0.85rem;
     margin: 0;
-    width: 28px;
-    height: 28px;
-    border-radius: 999px;
+    padding-top: 4px;
 }
 
-.radarButton:hover {
-    background: #2a2a2a;
-    border-color: #ffffff;
+.liveryPreview {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 8px;
+    display: block;
+}
+
+.liveryPlaceholder {
+    color: var(--muted);
+    font-size: 0.85rem;
+    padding: 2rem;
+    text-align: center;
 }
 
 .secondaryBody {
     display: grid;
-    grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
-    gap: 16px;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 14px;
     flex: 1;
     min-height: 0;
     overflow: hidden;
@@ -182,57 +262,370 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
+    padding-right: 6px;
+    margin-right: -4px;
 }
 
-.changelog::-webkit-scrollbar {
+.changelog::-webkit-scrollbar,
+.routesList::-webkit-scrollbar {
     width: 8px;
 }
 
-.changelog::-webkit-scrollbar-track {
-    background-color: var(--card);
-    border-radius: 100px;
-    overflow: hidden;
+.changelog::-webkit-scrollbar-track,
+.routesList::-webkit-scrollbar-track {
+    background-color: transparent;
 }
 
-.changelog::-webkit-scrollbar-thumb {
-    background: #111;
-    border: 1px solid var(--border);
+.changelog::-webkit-scrollbar-thumb,
+.routesList::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 100px;
+}
+
+.changelog::-webkit-scrollbar-thumb:hover,
+.routesList::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.16);
 }
 
 .changelogEntry {
     border: 1px solid var(--border);
-    background: #050505;
+    background: rgba(255, 255, 255, 0.02);
     border-radius: 8px;
-    padding: 4px 12px;
-    margin-right: 6px;
+    padding: 10px 14px;
+    transition: border-color 0.15s ease;
 }
 
-.changelogEntry h4 {
-    margin: 4px 0;
-    font-size: 16px;
-    font-weight: 600;
+.changelogEntry:hover {
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
-.changelogEntry h4 span {
-    font-size: 14px;
-    color: #c1ff74;
-    font-weight: 400;
+.changelogHead {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
 }
 
-.changelogEntry p {
-    margin: 0;
-    font-size: 14px;
-    color: #e3e3e3;
-}
-
-.changelogEntry h5 {
-    margin: 8px 0 4px;
+.versionTag {
+    font-family: "JetBrains Mono", monospace;
     font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 8px;
+    border-radius: 5px;
+    letter-spacing: 0.02em;
+}
+
+.currentPill {
+    font-size: 10px;
+    font-weight: 600;
+    color: #c1ff74;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border: 1px solid rgba(193, 255, 116, 0.4);
+    background: rgba(193, 255, 116, 0.08);
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.changelogDate {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+.changelogList {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.changelogList li {
+    position: relative;
+    padding-left: 14px;
+    font-size: 13px;
+    color: #d8d8d8;
+    line-height: 1.5;
+}
+
+.changelogList li::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 8px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--muted);
+}
+
+.flightLogHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.flightLogRange {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+}
+
+.flightLog {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    flex: 1;
+}
+
+.flightStats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.flightStat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.flightStatValue {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+}
+
+.routesSectionTitle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+    border-top: 1px solid var(--border);
+    padding: 8px 0 0;
+}
+
+.routesHint {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 11px;
+}
+
+.routesList {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-right: 4px;
+    margin-right: -4px;
+}
+
+.routeRow {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    transition: border-color 0.15s ease;
+}
+
+.routeRow:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.routeTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.routePair {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+}
+
+.routePair strong {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.routeArrow {
+    color: var(--muted);
     font-weight: 500;
 }
 
-.changelogHeader {
-    padding-left: 6px;
+.routeCount {
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.routeBar {
+    width: 100%;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 100px;
+    overflow: hidden;
+}
+
+.routeBarFill {
+    height: 100%;
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 100px;
+    transition: width 0.3s ease;
+}
+
+.infoMessage {
+    color: var(--muted);
+    font-size: 13px;
+    margin: 0;
+}
+
+.errorMessage {
+    color: var(--danger);
+    font-size: 13px;
+    margin: 0;
+}
+
+.simSwitch {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.simChip {
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 6px 16px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.04);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.simChip:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.simChip:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.simChipActive {
+    border-color: var(--text);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.downloadRow {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.downloadButton,
+.uninstallButton,
+.cancelDownloadButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-weight: 500;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.downloadButton:hover:not(:disabled):not([aria-disabled='true']) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.downloadButton:disabled,
+.uninstallButton:disabled,
+.cancelDownloadButton:disabled,
+.downloadButton[aria-disabled='true'] {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.uninstallButton {
+    background: rgba(255, 68, 68, 0.08);
+    border-color: rgba(255, 68, 68, 0.25);
+    color: var(--danger);
+}
+
+.uninstallButton:hover:not(:disabled) {
+    background: rgba(255, 68, 68, 0.18);
+    border-color: rgba(255, 68, 68, 0.4);
+}
+
+.cancelDownloadButton {
+    background: rgba(255, 68, 68, 0.08);
+    border-color: rgba(255, 68, 68, 0.25);
+    color: var(--danger);
+}
+
+.cancelDownloadButton:hover {
+    background: rgba(255, 68, 68, 0.18);
+    border-color: rgba(255, 68, 68, 0.4);
+}
+
+.buttonIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+}
+
+.downloadButton svg,
+.uninstallButton svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.headerButtons {
+    display: flex;
+    justify-content: space-between;
 }
