@@ -1,6 +1,7 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { AuthTokenListener } from '@/components/AuthTokenListener';
+import { AppUpdateListener } from '@/components/AppUpdateListener';
 import { RequireAuth } from '@/components/RequireAuth';
 import { SearchPage } from '@/pages/SearchPage';
 import { DownloadsPage } from '@/pages/DownloadsPage';
@@ -20,6 +21,7 @@ export const App = () => {
   return (
     <HashRouter>
       <AuthTokenListener />
+      <AppUpdateListener />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<RequireAuth />}>

@@ -1,17 +1,8 @@
-import { useEffect, useState, useCallback } from 'react';
-import type { AppUpdateStatus } from '@/types/electron-api';
+import { useCallback } from 'react';
+import { useAppUpdateStore } from '@/store/appUpdateStore';
 import { APP_VERSION } from '@/constants/appVersion';
 import styles from './AppUpdater.module.css';
 import { GitPullRequest } from 'react-feather';
-
-type UpdateState =
-    | { phase: 'idle' }
-    | { phase: 'checking' }
-    | { phase: 'available'; version: string; releaseDate?: string }
-    | { phase: 'up-to-date' }
-    | { phase: 'downloading'; percent: number; bytesPerSecond: number; transferred: number; total: number }
-    | { phase: 'downloaded'; version: string }
-    | { phase: 'error'; message: string };
 
 const CheckIcon = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -51,74 +42,28 @@ function formatBytes(bytes: number): string {
 }
 
 export const AppUpdater = () => {
-    const [state, setState] = useState<UpdateState>({ phase: 'idle' });
+    const state = useAppUpdateStore((s) => s.update);
+    const setUpdate = useAppUpdateStore((s) => s.setUpdate);
     const api = window.electronAPI;
-
-    useEffect(() => {
-        if (!api?.onAppUpdateStatus) return;
-
-        api.onAppUpdateStatus((status: AppUpdateStatus) => {
-            switch (status.status) {
-                case 'checking':
-                    setState({ phase: 'checking' });
-                    break;
-                case 'available':
-                    setState({
-                        phase: 'available',
-                        version: status.version || 'unknown',
-                        releaseDate: status.releaseDate,
-                    });
-                    break;
-                case 'not-available':
-                    setState({ phase: 'up-to-date' });
-                    break;
-                case 'downloading':
-                    setState({
-                        phase: 'downloading',
-                        percent: status.percent || 0,
-                        bytesPerSecond: status.bytesPerSecond || 0,
-                        transferred: status.transferred || 0,
-                        total: status.total || 0,
-                    });
-                    break;
-                case 'downloaded':
-                    setState({
-                        phase: 'downloaded',
-                        version: status.version || 'unknown',
-                    });
-                    break;
-                case 'error':
-                    setState({
-                        phase: 'error',
-                        message: status.error || 'An unknown error occurred',
-                    });
-                    break;
-            }
-        });
-
-        return () => {
-            api.removeAppUpdateListeners?.();
-        };
-    }, [api]);
 
     const handleCheckForUpdate = useCallback(async () => {
         if (!api?.checkForAppUpdate) return;
-        setState({ phase: 'checking' });
+        setUpdate({ phase: 'checking' });
         try {
             await api.checkForAppUpdate();
         } catch {
-            setState({ phase: 'error', message: 'Failed to check for updates' });
+            setUpdate({ phase: 'error', message: 'Failed to check for updates' });
         }
-    }, [api]);
+    }, [api, setUpdate]);
 
     const handleDownloadUpdate = useCallback(async () => {
         if (!api?.downloadAppUpdate) return;
         try {
             await api.downloadAppUpdate();
         } catch {
-            setState({ phase: 'error', message: 'Failed to download update' });
+            setUpdate({ phase: 'error', message: 'Failed to download update' });
         }
-    }, [api]);
+    }, [api, setUpdate]);
 
     const handleInstallUpdate = useCallback(() => {
         api?.installAppUpdate?.();

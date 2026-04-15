@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { TitleBar } from './TitleBar';
+import { AppUpdateBanner } from './AppUpdateBanner';
 import styles from './Layout.module.css';
 import {TourInitializer} from "@/tour/TourInitializer";
 
@@ -16,5 +17,6 @@ export const Layout = () => (
                 </div>
             </main>
         </div>
+        <AppUpdateBanner />
     </div>
 );
