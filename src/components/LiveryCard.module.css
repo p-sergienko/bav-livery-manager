@@ -86,14 +86,14 @@
 }
 
 .overlayExtracting {
-    color: var(--success);
+    color: #4a9eff;
 }
 
 .spinner {
     width: 32px;
     height: 32px;
     border: 3px solid rgba(255, 255, 255, 0.2);
-    border-top-color: var(--success);
+    border-top-color: #4a9eff;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -117,7 +117,12 @@
 .progressFill {
     height: 100%;
     width: 0;
-    background: linear-gradient(90deg, #4caf50, #8bc34a);
+    background: linear-gradient(
+            90deg,
+            #4a9eff 0%,
+            #6bb8ff 50%,
+            #4a9eff 100%
+    );
     transition: width 0.2s ease-out;
     border-radius: 3px;
 }
@@ -126,7 +131,7 @@
     position: absolute;
     left: 0;
     bottom: 0;
-    background: rgba(76, 175, 80, 0.9);
+    background: #4a9eff;
     color: #ffffff;
     padding: 4px 12px 4px 8px;
     font-size: 11px;
