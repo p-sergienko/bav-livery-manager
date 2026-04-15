@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { LiveryCard } from '@/components/LiveryCard';
-import { ITEMS_PER_PAGE } from '@/utils/livery';
-import type { Livery, InstalledLiveryRecord, Resolution, Simulator } from '@/types/livery';
-import { useLiveryStore } from '@/store/liveryStore';
-import { useAuthStore } from '@/store/authStore';
-import { useCatalogQuery } from '@/hooks/useCatalogQuery';
-import { useLiveriesQuery } from '@/hooks/useLiveriesQuery';
-import { Toast } from '@/components/Toast';
-import type { ReactNode } from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
+import {LiveryCard} from '@/components/LiveryCard';
+import {LiveryCardSkeleton} from '@/components/LiveryCardSkeleton';
+import {ITEMS_PER_PAGE} from '@/utils/livery';
+import type {Livery, InstalledLiveryRecord, Resolution, Simulator} from '@/types/livery';
+import {useLiveryStore} from '@/store/liveryStore';
+import {useAuthStore} from '@/store/authStore';
+import {useCatalogQuery} from '@/hooks/useCatalogQuery';
+import {useLiveriesQuery} from '@/hooks/useLiveriesQuery';
+import {Toast} from '@/components/Toast';
+import type {ReactNode} from 'react';
 import styles from './SearchPage.module.css';
 
 type FilterKey = 'developer' | 'aircraft' | 'engine' | 'simulator' | 'resolution' | 'category';
@@ -21,7 +22,7 @@ const baseFilters: Record<FilterKey, string> = {
     category: 'all'
 };
 
-const createDefaultFilters = (simulator: string): FilterState => ({ ...baseFilters, simulator });
+const createDefaultFilters = (simulator: string): FilterState => ({...baseFilters, simulator});
 
 const uniqueStrings = (values: Array<string | null | undefined>) => {
     const set = new Set<string>();
@@ -30,7 +31,7 @@ const uniqueStrings = (values: Array<string | null | undefined>) => {
             set.add(value.trim());
         }
     });
-    return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
 };
 
 interface ChipOption {
@@ -46,13 +47,13 @@ const UNCATEGORIZED = '__uncategorized';
 
 const dedupeOptions = (entries: ChipOption[]) => {
     const map = new Map<string, ChipOption>();
-    entries.forEach(({ value, label, hint }) => {
+    entries.forEach(({value, label, hint}) => {
         if (!value) return;
         if (!map.has(value)) {
-            map.set(value, { value, label, hint: hint ?? null });
+            map.set(value, {value, label, hint: hint ?? null});
         }
     });
-    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label, undefined, {sensitivity: 'base'}));
 };
 
 const buildFallbackOptions = (liveries: Livery[]) => {
@@ -65,18 +66,18 @@ const buildFallbackOptions = (liveries: Livery[]) => {
 
     const hasUncategorized = liveries.some((l) => !(l.categoryId || l.categoryName));
     if (hasUncategorized) {
-        categories.push({ value: UNCATEGORIZED, label: 'Uncategorized' });
+        categories.push({value: UNCATEGORIZED, label: 'Uncategorized'});
     }
 
     return {
-        developers: dedupeOptions(liveries.map((l) => ({ value: l.developerId, label: l.developerName }))),
-        aircraft: dedupeOptions(liveries.map((l) => ({ value: l.aircraftProfileId, label: l.aircraftProfileName }))),
+        developers: dedupeOptions(liveries.map((l) => ({value: l.developerId, label: l.developerName}))),
+        aircraft: dedupeOptions(liveries.map((l) => ({value: l.aircraftProfileId, label: l.aircraftProfileName}))),
         engines: uniqueStrings(liveries.map((l) => l.engine)),
         simulators: dedupeOptions(liveries.map((l) => ({
             value: l.simulatorId,
             label: l.simulatorCode || l.simulatorId
         }))),
-        resolutions: dedupeOptions(liveries.map((l) => ({ value: l.resolutionId, label: l.resolutionValue }))),
+        resolutions: dedupeOptions(liveries.map((l) => ({value: l.resolutionId, label: l.resolutionValue}))),
         categories
     };
 };
@@ -193,25 +194,26 @@ const filterLiveries = (
     return matches;
 };
 
-const numberFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
+const numberFormatter = new Intl.NumberFormat(undefined, {maximumFractionDigits: 0});
 
 const classNames = (...tokens: Array<string | false | undefined>) => tokens.filter(Boolean).join(' ');
 
 const SearchIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-        <path d="M11 3a8 8 0 0 1 8 8c0 1.848-.627 3.55-1.68 4.905l3.386 3.388a1 1 0 0 1-1.414 1.414l-3.388-3.386A7.96 7.96 0 0 1 11 19a8 8 0 1 1 0-16z" />
+        <path
+            d="M11 3a8 8 0 0 1 8 8c0 1.848-.627 3.55-1.68 4.905l3.386 3.388a1 1 0 0 1-1.414 1.414l-3.388-3.386A7.96 7.96 0 0 1 11 19a8 8 0 1 1 0-16z"/>
     </svg>
 );
 
 const CloseIcon = () => (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
-        <path d="M18 6L6 18M6 6l12 12" />
+        <path d="M18 6L6 18M6 6l12 12"/>
     </svg>
 );
 
 const FilterIcon = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
     </svg>
 );
 
@@ -220,9 +222,9 @@ export const SearchPage = () => {
     const authError = useAuthStore((state) => state.error);
     const clearAuthError = useAuthStore((state) => state.setError);
 
-    const { data: catalog, isFetching: catalogLoading, error: catalogError } = useCatalogQuery(authToken);
-    const { data: liveriesData, isFetching: liveriesFetching, error: listError } = useLiveriesQuery();
-    
+    const {data: catalog, isFetching: catalogLoading, error: catalogError} = useCatalogQuery(authToken);
+    const {data: liveriesData, isFetching: liveriesFetching, error: listError} = useLiveriesQuery();
+
     const liveries = useMemo(() => liveriesData ?? [], [liveriesData]);
 
     const installedLiveries = useLiveryStore((state) => state.installedLiveries);
@@ -262,7 +264,7 @@ export const SearchPage = () => {
         if (catalog?.developers?.length) {
             const entries = catalog.developers
                 .filter((dev) => dev.id && dev.name)
-                .map((dev) => ({ value: dev.id, label: dev.name }));
+                .map((dev) => ({value: dev.id, label: dev.name}));
             return dedupeOptions(entries);
         }
         return fallbackOptions.developers;
@@ -272,7 +274,7 @@ export const SearchPage = () => {
         if (catalog?.aircraft?.length) {
             const entries = catalog.aircraft
                 .filter((air) => air.id && air.name)
-                .map((air) => ({ value: air.id, label: air.name }));
+                .map((air) => ({value: air.id, label: air.name}));
             return dedupeOptions(entries);
         }
         return fallbackOptions.aircraft;
@@ -283,7 +285,7 @@ export const SearchPage = () => {
     const simulatorOptions = useMemo<ChipOption[]>(() => {
         const catalogOptions = (catalog?.simulators ?? [])
             .filter((sim) => sim.id && sim.code)
-            .map((sim) => ({ value: sim.id, label: sim.code }));
+            .map((sim) => ({value: sim.id, label: sim.code}));
 
         return dedupeOptions([...catalogOptions, ...fallbackOptions.simulators]);
     }, [catalog?.simulators, fallbackOptions.simulators]);
@@ -307,7 +309,7 @@ export const SearchPage = () => {
         if (catalog?.resolutions?.length) {
             const entries = catalog.resolutions
                 .filter((res) => res.id && res.value)
-                .map((res) => ({ value: res.id, label: res.value }));
+                .map((res) => ({value: res.id, label: res.value}));
             return dedupeOptions(entries);
         }
         return fallbackOptions.resolutions;
@@ -326,7 +328,7 @@ export const SearchPage = () => {
 
         const needsUncategorized = liveries.some((l) => !(l.categoryId || l.categoryName));
         if (needsUncategorized && !combined.find((c) => c.value === UNCATEGORIZED)) {
-            combined.push({ value: UNCATEGORIZED, label: 'Uncategorized' });
+            combined.push({value: UNCATEGORIZED, label: 'Uncategorized'});
         }
 
         return combined;
@@ -361,7 +363,7 @@ export const SearchPage = () => {
 
         if (!allowedSimulatorValues.length) {
             if (filters.simulator !== '') {
-                setFilters((prev) => ({ ...prev, simulator: '' }));
+                setFilters((prev) => ({...prev, simulator: ''}));
             }
             return;
         }
@@ -375,7 +377,7 @@ export const SearchPage = () => {
                 : allowedSimulatorValues[0];
 
         if (next !== filters.simulator) {
-            setFilters((prev) => ({ ...prev, simulator: next }));
+            setFilters((prev) => ({...prev, simulator: next}));
         }
     }, [allowedSimulatorValues, filters.simulator, resolveSimulatorValue, settings.defaultSimulator, simulatorOptions]);
 
@@ -394,17 +396,17 @@ export const SearchPage = () => {
     const activeFilterBadges = useMemo(() => {
         const badges: Array<{ key: FilterKey; label: string; displayValue: string }> = [];
         const filterDefs: Array<{ key: FilterKey; label: string }> = [
-            { key: 'developer', label: 'Developer' },
-            { key: 'aircraft', label: 'Aircraft' },
-            { key: 'engine', label: 'Engine' },
-            { key: 'resolution', label: 'Resolution' },
-            { key: 'category', label: 'Category' },
+            {key: 'developer', label: 'Developer'},
+            {key: 'aircraft', label: 'Aircraft'},
+            {key: 'engine', label: 'Engine'},
+            {key: 'resolution', label: 'Resolution'},
+            {key: 'category', label: 'Category'},
         ];
-        for (const { key, label } of filterDefs) {
+        for (const {key, label} of filterDefs) {
             const value = filters[key];
             if (value && value !== 'all') {
                 const displayValue = valueMaps[key].get(value) ?? value;
-                badges.push({ key, label, displayValue });
+                badges.push({key, label, displayValue});
             }
         }
         return badges;
@@ -456,7 +458,7 @@ export const SearchPage = () => {
     const endItem = Math.min(page * ITEMS_PER_PAGE, dedupedLiveries.length);
 
     const updateFilter = (key: FilterKey, value: string) => {
-        setFilters((prev) => ({ ...prev, [key]: value }));
+        setFilters((prev) => ({...prev, [key]: value}));
         setPage(1);
     };
 
@@ -484,7 +486,7 @@ export const SearchPage = () => {
     return (
         <section className={styles.page}>
             {/* Header */}
-            <div id="filterSection" >
+            <div id="filterSection">
                 <header className={styles.pageHeader}>
                     <div className={styles.headerLeft}>
                         <div className={styles.headerTitleRow}>
@@ -500,7 +502,8 @@ export const SearchPage = () => {
                                         {hasSimulatorSelection && (
                                             <p className={styles.resultCount}>
                                                 <strong>{numberFormatter.format(dedupedLiveries.length)}</strong> {dedupedLiveries.length === 1 ? 'livery' : 'liveries'} found
-                                                {searchTerm && <span className={styles.searchTermHint}> for &ldquo;{searchTerm}&rdquo;</span>}
+                                                {searchTerm && <span
+                                                    className={styles.searchTermHint}> for &ldquo;{searchTerm}&rdquo;</span>}
                                             </p>
                                         )}
                                     </div>
@@ -514,14 +517,20 @@ export const SearchPage = () => {
                             <button
                                 type="button"
                                 className={classNames(styles.viewToggleButton, viewMode === 'all' && styles.viewToggleButtonActive)}
-                                onClick={() => { setViewMode('all'); setPage(1); }}
+                                onClick={() => {
+                                    setViewMode('all');
+                                    setPage(1);
+                                }}
                             >
                                 All
                             </button>
                             <button
                                 type="button"
                                 className={classNames(styles.viewToggleButton, viewMode === 'installed' && styles.viewToggleButtonActive)}
-                                onClick={() => { setViewMode('installed'); setPage(1); }}
+                                onClick={() => {
+                                    setViewMode('installed');
+                                    setPage(1);
+                                }}
                             >
                                 Installed
                             </button>
@@ -552,7 +561,7 @@ export const SearchPage = () => {
                 <div className={styles.toolbar}>
                     <div className={styles.searchBar}>
                         <div className={styles.searchInputWrap}>
-                            <span className={styles.searchIconInline}><SearchIcon /></span>
+                            <span className={styles.searchIconInline}><SearchIcon/></span>
                             <input
                                 value={searchTerm}
                                 onChange={(event) => {
@@ -570,10 +579,13 @@ export const SearchPage = () => {
                                 <button
                                     type="button"
                                     className={styles.clearSearchButton}
-                                    onClick={() => { setSearchTerm(''); setPage(1); }}
+                                    onClick={() => {
+                                        setSearchTerm('');
+                                        setPage(1);
+                                    }}
                                     aria-label="Clear search"
                                 >
-                                    <CloseIcon />
+                                    <CloseIcon/>
                                 </button>
                             )}
                         </div>
@@ -584,7 +596,7 @@ export const SearchPage = () => {
                             onClick={() => setShowFilters(!showFilters)}
                             aria-label="Toggle filters"
                         >
-                            <FilterIcon />
+                            <FilterIcon/>
                             <span>Filters</span>
                             {activeFilterCount > 0 && (
                                 <span className={styles.filterCount}>{activeFilterCount}</span>
@@ -610,7 +622,7 @@ export const SearchPage = () => {
                         })}
                         {resolutionOptions.length > 0 && (
                             <>
-                                <span className={styles.simDivider} />
+                                <span className={styles.simDivider}/>
                                 {resolutionOptions.map((option) => (
                                     <button
                                         key={option.value}
@@ -636,7 +648,8 @@ export const SearchPage = () => {
 
             {/* Expandable filter panel */}
             <div>
-                <div className={classNames(styles.filterPanel, showFilters && styles.filterPanelOpen, activeFilterBadges.length > 0 && showFilters && styles.filterPanelWithBadges)}>
+                <div
+                    className={classNames(styles.filterPanel, showFilters && styles.filterPanelOpen, activeFilterBadges.length > 0 && showFilters && styles.filterPanelWithBadges)}>
                     <div className={styles.filterGrid}>
                         <div className={styles.filterField}>
                             <label className={styles.filterLabel}>Developer</label>
@@ -696,7 +709,7 @@ export const SearchPage = () => {
                 </div>
                 {activeFilterBadges.length > 0 && (
                     <div className={styles.activeFilters}>
-                        {activeFilterBadges.map(({ key, label, displayValue }) => (
+                        {activeFilterBadges.map(({key, label, displayValue}) => (
                             <button
                                 key={key}
                                 type="button"
@@ -706,7 +719,7 @@ export const SearchPage = () => {
                             >
                                 <span className={styles.filterBadgeLabel}>{label}:</span>
                                 <span>{displayValue}</span>
-                                <CloseIcon />
+                                <CloseIcon/>
                             </button>
                         ))}
                         {activeFilterBadges.length > 1 && (
@@ -718,21 +731,26 @@ export const SearchPage = () => {
                 )}
             </div>
 
-            {/* Results */}
             <div className={styles.scrollContainer}>
                 <div className={styles.paginationBar}>
                     <span className={styles.paginationText}>
                         {dedupedLiveries.length > 0 ? (
                             <>Showing <strong>{startItem}–{endItem}</strong> of <strong>{dedupedLiveries.length}</strong></>
                         ) : (
-                            <>No results</>
+                            loading || liveriesFetching ? (
+                                <>Loading liveries... please stand-by</>
+                            ) : (
+                                <>No results</>
+                            )
                         )}
                     </span>
                     {totalPages > 1 && (
                         <div className={styles.paginationButtons}>
-                            <button type="button" onClick={() => setPage((v) => Math.max(1, v - 1))} disabled={page === 1} aria-label="Previous page">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                                    <path d="M15 18l-6-6 6-6" />
+                            <button type="button" onClick={() => setPage((v) => Math.max(1, v - 1))}
+                                    disabled={page === 1} aria-label="Previous page">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     strokeWidth="1.5" aria-hidden>
+                                    <path d="M15 18l-6-6 6-6"/>
                                 </svg>
                             </button>
                             {pageNumbers.map((p, i) =>
@@ -749,9 +767,11 @@ export const SearchPage = () => {
                                     </button>
                                 )
                             )}
-                            <button type="button" onClick={() => setPage((v) => Math.min(totalPages, v + 1))} disabled={page === totalPages} aria-label="Next page">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                                    <path d="M9 18l6-6-6-6" />
+                            <button type="button" onClick={() => setPage((v) => Math.min(totalPages, v + 1))}
+                                    disabled={page === totalPages} aria-label="Next page">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     strokeWidth="1.5" aria-hidden>
+                                    <path d="M9 18l6-6-6-6"/>
                                 </svg>
                             </button>
                         </div>
@@ -759,16 +779,19 @@ export const SearchPage = () => {
                 </div>
 
                 {(loading || liveriesFetching) ? (
-                    <div className={styles.loadingState}>
-                        <div className={styles.spinner} />
-                        <p>Loading liveries…</p>
+                    <div className={styles.grid}>
+                        {Array.from({length: ITEMS_PER_PAGE}).map((_, i) => (
+                            <LiveryCardSkeleton key={i}/>
+                        ))}
                     </div>
                 ) : !hasSimulatorPathConfigured ? (
                     <div className={styles.emptyState}>
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden>
-                            <path d="M12.89 1.45l8 4A2 2 0 0 1 22 7.24v9.53a2 2 0 0 1-1.11 1.79l-8 4a2 2 0 0 1-1.79 0l-8-4A2 2 0 0 1 2 16.76V7.24a2 2 0 0 1 1.11-1.79l8-4a2 2 0 0 1 1.78 0z" />
-                            <polyline points="2.32 6.16 12 11 21.68 6.16" />
-                            <line x1="12" y1="22.76" x2="12" y2="11" />
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             strokeWidth="1" aria-hidden>
+                            <path
+                                d="M12.89 1.45l8 4A2 2 0 0 1 22 7.24v9.53a2 2 0 0 1-1.11 1.79l-8 4a2 2 0 0 1-1.79 0l-8-4A2 2 0 0 1 2 16.76V7.24a2 2 0 0 1 1.11-1.79l8-4a2 2 0 0 1 1.78 0z"/>
+                            <polyline points="2.32 6.16 12 11 21.68 6.16"/>
+                            <line x1="12" y1="22.76" x2="12" y2="11"/>
                         </svg>
                         <p>Add a simulator path in Settings to see liveries.</p>
                     </div>
@@ -791,8 +814,11 @@ export const SearchPage = () => {
                                     if (livery.aircraftProfileName === 'A35K') {
                                         setWarningMessage(
                                             <>
-                                                Note: The A350-1000 livery require additional configuration. Learn more:{' '}
-                                                <a href="https://flightsim.to/addon/105315/a35k-speedcore" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>
+                                                Note: The A350-1000 livery require additional configuration. Learn
+                                                more:{' '}
+                                                <a href="https://flightsim.to/addon/105315/a35k-speedcore"
+                                                   target="_blank" rel="noreferrer"
+                                                   style={{textDecoration: 'underline'}}>
                                                     A35K Speedcore
                                                 </a>
                                             </>
@@ -807,9 +833,10 @@ export const SearchPage = () => {
                     </div>
                 ) : (
                     <div className={styles.emptyState}>
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden>
-                            <circle cx="11" cy="11" r="8" />
-                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             strokeWidth="1" aria-hidden>
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                         </svg>
                         <p>No liveries match your filters.</p>
                         {activeFilterCount > 0 && (
