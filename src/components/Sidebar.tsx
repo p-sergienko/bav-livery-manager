@@ -38,8 +38,8 @@ const Icon = ({name}: { name: string }) => {
     }
 };
 
-const CollapseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M120-160v-640h80v640h-80Zm360-120L280-480l200-200 56 56-104 104h408v80H432l104 104-56 56Z"/></svg>;
-const UnCollapseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M760-160v-640h80v640h-80ZM480-280l-56-56 104-104H120v-80h408L424-624l56-56 200 200-200 200Z"/></svg>;
+const UnCollapseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M120-160v-640h80v640h-80Zm360-120L280-480l200-200 56 56-104 104h408v80H432l104 104-56 56Z"/></svg>;
+const CollapseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M760-160v-640h80v640h-80ZM480-280l-56-56 104-104H120v-80h408L424-624l56-56 200 200-200 200Z"/></svg>;
 
 const classNames = (...tokens: Array<string | false | undefined>) => tokens.filter(Boolean).join(' ');
 
