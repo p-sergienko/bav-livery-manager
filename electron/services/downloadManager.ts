@@ -29,6 +29,22 @@ const BACKOFF_MS = 800;
 
 const INVALID_FILENAME_CHARS = /[<>:"/\\|?*]+/g;
 
+const DUMMY_PMDG_MANIFEST = {
+  "dependencies": [],
+  "content_type": "AIRCRAFT",
+  "title": "Liveries",
+  "manufacturer": "PMDG",
+  "creator": "PMDG Simulations",
+  "package_version": "1.0.0",
+  "minimum_game_version": "1.20.6",
+  "release_notes": {
+    "neutral": {
+      "LastUpdate": "",
+      "OlderHistory": ""
+    }
+  }
+};
+
 const activeDownloads = new Map<string, AbortController>();
 
 export function cancelDownload(liveryId: string): boolean {
@@ -319,6 +335,12 @@ async function installPMDG(zipPath: string, extractPath: string, simulator: 'MSF
     const registation = liveryName.split(' ')[0];
 
     await extractZip(zipPath, exptractPathForPmdg);
+
+    try {
+        await fs.access(`${pmdgLiveryFolderPath}/manifest.json`, fs.constants.R_OK | fs.constants.W_OK);
+    } catch {
+        await fs.writeJson(`${pmdgLiveryFolderPath}/manifest.json`, DUMMY_PMDG_MANIFEST);
+    }
 
     await processLayout(pmdgLiveryFolderPath, { force: true });
 
