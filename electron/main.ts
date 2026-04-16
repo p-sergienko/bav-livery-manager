@@ -34,6 +34,10 @@ const appContext: AppContext = {
 function setupAutoUpdates() {
     if (!app.isPackaged) {
         console.log('Auto updates are disabled in development mode.');
+        ipcMain.handle('check-for-app-update', async () => ({ success: false, error: 'Auto updates are disabled in development mode' }));
+        ipcMain.handle('download-app-update', async () => ({ success: false, error: 'Auto updates are disabled in development mode' }));
+        ipcMain.handle('install-app-update', async () => ({ success: false, error: 'Auto updates are disabled in development mode' }));
+        ipcMain.handle('get-app-version', () => app.getVersion());
         return;
     }
 
