@@ -7,6 +7,7 @@ import type { ProgressInfo, UpdateInfo } from 'electron-updater';
 import log from 'electron-log';
 import { registerIpcHandlers } from './ipc/registerHandlers';
 import type { AppContext } from './types';
+import { installExtension,REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
@@ -371,6 +372,14 @@ app.whenReady().then(() => {
     } else {
         app.setAsDefaultProtocolClient(AUTH_PROTOCOL);
     }
+
+  installExtension(REACT_DEVELOPER_TOOLS,  { loadExtensionOptions: { allowFileAccess: true }})
+      .then((name) => {
+        console.log(`Added Extension: ${name}`);
+        // Create the window and the React application
+        createWindow();
+      })
+      .catch((err) => console.log('An error occurred: ', err));
 });
 
 app.on('window-all-closed', () => {

@@ -114,6 +114,9 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
                 const existing = get().downloadStates[payload.liveryName];
                 if (!existing) return;
 
+                // Skip redundant updates where nothing meaningful changed
+                if (existing.progress === payload.progress && existing.extracting === payload.extracting) return;
+
                 const newStates = {
                     ...get().downloadStates,
                     [payload.liveryName]: {

@@ -229,7 +229,6 @@ export const SearchPage = () => {
 
     const installedLiveries = useLiveryStore((state) => state.installedLiveries);
     const settings = useLiveryStore((state) => state.settings);
-    const downloadStates = useLiveryStore((state) => state.downloadStates);
     const handleDownload = useLiveryStore((state) => state.handleDownload);
     const cancelDownload = useLiveryStore((state) => state.cancelDownload);
     const handleUninstall = useLiveryStore((state) => state.handleUninstall);
@@ -433,6 +432,7 @@ export const SearchPage = () => {
 
     const totalPages = Math.max(1, Math.ceil(dedupedLiveries.length / ITEMS_PER_PAGE));
     const paginated = dedupedLiveries.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
 
     // Build page numbers to show (max 5 visible, with ellipsis)
     const pageNumbers = useMemo(() => {
@@ -802,6 +802,7 @@ export const SearchPage = () => {
                             <LiveryCard
                                 key={livery.id ?? livery.name}
                                 livery={livery}
+                                allLiveries={liveries}
                                 defaultResolution={settings.defaultResolution}
                                 defaultSimulator={activeSimulatorCode ?? settings.defaultSimulator}
                                 resolutionFilter={
@@ -809,7 +810,6 @@ export const SearchPage = () => {
                                         ? 'all'
                                         : ((valueMaps.resolution.get(filters.resolution) ?? filters.resolution) as Resolution)
                                 }
-                                downloadState={downloadStates[livery.name]}
                                 isInstalled={(resolution, simulator) => isVariantInstalled(livery, resolution, simulator)}
                                 onDownload={(resolution: Resolution, simulator: Simulator) => {
                                     if (livery.aircraftProfileName === 'A35K') {

@@ -127,7 +127,16 @@ export async function downloadAndInstallLivery(options: DownloadLiveryOptions): 
         outputPath = path.join(baseFolder, zipFilename);
         extractPath = path.join(baseFolder, folderName);
 
+        let lastProgressSentAt = 0;
+        const PROGRESS_THROTTLE_MS = 80;
+
         await retryAsync(() => downloadFile(downloadUrl, outputPath, abortController.signal, (progress) => {
+            const now = Date.now();
+            if (now - lastProgressSentAt < PROGRESS_THROTTLE_MS && progress.percent < 100) {
+                return;
+            }
+            lastProgressSentAt = now;
+
             const targetWindow = appContext.getMainWindow();
             if (!targetWindow || targetWindow.isDestroyed()) {
                 return;

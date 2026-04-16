@@ -1,15 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { DownloadProgress, Livery, Resolution, Simulator } from '@/types/livery';
+import type { Livery, Resolution, Simulator } from '@/types/livery';
 import { useLiveryStore } from '@/store/liveryStore';
-import { useLiveriesQuery } from '@/hooks/useLiveriesQuery';
 import styles from './LiveryCard.module.css';
 
 interface LiveryCardProps {
     livery: Livery;
+    allLiveries: Livery[];
     defaultResolution: Resolution;
     defaultSimulator: Simulator;
     resolutionFilter?: Resolution | 'all';
-    downloadState?: DownloadProgress;
     isInstalled: (resolution: Resolution, simulator: Simulator) => boolean;
     onDownload: (resolution: Resolution, simulator: Simulator) => Promise<boolean>;
     onCancelDownload?: () => void;
@@ -55,23 +54,23 @@ const UninstallIcon = () => (
 
 export const LiveryCard = ({
     livery,
+    allLiveries,
     defaultResolution,
     defaultSimulator,
     resolutionFilter,
-    downloadState,
     isInstalled,
     onDownload,
     onCancelDownload,
     onUninstall
 }: LiveryCardProps) => {
-    const { data: liveriesData } = useLiveriesQuery();
-    const allLiveries = useMemo(() => liveriesData ?? [], [liveriesData]);
     const [simulator, setSimulator] = useState<Simulator>(defaultSimulator);
     const [busy, setBusy] = useState(false);
     const isResolutionForced = Boolean(resolutionFilter && resolutionFilter !== 'all');
     const showConflictToast = useCallback(() => {
         useLiveryStore.setState({ error: HIGH_RESOLUTION_CONFLICT_MESSAGE });
     }, []);
+
+    const downloadState = useLiveryStore((state) => state.downloadStates[livery.name]);
 
     // Suppress unused lint — kept in interface for API compatibility
     void defaultResolution;
