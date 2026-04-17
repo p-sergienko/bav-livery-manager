@@ -11,18 +11,18 @@ import { BAVIcon } from "@/components/Icons/BAVIcon";
 const SlidesDescriptions = [
     {
         image: "/slides/slide1.webp",
-        title: "A380 arrives in Anchorage",
-        author: "Laurie Cooper BAW6"
-    },
-    {
-        image: "/slides/slide2.webp",
-        title: "BLA BLA BLA G-EUUB",
-        author: "BAW66 Laurie Cooooooper"
+        title: "Welcome to NYC",
+        author: "Giacomo Carrafelli BAW342"
     },
     {
         image: "/slides/slide3.webp",
-        title: "BAL BAL BAL G-EUUC",
-        author: "BAW666 Laurie Coooooooooooooooper"
+        title: "Sunset Arrival into HKG",
+        author: "John Yang BAW11"
+    },   
+    {
+        image: "/slides/slide2.webp",
+        title: "Taking Flight",
+        author: "Pavel Sergienko BAW576"
     }
 ]
 
