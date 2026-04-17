@@ -51,8 +51,8 @@ export const MAIN_TOUR_STEPS: TourStepDef[] = [
                style="display:block;border-radius:8px;margin-bottom:12px" 
                src="/guides/endTour.webp" alt="End of the tour">
                We hope you enjoy the <strong>BAVirtual Livery Manager</strong>.<br/><br/>
-               If you have any feedback or feature requests for the installer, please raise an issue via <a href="#" onclick="event.preventDefault(); window.electronAPI?.openExternalLink('https://github.com/p-sergienko/bav-livery-manager/issues/')">GitHub.</a><br/><br/>
-               If you have any support needs regarding liveries, please raise a support ticket via <a href="#" onclick="event.preventDefault(); window.electronAPI?.openExternalLink('https://support.bavirtual.co.uk/')">the support portal.</a>`,
+               If you have any feedback or feature requests for the installer, please raise an issue via <a href="https://github.com/p-sergienko/bav-livery-manager/issues/">GitHub.</a><br/><br/>
+               If you have any support needs regarding liveries, please raise a support ticket via <a href="https://support.bavirtual.co.uk/">the support portal.</a>`,
         placement: "auto",
         route: "/search",
     },

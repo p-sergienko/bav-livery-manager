@@ -15,7 +15,20 @@ export function TourInitializer() {
     }, []);
 
     useEffect(() => {
-        return () => stopTour();
+        const handleLinkClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            const a = target.closest('a');
+            if (a && a.href && (a.href.startsWith('http://') || a.href.startsWith('https://')) && a.closest('.shepherd-element')) {
+                e.preventDefault();
+                window.electronAPI?.openExternalLink(a.href);
+            }
+        };
+
+        document.addEventListener('click', handleLinkClick);
+        return () => {
+            stopTour();
+            document.removeEventListener('click', handleLinkClick);
+        };
     }, []);
 
     return <TourWelcomeModal />;

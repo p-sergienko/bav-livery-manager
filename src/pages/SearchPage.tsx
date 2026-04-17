@@ -818,7 +818,10 @@ export const SearchPage = () => {
                                                 Note: The A350-1000 livery require additional configuration. Learn
                                                 more:{' '}
                                                 <a href="https://flightsim.to/addon/105315/a35k-speedcore"
-                                                   target="_blank" rel="noreferrer"
+                                                   onClick={(e) => {
+                                                       e.preventDefault();
+                                                       window.electronAPI?.openExternalLink('https://flightsim.to/addon/105315/a35k-speedcore');
+                                                   }}
                                                    style={{textDecoration: 'underline'}}>
                                                     A35K Speedcore
                                                 </a>
