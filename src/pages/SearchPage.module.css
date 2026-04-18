@@ -65,18 +65,16 @@
     font-style: italic;
 }
 
-.headerRight {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
 .viewToggle {
     display: inline-flex;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: var(--card);
-    overflow: hidden;
+    gap: 10px;
+    align-items: center;
+}
+
+.viewToggle h4 {
+    margin: 0;
+    font-weight: 500;
+    font-size: 0.9rem;
 }
 
 .viewToggleButton {

@@ -512,29 +512,28 @@ export const SearchPage = () => {
                         </div>
 
                     </div>
-                    <div className={styles.headerRight}>
-                        <div className={styles.viewToggle}>
-                            <button
-                                type="button"
-                                className={classNames(styles.viewToggleButton, viewMode === 'all' && styles.viewToggleButtonActive)}
-                                onClick={() => {
-                                    setViewMode('all');
-                                    setPage(1);
-                                }}
-                            >
-                                All
-                            </button>
-                            <button
-                                type="button"
-                                className={classNames(styles.viewToggleButton, viewMode === 'installed' && styles.viewToggleButtonActive)}
-                                onClick={() => {
-                                    setViewMode('installed');
-                                    setPage(1);
-                                }}
-                            >
-                                Installed
-                            </button>
-                        </div>
+                    <div className={styles.viewToggle}>
+                        <h4>Display liveries:</h4>
+                        <button
+                            type="button"
+                            className={classNames(styles.simChip, viewMode === 'all' && styles.simChipActive)}
+                            onClick={() => {
+                                setViewMode('all');
+                                setPage(1);
+                            }}
+                        >
+                            All
+                        </button>
+                        <button
+                            type="button"
+                            className={classNames(styles.simChip, viewMode === 'installed' && styles.simChipActive)}
+                            onClick={() => {
+                                setViewMode('installed');
+                                setPage(1);
+                            }}
+                        >
+                            Installed
+                        </button>
                     </div>
                 </header>
 
