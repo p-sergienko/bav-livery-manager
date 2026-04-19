@@ -31,21 +31,7 @@ export function loadSettings(): Settings {
     try {
         const filePath = resolveSettingsPath();
         if (fs.existsSync(filePath)) {
-            const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8')) as Settings;
-
-            if (parsed.msfs2020Path?.includes('Liveries')) {
-                parsed.msfs2020Path = parsed.msfs2020Path.replace(/\\?Liveries$/, '');
-            }
-            if (parsed.msfs2024Path?.includes('Liveries')) {
-                parsed.msfs2024Path = parsed.msfs2024Path.replace(/\\?Liveries$/, '');
-            }
-
-            return {
-                msfs2020Path: parsed.msfs2020Path || '',
-                msfs2024Path: parsed.msfs2024Path || '',
-                defaultResolution: parsed.defaultResolution || DEFAULT_SETTINGS.defaultResolution,
-                defaultSimulator: parsed.defaultSimulator || DEFAULT_SETTINGS.defaultSimulator
-            };
+            return JSON.parse(fs.readFileSync(filePath, 'utf8')) as Settings;
         }
     } catch (error) {
         console.error('Error loading settings:', error);
