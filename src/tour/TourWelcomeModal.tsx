@@ -10,17 +10,17 @@ import { BAVIcon } from "@/components/Icons/BAVIcon";
 
 const SlidesDescriptions = [
     {
-        image: "/slides/slide1.webp",
+        image: `${import.meta.env.BASE_URL}slides/slide1.webp`,
         title: "Welcome to NYC",
         author: "Giacomo Carrafelli BAW342"
     },
     {
-        image: "/slides/slide3.webp",
+        image: `${import.meta.env.BASE_URL}slides/slide3.webp`,
         title: "Sunset Arrival into HKG",
         author: "John Yang BAW11"
-    },   
+    },
     {
-        image: "/slides/slide2.webp",
+        image: `${import.meta.env.BASE_URL}slides/slide2.webp`,
         title: "Taking Flight",
         author: "Pavel Sergienko BAW576"
     }
