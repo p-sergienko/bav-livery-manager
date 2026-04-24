@@ -9,7 +9,9 @@ import {useCatalogQuery} from '@/hooks/useCatalogQuery';
 import {useLiveriesQuery} from '@/hooks/useLiveriesQuery';
 import {Toast} from '@/components/Toast';
 import {FilterPanel} from '@/components/FilterPanel';
+import {SearchBar} from '@/components/SearchBar';
 import {useFilterStore} from '@/store/filterStore';
+import {useDebounce} from '@/hooks/useDebounce';
 import type {FilterKey, FilterState} from '@/store/filterStore';
 import type {ReactNode} from 'react';
 import styles from './SearchPage.module.css';
@@ -129,6 +131,42 @@ const dedupeLiveriesForDisplay = (liveries: Livery[], preferredResolution: Resol
     return Array.from(map.values());
 };
 
+const scoreSearch = (livery: Livery, tokens: string[]): number => {
+    if (tokens.length === 0) return 1;
+    let total = 0;
+    const check = (field: string | null | undefined, w: number) => {
+        const f = (field ?? '').toLowerCase();
+        if (!f) return 0;
+        if (f === tokens[0] && tokens.length === 1) return w * 4
+        return 0;
+    };
+    void check;
+    for (const token of tokens) {
+        const scores = [
+            scoreField(livery.name, token, 10),
+            scoreField(livery.title, token, 10),
+            scoreField(livery.developerName, token, 7),
+            scoreField(livery.aircraftProfileName, token, 9),
+            scoreField(livery.categoryName, token, 5),
+            scoreField(livery.simulatorCode, token, 3),
+            scoreField(livery.resolutionValue, token, 2),
+        ];
+        const best = Math.max(...scores);
+        if (best === 0) return 0;
+        total += best;
+    }
+    return total;
+};
+
+const scoreField = (field: string | null | undefined, token: string, weight: number): number => {
+    const f = (field ?? '').toLowerCase();
+    if (!f) return 0;
+    if (f === token) return weight * 3;
+    if (f.startsWith(token)) return weight * 2;
+    if (f.includes(token)) return weight;
+    return 0;
+};
+
 const filterLiveries = (
     liveries: Livery[],
     filters: FilterState,
@@ -136,15 +174,9 @@ const filterLiveries = (
     viewMode: 'all' | 'installed',
     installedLiveries: InstalledLiveryRecord[]
 ) => {
-    const term = searchTerm.toLowerCase();
+    const tokens = searchTerm.trim().toLowerCase().split(/\s+/).filter(Boolean);
     const matches = liveries.filter((livery) => {
-        const matchesSearch =
-            !term ||
-            livery.name.toLowerCase().includes(term) ||
-            livery.developerName.toLowerCase().includes(term) ||
-            (livery.aircraftProfileName ?? '').toLowerCase().includes(term) ||
-            livery.simulatorCode.toLowerCase().includes(term) ||
-            livery.resolutionValue.toLowerCase().includes(term);
+        const matchesSearch = scoreSearch(livery, tokens) > 0;
 
         const matchesDeveloper = filters.developer === 'all' || livery.developerId === filters.developer;
         const matchesAircraft = filters.aircraft === 'all' || livery.aircraftProfileId === filters.aircraft;
@@ -187,12 +219,7 @@ const numberFormatter = new Intl.NumberFormat(undefined, {maximumFractionDigits:
 
 const classNames = (...tokens: Array<string | false | undefined>) => tokens.filter(Boolean).join(' ');
 
-const SearchIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-        <path
-            d="M11 3a8 8 0 0 1 8 8c0 1.848-.627 3.55-1.68 4.905l3.386 3.388a1 1 0 0 1-1.414 1.414l-3.388-3.386A7.96 7.96 0 0 1 11 19a8 8 0 1 1 0-16z"/>
-    </svg>
-);
+
 
 const CloseIcon = () => (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
@@ -230,6 +257,7 @@ export const SearchPage = () => {
     const setFilter = useFilterStore((s) => s.setFilter);
     const searchTerm = useFilterStore((s) => s.searchTerm);
     const setSearchTerm = useFilterStore((s) => s.setSearchTerm);
+    const debouncedSearchTerm = useDebounce(searchTerm, 150);
     const viewMode = useFilterStore((s) => s.viewMode);
     const setViewMode = useFilterStore((s) => s.setViewMode);
     const storeClearFilters = useFilterStore((s) => s.clearFilters);
@@ -411,10 +439,10 @@ export const SearchPage = () => {
             });
             return map;
         };
-        const baseDev = filterLiveries(liveries, {...filters, developer: 'all'}, searchTerm, viewMode, installedLiveries);
-        const baseAir = filterLiveries(liveries, {...filters, aircraft: 'all'}, searchTerm, viewMode, installedLiveries);
-        const baseEng = filterLiveries(liveries, {...filters, engine: 'all'}, searchTerm, viewMode, installedLiveries);
-        const baseCat = filterLiveries(liveries, {...filters, category: 'all'}, searchTerm, viewMode, installedLiveries);
+        const baseDev = filterLiveries(liveries, {...filters, developer: 'all'}, debouncedSearchTerm, viewMode, installedLiveries);
+        const baseAir = filterLiveries(liveries, {...filters, aircraft: 'all'}, debouncedSearchTerm, viewMode, installedLiveries);
+        const baseEng = filterLiveries(liveries, {...filters, engine: 'all'}, debouncedSearchTerm, viewMode, installedLiveries);
+        const baseCat = filterLiveries(liveries, {...filters, category: 'all'}, debouncedSearchTerm, viewMode, installedLiveries);
         return {
             developer: countBy(baseDev, (l) => l.developerId),
             aircraft: countBy(baseAir, (l) => l.aircraftProfileId),
@@ -422,29 +450,31 @@ export const SearchPage = () => {
             category: countBy(baseCat, (l) => l.categoryId ?? l.categoryName ?? (!(l.categoryId || l.categoryName) ? '__uncategorized' : null)),
             totals: {developer: baseDev.length, aircraft: baseAir.length, engine: baseEng.length, category: baseCat.length},
         };
-    }, [filters, hasSimulatorSelection, installedLiveries, liveries, searchTerm, viewMode]);
+    }, [filters, hasSimulatorSelection, installedLiveries, liveries, debouncedSearchTerm, viewMode]);
 
     const filteredLiveries = useMemo(
         () =>
             hasSimulatorSelection
-                ? filterLiveries(
-                    liveries,
-                    filters,
-                    searchTerm,
-                    viewMode,
-                    installedLiveries,
-                )
+                ? filterLiveries(liveries, filters, debouncedSearchTerm, viewMode, installedLiveries)
                 : [],
-        [filters, hasSimulatorSelection, isVariantInstalled, liveries, searchTerm, settings.defaultResolution, settings.defaultSimulator, viewMode]
+        [filters, hasSimulatorSelection, liveries, debouncedSearchTerm, viewMode, installedLiveries]
     );
 
-    const dedupedLiveries = useMemo(
-        () => dedupeLiveriesForDisplay(filteredLiveries, settings.defaultResolution).sort((liveryA, liveryB) => liveryA.name.localeCompare(liveryB.name)),
-        [filteredLiveries, settings.defaultResolution]
-    );
+    const dedupedLiveries = useMemo(() => {
+        const deduped = dedupeLiveriesForDisplay(filteredLiveries, settings.defaultResolution);
+        if (!debouncedSearchTerm.trim()) {
+            return deduped.sort((a, b) => a.name.localeCompare(b.name));
+        }
+        const tokens = debouncedSearchTerm.trim().toLowerCase().split(/\s+/).filter(Boolean);
+        return deduped.sort((a, b) => scoreSearch(b, tokens) - scoreSearch(a, tokens));
+    }, [filteredLiveries, settings.defaultResolution, debouncedSearchTerm]);
 
     const totalPages = Math.max(1, Math.ceil(dedupedLiveries.length / ITEMS_PER_PAGE));
     const paginated = dedupedLiveries.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+    useEffect(() => {
+        setPage((prev) => Math.min(prev, totalPages));
+    }, [totalPages]);
 
 
     // Build page numbers to show (max 5 visible, with ellipsis)
@@ -475,9 +505,6 @@ export const SearchPage = () => {
         setPage(1);
     };
 
-    const handleSearchSubmit = () => {
-        setPage(1);
-    };
 
     const handleQuickSelect = (key: FilterKey, value: string) => {
         if (key === 'simulator') {
@@ -565,41 +592,14 @@ export const SearchPage = () => {
                     />
                 )}
 
-                {/* Search toolbar */}
                 <div className={styles.toolbar}>
-                    <div className={styles.searchBar}>
-                        <div className={styles.searchInputWrap}>
-                            <span className={styles.searchIconInline}><SearchIcon/></span>
-                            <input
-                                value={searchTerm}
-                                onChange={(event) => {
-                                    setSearchTerm(event.target.value);
-                                    setPage(1);
-                                }}
-                                onKeyDown={(event) => {
-                                    if (event.key === 'Enter') handleSearchSubmit();
-                                }}
-                                placeholder="Search by name, developer, or aircraft…"
-                                className={styles.searchInput}
-                                type="search"
-                            />
-                            {searchTerm && (
-                                <button
-                                    type="button"
-                                    className={styles.clearSearchButton}
-                                    onClick={() => {
-                                        setSearchTerm('');
-                                        setPage(1);
-                                    }}
-                                    aria-label="Clear search"
-                                >
-                                    <CloseIcon/>
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Simulator / Resolution / Filter dropdowns — all in one row */}
+                    <SearchBar
+                        value={searchTerm}
+                        onChange={(v) => { setSearchTerm(v); setPage(1); }}
+                        resultCount={dedupedLiveries.length}
+                        totalCount={liveries.length}
+                    />
+ 
                     <div id="simulatorResolutionSelect" className={styles.simSelectorRow}>
                         {simulatorOptions.map((option) => {
                             const disabled = !pathEnabledSimulators.includes(option.label.toUpperCase() as Simulator);

@@ -1,0 +1,124 @@
+.wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.inputRow {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.icon {
+    position: absolute;
+    left: 14px;
+    display: flex;
+    align-items: center;
+    color: var(--muted);
+    pointer-events: none;
+    transition: color 0.2s ease;
+}
+
+.input {
+    width: 100%;
+    padding: 0 44px 0 44px;
+    height: 48px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--text);
+    font-size: 15px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    outline: none;
+}
+
+.input::placeholder {
+    color: var(--muted);
+    opacity: 0.65;
+}
+
+/* Clear the default browser search cancel button */
+.input::-webkit-search-cancel-button {
+    display: none;
+}
+
+.input:focus {
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+}
+
+.input:focus ~ .icon,
+.inputRow:focus-within .icon {
+    color: var(--text);
+}
+
+.clear {
+    position: absolute;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--muted);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.clear:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: var(--text);
+}
+
+.shortcut {
+    position: absolute;
+    right: 12px;
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 7px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    pointer-events: none;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.input:focus + .shortcut,
+.inputRow:focus-within .shortcut {
+    opacity: 0;
+}
+
+.hint {
+    padding-left: 16px;
+    font-size: 12px;
+    color: var(--muted);
+    opacity: 0.8;
+    transition: color 0.2s ease;
+    min-height: 16px;
+    animation: fadeIn 150ms ease;
+}
+
+.hintActive {
+    color: var(--text);
+    opacity: 1;
+}
+
+.hintActive strong {
+    font-weight: 600;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-2px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
