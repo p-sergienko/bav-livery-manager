@@ -4,9 +4,6 @@ import styles from './SearchBar.module.css';
 interface SearchBarProps {
     value: string;
     onChange: (value: string) => void;
-    resultCount?: number;
-    totalCount?: number;
-    loading?: boolean;
 }
 
 const SearchIcon = () => (
@@ -21,7 +18,7 @@ const CloseIcon = () => (
     </svg>
 );
 
-export const SearchBar = ({value, onChange, resultCount, totalCount, loading}: SearchBarProps) => {
+export const SearchBar = ({value, onChange}: SearchBarProps) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -39,9 +36,6 @@ export const SearchBar = ({value, onChange, resultCount, totalCount, loading}: S
         document.addEventListener('keydown', handler);
         return () => document.removeEventListener('keydown', handler);
     }, [onChange]);
-
-    const showCount = value.trim().length > 0 && resultCount !== undefined && totalCount !== undefined;
-    const hasNarrowed = showCount && resultCount !== totalCount;
 
     return (
         <div className={styles.wrap}>
@@ -70,17 +64,6 @@ export const SearchBar = ({value, onChange, resultCount, totalCount, loading}: S
                     <kbd className={styles.shortcut}>Ctrl K</kbd>
                 )}
             </div>
-            {showCount && (
-                <div className={`${styles.hint} ${hasNarrowed ? styles.hintActive : ''}`}>
-                    {loading ? (
-                        <span>Searching…</span>
-                    ) : hasNarrowed ? (
-                        <span><strong>{resultCount}</strong> of {totalCount} match</span>
-                    ) : (
-                        <span>All {totalCount} match</span>
-                    )}
-                </div>
-            )}
         </div>
     );
 };

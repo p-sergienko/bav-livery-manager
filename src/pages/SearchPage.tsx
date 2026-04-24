@@ -596,8 +596,6 @@ export const SearchPage = () => {
                     <SearchBar
                         value={searchTerm}
                         onChange={(v) => { setSearchTerm(v); setPage(1); }}
-                        resultCount={dedupedLiveries.length}
-                        totalCount={liveries.length}
                     />
  
                     <div id="simulatorResolutionSelect" className={styles.simSelectorRow}>
