@@ -16,7 +16,7 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     overflow: hidden;
-    background: rgba(0, 0, 0, 0.15);
+    background: transparent;
     transition: border-color 0.2s ease;
 }
 
@@ -204,7 +204,7 @@
     border-radius: 3px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.78em;
-    color: #c9d1d9;
+    color: var(--text);
     border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -238,11 +238,6 @@
     border-left: 3px solid rgba(59, 130, 246, 0.4);
     background: rgba(59, 130, 246, 0.05);
     border-radius: 0 4px 4px 0;
-}
-
-.mdBlockquote .mdP {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.78rem;
 }
 
 /* ─── Markdown: Horizontal rule ─── */

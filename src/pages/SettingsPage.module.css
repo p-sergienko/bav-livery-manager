@@ -4,6 +4,7 @@
     gap: 10px;
     height: 100%;
     min-height: 0;
+    overflow-y: auto;
 }
 
 .header {
@@ -51,16 +52,131 @@
     border-color: #666666;
 }
 
-/* ─── Form ─── */
-.form {
+.scrollableContent {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+}
+
+.sectionCard {
+    display: flex;
+    flex-direction: column;
     background: var(--card);
     border-radius: 6px;
     border: 1px solid var(--border);
-    padding: 14px 16px;
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 1px 6px var(--shadow);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.sectionCardExpanded {
+    flex: 1;
+    min-height: 0;
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    cursor: pointer;
+    user-select: none;
+    background: transparent;
+    transition: background 0.2s ease;
+}
+
+.sectionHeader:hover {
+    background: var(--chips-background);
+}
+
+.sectionTitleWrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.chevron {
+    color: var(--muted);
+    transition: transform 0.2s ease, color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sectionHeader:hover .chevron {
+    color: var(--text);
+}
+
+.sectionContent {
+    padding: 0 16px 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.expandedContent {
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+}
+
+.accordionWrapper {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.accordionWrapperOpen {
+    grid-template-rows: 1fr;
+}
+
+.sectionCardExpanded .accordionWrapper {
+    flex: 1;
+    min-height: 0;
+}
+
+.accordionInner {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.sectionCardExpanded .accordionInner {
+    flex: 1;
+    min-height: 0;
+}
+
+.appUpdaterWrap {
+    padding: 0 16px 14px 16px;
+    border-bottom: 1px solid transparent;
+}
+
+.updatesContent {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.formInner {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.formTitle {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.formSubtitle {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--muted);
 }
 
 .pathInput {
@@ -97,10 +213,10 @@
     border-color: var(--text);
 }
 
-.inputRow button {
+.actionButton {
     padding: 7px 12px;
-    background: #2a2a2a;
-    color: #ffffff;
+    background: var(--buttons);
+    color: var(--text);
     border: 1px solid var(--border);
     border-radius: 4px;
     cursor: pointer;
@@ -111,14 +227,46 @@
     gap: 4px;
 }
 
-.inputRow button p {
+.actionButton p {
     margin: 2px 0 0;
     font-size: 0.78rem;
 }
 
-.inputRow button:hover {
-    background: #3a3a3a;
-    border-color: #666666;
+.actionButton:hover {
+    background: var(--chips-background-active);
+    border-color: var(--text);
+}
+
+.themeButton,
+.themeButtonActive {
+    padding: 7px 12px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.themeButtonActive {
+    color: var(--text);
+    border-color: var(--text);
+    background: var(--chips-background-active);
+}
+
+.themeButton:hover {
+    color: var(--text);
+    background: var(--chips-background-active);
+}
+
+.themeButton p,
+.themeButtonActive p {
+    margin: 2px 0 0;
+    font-size: 0.78rem;
 }
 
 .formActions {
@@ -135,28 +283,49 @@
 }
 
 .submitButton {
-    padding: 6px 10px;
-    background: #2a2a2a;
-    color: #ffffff;
+    padding: 7px 12px;
+    background: var(--buttons);
+    color: var(--text);
     border: 1px solid var(--border);
-    border-radius: 5px;
+    border-radius: 4px;
     cursor: pointer;
     font-size: 0.78rem;
-    font-weight: 500;
     transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .submitButton:hover {
-    background: #3a3a3a;
-    border-color: #666666;
+    border-color: var(--text);
+    background: var(--chips-background-active);
+}
+
+.outlineButton {
+    padding: 7px 12px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.outlineButton:hover {
+    border-color: var(--text);
+    color: var(--text);
 }
 
 .detectButton {
-    padding: 6px 10px;
-    background: transparent;
-    color: #ffffff;
-    border: 1px solid #17a61c;
-    border-radius: 5px;
+    padding: 7px 12px;
+    background-color: transparent;
+    color: var(--text);
+    border: 1px solid var(--success);
+    border-radius: 4px;
     cursor: pointer;
     font-size: 0.78rem;
     transition: all 0.2s ease;
@@ -172,11 +341,7 @@
 }
 
 .accountCard {
-    /* background: linear-gradient(135deg, rgba(220, 53, 69, 0.06), var(--card));
-    border-radius: 6px;
-    border: 1px solid rgba(220, 53, 69, 0.25); */
     padding: 10px 14px;
-    /* box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15); */
     border: 1px solid var(--border);
     border-radius: 8px;
 }
@@ -267,11 +432,7 @@
 
 /* ─── Bottom section (App Updates & Changelog) ─── */
 .bottomSection {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    display: none;
 }
 
 .bottomSectionHeader {
@@ -364,4 +525,11 @@
 .title {
     line-height: 0.98;
     padding-bottom: 10px;
+}
+
+.divider {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 8px 0;
+    width: 100%;
 }

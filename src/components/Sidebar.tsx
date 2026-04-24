@@ -3,8 +3,9 @@ import {DownloadProgress} from './DownloadProgress';
 import {UpdateBadge} from './UpdateBadge';
 import {APP_VERSION} from '@/constants/appVersion';
 import styles from './Sidebar.module.css';
-import {ArrowLeft, RotateCw} from 'react-feather';
+import {RotateCw} from 'react-feather';
 import {useState} from "react";
+import {useThemeStore} from "@/store/themeStore";
 
 const NAV_ITEMS = [
     {label: 'Search', to: '/search', icon: 'search'},
@@ -38,8 +39,8 @@ const Icon = ({name}: { name: string }) => {
     }
 };
 
-const UnCollapseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M120-160v-640h80v640h-80Zm360-120L280-480l200-200 56 56-104 104h408v80H432l104 104-56 56Z"/></svg>;
-const CollapseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M760-160v-640h80v640h-80ZM480-280l-56-56 104-104H120v-80h408L424-624l56-56 200 200-200 200Z"/></svg>;
+const UnCollapseIcon = ({color}: {color: string}) => <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill={color}><path d="M120-160v-640h80v640h-80Zm360-120L280-480l200-200 56 56-104 104h408v80H432l104 104-56 56Z"/></svg>;
+const CollapseIcon = ({color}: {color: string}) => <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill={color}><path d="M760-160v-640h80v640h-80ZM480-280l-56-56 104-104H120v-80h408L424-624l56-56 200 200-200 200Z"/></svg>;
 
 const classNames = (...tokens: Array<string | false | undefined>) => tokens.filter(Boolean).join(' ');
 
@@ -47,6 +48,8 @@ export const Sidebar = () => {
 
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isRenderExpanded, setIsRenderExpanded] = useState(true);
+
+    const {theme, currentTheme} = useThemeStore();
 
     const toggleSidebar = () => {
         if (isCollapsed) {
@@ -64,7 +67,7 @@ export const Sidebar = () => {
                 <div onClick={toggleSidebar} className={styles.collapseButton}>
                     <div className={classNames(styles.panelButton)}>
                         {
-                            isCollapsed ? <CollapseIcon/> : <UnCollapseIcon/>
+                            isCollapsed ? <CollapseIcon color={theme.text}/> : <UnCollapseIcon color={theme.text}/>
                         }
                         {!isCollapsed && <span>Collapse</span>}
                     </div>
@@ -95,7 +98,7 @@ export const Sidebar = () => {
                 <div className={classNames(styles.footer, isCollapsed && styles.panelFooterCollapsed)}>
                     <div className={styles.versionBadge}>v{APP_VERSION}</div>
                     <div className={styles.sidebarLogo}>
-                        <img className={styles.logoImage} src={LOGO_URL} alt="Livery Manager"/>
+                        <img className={styles.logoImage} style={currentTheme === "light" ? {filter: "invert()"} : {}} src={LOGO_URL} alt="Livery Manager"/>
                     </div>
                 </div>
         </aside>

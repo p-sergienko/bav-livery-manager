@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { PANEL_BASE_URL } from '../../shared/constants';
+import { PANEL_BASE_URL } from '@shared/constants';
 import { useAuthStore } from '@/store/authStore';
 import styles from './LoginPage.module.css';
+import {useThemeStore} from "@/store/themeStore";
 
 const buildPortalUrl = () => {
     const url = new URL(PANEL_BASE_URL);
@@ -21,6 +22,8 @@ export const LoginPage = () => {
 
     const [lastAttempt, setLastAttempt] = useState<number | null>(null);
     const fromPath = (location.state as { from?: string })?.from ?? '/search';
+
+    const {currentTheme} = useThemeStore();
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -54,7 +57,7 @@ export const LoginPage = () => {
         <div className={styles.page}>
             <div className={styles.card}>
                 <div className={styles.titleGroup}>
-                    <img alt="logo" src="https://pub-505cce096f5e4523867626e0594f0337.r2.dev/InstallerLogo.png" />
+                    <img style={currentTheme === "light" ? {filter: "invert()"} : {}} src="https://pub-505cce096f5e4523867626e0594f0337.r2.dev/InstallerLogo.png" alt="Livery Manager"/>
                     <h1>Authenticate via browser</h1>
                     <p>To use the manager you need to sign in with your BAV account.</p>
                 </div>

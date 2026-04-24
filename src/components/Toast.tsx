@@ -32,7 +32,6 @@ export const Toast = ({ message, type = 'error', duration = 6000, onClose }: Toa
     const [isLeaving, setIsLeaving] = useState(false);
 
     useEffect(() => {
-        // Trigger enter animation
         requestAnimationFrame(() => setIsVisible(true));
 
         const timer = setTimeout(() => {
@@ -46,7 +45,7 @@ export const Toast = ({ message, type = 'error', duration = 6000, onClose }: Toa
         setIsLeaving(true);
         setTimeout(() => {
             onClose();
-        }, 300); // Match exit animation duration
+        }, 300);
     };
 
     const Icon = iconMap[type];

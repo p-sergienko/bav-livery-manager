@@ -178,7 +178,7 @@
 }
 
 .infoButton {
-    color: inherit;
+    color: var(--text);
     margin: 0;
     font-size: 12px;
     text-transform: uppercase;

@@ -9,6 +9,11 @@
     --danger: #ff4444;
     --success: #4caf50;
     --focus: rgba(255, 255, 255, 0.3);
+    --chips-background: rgba(255, 255, 255, 0.04);
+    --chips-background-active: rgba(255, 255, 255, 0.12);
+    --buttons: #2a2a2a;
+    --shadow: rgba(0, 0, 0, 0.2);
+    --changelog-text: #b3b3b3;
 }
 
 * {
@@ -23,6 +28,7 @@ body {
     min-height: 100vh;
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.5s ease, color 0.5s ease !important;
 }
 
 #root {

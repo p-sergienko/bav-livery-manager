@@ -7,9 +7,10 @@ import { AppUpdater } from '@/components/AppUpdater';
 import { Changelog } from '@/components/Changelog';
 import styles from './SettingsPage.module.css';
 import { BAVIcon } from "@/components/Icons/BAVIcon";
-import { Book, Folder, LogOut, Save, User, Zap } from 'react-feather';
+import { Book, Folder, LogOut, Save, User, Zap, Sun, Moon, ChevronDown, ChevronUp } from 'react-feather';
 import { useTour } from '@/tour/useTour';
 import { MAIN_TOUR_STEPS } from "@/tour/steps";
+import {useThemeStore} from "@/store/themeStore";
 
 export const SettingsPage = () => {
     const settings = useLiveryStore((state) => state.settings);
@@ -19,11 +20,29 @@ export const SettingsPage = () => {
     const fullName = useAuthStore((state) => state.fullName);
     const rank = useAuthStore((state) => state.rank);
     const logout = useAuthStore((state) => state.logout);
+    const currentTheme = useThemeStore((state) => state.currentTheme);
+    const setTheme = useThemeStore((state) => state.setTheme);
     const navigate = useNavigate();
 
     const [formState, setFormState] = useState(settings);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
     const [detecting, setDetecting] = useState(false);
+
+    const [isPathsOpen, setIsPathsOpen] = useState(true);
+    const [isAppearanceOpen, setIsAppearanceOpen] = useState(true);
+    const [isUpdatesOpen, setIsUpdatesOpen] = useState(false);
+
+    const handleTogglePaths = () => {
+        const nextState = !isPathsOpen;
+        setIsPathsOpen(nextState);
+        if (nextState) setIsUpdatesOpen(false);
+    };
+
+    const handleToggleUpdates = () => {
+        const nextState = !isUpdatesOpen;
+        setIsUpdatesOpen(nextState);
+        if (nextState) setIsPathsOpen(false);
+    };
 
     useEffect(() => {
         setFormState(settings);
@@ -107,7 +126,6 @@ export const SettingsPage = () => {
             return;
         }
 
-        // Fallback for web: open in new tab/window
         try {
             window.open(url, '_blank', 'noopener');
         } catch (err) {
@@ -159,48 +177,118 @@ export const SettingsPage = () => {
                 />
             )}
 
-            <form id="simDirectorySection" className={styles.form} onSubmit={handleSubmit}>
-                <label className={styles.pathInput}>
-                    <span className={styles.label}>MSFS 2020 Community Folder</span>
-                    <div className={styles.inputRow}>
-                        <input value={formState.msfs2020Path} onChange={(e) => setFormState((prev) => ({ ...prev, msfs2020Path: e.target.value }))} />
-                        <button type="button" onClick={() => handleBrowse('msfs2020Path')}>
-                            <Folder size={20}/>
-                            <p>Browse</p>
-                        </button>
+            <div className={styles.scrollableContent}>
+                <div className={styles.sectionCard}>
+                    <div className={styles.sectionHeader} onClick={handleTogglePaths}>
+                        <div className={styles.sectionTitleWrap}>
+                            <h2 className={styles.formTitle}>Simulator Paths</h2>
+                        </div>
+                        <div className={styles.chevron}>
+                            {isPathsOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                        </div>
                     </div>
-                </label>
+                    <div className={`${styles.accordionWrapper} ${isPathsOpen ? styles.accordionWrapperOpen : ''}`}>
+                        <div className={styles.accordionInner}>
+                            <div className={`${styles.sectionContent} ${styles.expandedContent}`}>
+                                <form id="simDirectorySection" className={styles.formInner} onSubmit={handleSubmit}>
+                                    <label className={styles.pathInput}>
+                                        <span className={styles.label}>MSFS 2020 Community Folder</span>
+                                        <div className={styles.inputRow}>
+                                            <input value={formState.msfs2020Path} onChange={(e) => setFormState((prev) => ({ ...prev, msfs2020Path: e.target.value }))} />
+                                            <button type="button" className={styles.actionButton} onClick={() => handleBrowse('msfs2020Path')}>
+                                                <Folder size={20}/>
+                                                <p>Browse</p>
+                                            </button>
+                                        </div>
+                                    </label>
 
-                <label className={styles.pathInput}>
-                    <span className={styles.label}>MSFS 2024 Community Folder</span>
-                    <div className={styles.inputRow}>
-                        <input value={formState.msfs2024Path} onChange={(e) => setFormState((prev) => ({ ...prev, msfs2024Path: e.target.value }))} />
-                        <button type="button" onClick={() => handleBrowse('msfs2024Path')}>
-                            <Folder size={20}/>
-                            <p>Browse</p>
-                        </button>
+                                    <label className={styles.pathInput}>
+                                        <span className={styles.label}>MSFS 2024 Community Folder</span>
+                                        <div className={styles.inputRow}>
+                                            <input value={formState.msfs2024Path} onChange={(e) => setFormState((prev) => ({ ...prev, msfs2024Path: e.target.value }))} />
+                                            <button type="button" className={styles.actionButton} onClick={() => handleBrowse('msfs2024Path')}>
+                                                <Folder size={20}/>
+                                                <p>Browse</p>
+                                            </button>
+                                        </div>
+                                    </label>
+                                    <p className={styles.note}>Note: if you don't use the community folder, you can change the path to your custom community directory.</p>
+
+                                    <div className={styles.formActions}>
+                                        <button type="submit" className={styles.submitButton}>
+                                            <Save size={20}/>
+                                            Save Settings
+                                        </button>
+                                        <button type="button" className={styles.detectButton} onClick={handleAutoDetect} disabled={detecting}>
+                                            <Zap size={20}/>
+                                            {detecting ? 'Detecting…' : 'Auto-detect paths'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
-                </label>
-                <p className={styles.note}>Note: if you don't use the community folder, you can change the path to your custom community directory.</p>
-                <div className={styles.formActions}>
-                    <button type="submit" className={styles.submitButton}>
-                        <Save size={20}/>
-                        Save Settings
-                    </button>
-                    <button type="button" className={styles.detectButton} onClick={handleAutoDetect} disabled={detecting}>
-                        <Zap size={20}/>
-                        {detecting ? 'Detecting…' : 'Auto-detect paths'}
-                    </button>
                 </div>
-            </form>
 
-            <div className={styles.bottomSection}>
-                <div className={styles.bottomSectionHeader}>
-                    <h2 className={styles.sectionTitle}>App Updates & Changelog</h2>
+                <div className={styles.sectionCard}>
+                    <div className={styles.sectionHeader} onClick={() => setIsAppearanceOpen(!isAppearanceOpen)}>
+                        <div className={styles.sectionTitleWrap}>
+                            <h2 className={styles.formTitle}>Appearance</h2>
+                        </div>
+                        <div className={styles.chevron}>
+                            {isAppearanceOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                        </div>
+                    </div>
+                    <div className={`${styles.accordionWrapper} ${isAppearanceOpen ? styles.accordionWrapperOpen : ''}`}>
+                        <div className={styles.accordionInner}>
+                            <div className={`${styles.sectionContent} ${styles.expandedContent}`}>
+                                <div className={styles.formInner}>
+                                    <label className={styles.pathInput}>
+                                        <span className={styles.label}>Theme</span>
+                                        <div className={styles.inputRow}>
+                                            <button 
+                                                type="button" 
+                                                className={currentTheme === 'dark' ? styles.themeButtonActive : styles.themeButton} 
+                                                onClick={() => setTheme('dark')}
+                                            >
+                                                <Moon size={16}/>
+                                                <p>Dark</p>
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                className={currentTheme === 'light' ? styles.themeButtonActive : styles.themeButton} 
+                                                onClick={() => setTheme('light')}
+                                            >
+                                                <Sun size={16}/>
+                                                <p>Light</p>
+                                            </button>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div className={styles.bottomSectionContent}>
-                    <AppUpdater />
-                    <Changelog />
+
+                <div className={`${styles.sectionCard} ${isUpdatesOpen ? styles.sectionCardExpanded : ''}`}>
+                    <div className={styles.sectionHeader} onClick={handleToggleUpdates}>
+                        <div className={styles.sectionTitleWrap}>
+                            <h2 className={styles.formTitle}>App Updates & Changelog</h2>
+                        </div>
+                        <div className={styles.chevron}>
+                            {isUpdatesOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                        </div>
+                    </div>
+                    <div className={styles.appUpdaterWrap}>
+                        <AppUpdater />
+                    </div>
+                    <div className={`${styles.accordionWrapper} ${isUpdatesOpen ? styles.accordionWrapperOpen : ''}`}>
+                        <div className={styles.accordionInner}>
+                            <div className={`${styles.sectionContent} ${styles.expandedContent} ${styles.updatesContent}`}>
+                                <Changelog />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

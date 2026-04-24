@@ -70,7 +70,7 @@
     font-size: 12px;
     font-weight: 600;
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(127, 127, 127, 0.2);
     color: var(--text);
     font-family: "JetBrains Mono", monospace;
     letter-spacing: 0.02em;
@@ -207,7 +207,7 @@
 
 .radarButton:hover {
     background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: var(--text);
 }
 
 .liveryBox {
@@ -297,7 +297,7 @@
 }
 
 .changelogEntry:hover {
-    border-color: rgba(255, 255, 255, 0.15);
+    border-color: var(--text);
 }
 
 .changelogHead {
@@ -352,7 +352,7 @@
     position: relative;
     padding-left: 14px;
     font-size: 13px;
-    color: #d8d8d8;
+    color: var(--muted);
     line-height: 1.5;
 }
 
@@ -454,7 +454,7 @@
 }
 
 .routeRow:hover {
-    border-color: rgba(255, 255, 255, 0.15);
+    border-color: var(--text);
 }
 
 .routeTop {
@@ -500,7 +500,7 @@
 
 .routeBarFill {
     height: 100%;
-    background: rgba(255, 255, 255, 0.35);
+    background: var(--muted);
     border-radius: 100px;
     transition: width 0.3s ease;
 }
@@ -524,13 +524,13 @@
 }
 
 .simChip {
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid var(--chips-background);
     border-radius: 8px;
     padding: 6px 16px;
     font-size: 0.85rem;
     font-weight: 500;
     color: var(--text);
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--chips-background);
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -546,7 +546,7 @@
 
 .simChipActive {
     border-color: var(--text);
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--chips-background-active);
 }
 
 .downloadRow {
@@ -577,7 +577,7 @@
 
 .downloadButton:hover:not(:disabled):not([aria-disabled='true']) {
     background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.25);
+    border-color: var(--text);
 }
 
 .downloadButton:disabled,
@@ -596,7 +596,7 @@
 
 .uninstallButton:hover:not(:disabled) {
     background: rgba(255, 68, 68, 0.18);
-    border-color: rgba(255, 68, 68, 0.4);
+    border-color: var(--text);
 }
 
 .cancelDownloadButton {
@@ -607,7 +607,7 @@
 
 .cancelDownloadButton:hover {
     background: rgba(255, 68, 68, 0.18);
-    border-color: rgba(255, 68, 68, 0.4);
+    border-color: var(--text);
 }
 
 .buttonIcon {

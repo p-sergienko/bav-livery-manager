@@ -4,6 +4,7 @@ import { useLiveryStore } from '@/store/liveryStore';
 import styles from './LiveryCard.module.css';
 import { Info } from 'react-feather';
 import { NavLink } from 'react-router-dom';
+import {useThemeStore} from "@/store/themeStore";
 
 interface LiveryCardProps {
     livery: Livery;
@@ -74,7 +75,8 @@ export const LiveryCard = ({
 
     const downloadState = useLiveryStore((state) => state.downloadStates[livery.name]);
 
-    // Suppress unused lint — kept in interface for API compatibility
+    const textColor = useThemeStore((state) => state.theme.text);
+
     void defaultResolution;
 
     useEffect(() => {
@@ -194,7 +196,7 @@ export const LiveryCard = ({
                         <h3 className={styles.title}>{livery.name}</h3>
                         <NavLink to={'/information/' + livery.id} className={styles.infoContainer}>
                             <p className={styles.infoButton}>More details</p>
-                            <Info width={14} height={14} />
+                            <Info width={14} height={14} color={textColor}/>
                         </NavLink>
                     </div>
                     {livery.version && <span className={styles.badge}>v{livery.version}</span>}

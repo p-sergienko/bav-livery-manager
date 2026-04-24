@@ -12,6 +12,7 @@ import { useSessionHeartbeat } from '@/hooks/useSessionHeartbeat';
 import { useLiveriesQuery } from '@/hooks/useLiveriesQuery';
 import { useInstalledLiveriesQuery } from '@/hooks/useInstalledLiveriesQuery';
 import { InformationPage } from './pages/InformationPage';
+import {ThemeSync} from "@/components/ThemeSync";
 
 export const App = () => {
   useInitializeLiveryStore();
@@ -23,6 +24,7 @@ export const App = () => {
     <HashRouter>
       <AuthTokenListener />
       <AppUpdateListener />
+      <ThemeSync/>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<RequireAuth />}>

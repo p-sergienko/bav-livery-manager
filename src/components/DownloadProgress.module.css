@@ -194,7 +194,7 @@
 
 .badgeMinimized {
     background: var(--card);
-    color: #fff;
+    color: var(--text);
     margin-top: 6px;
     font-size: 0.9rem;
     font-weight: 600;
