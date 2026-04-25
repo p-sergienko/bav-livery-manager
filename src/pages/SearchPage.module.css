@@ -488,6 +488,45 @@
     transition: grid-template-columns 0.5s ease-in-out;
 }
 
+.sentinel {
+    height: 80px;
+    margin-top: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loadMoreIndicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+}
+
+.pageDivider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 40px 0 28px;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    user-select: none;
+}
+
+.pageDivider::before,
+.pageDivider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
 /* ─── Loading state ─── */
 .loadingState {
     display: flex;

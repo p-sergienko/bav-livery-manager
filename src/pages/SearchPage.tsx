@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {LiveryCard} from '@/components/LiveryCard';
 import {LiveryCardSkeleton} from '@/components/LiveryCardSkeleton';
 import {ITEMS_PER_PAGE} from '@/utils/livery';
@@ -270,7 +270,9 @@ export const SearchPage = () => {
         return sims;
     }, [settings.msfs2020Path, settings.msfs2024Path]);
 
-    const [page, setPage] = useState(1);
+    const [displayedPages, setDisplayedPages] = useState([1]);
+    const sentinelRef = useRef<HTMLDivElement>(null);
+    const contentAreaRef = useRef<HTMLDivElement>(null);
 
     const fallbackOptions = useMemo(() => buildFallbackOptions(liveries), [liveries]);
 
@@ -470,41 +472,76 @@ export const SearchPage = () => {
     }, [filteredLiveries, settings.defaultResolution, debouncedSearchTerm]);
 
     const totalPages = Math.max(1, Math.ceil(dedupedLiveries.length / ITEMS_PER_PAGE));
-    const paginated = dedupedLiveries.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+    const lastPage = displayedPages[displayedPages.length - 1];
+    const hasMore = lastPage < totalPages;
 
-    useEffect(() => {
-        setPage((prev) => Math.min(prev, totalPages));
-    }, [totalPages]);
+    const [currentPage, setCurrentPage] = useState(1);
 
+    const startItem = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+    const endItem = Math.min(currentPage * ITEMS_PER_PAGE, dedupedLiveries.length);
 
-    // Build page numbers to show (max 5 visible, with ellipsis)
     const pageNumbers = useMemo(() => {
         const pages: Array<number | 'ellipsis'> = [];
         const maxVisible = 5;
-
         if (totalPages <= maxVisible + 2) {
             for (let i = 1; i <= totalPages; i++) pages.push(i);
         } else {
             pages.push(1);
-            const start = Math.max(2, page - 1);
-            const end = Math.min(totalPages - 1, page + 1);
-
+            const start = Math.max(2, currentPage - 1);
+            const end = Math.min(totalPages - 1, currentPage + 1);
             if (start > 2) pages.push('ellipsis');
             for (let i = start; i <= end; i++) pages.push(i);
             if (end < totalPages - 1) pages.push('ellipsis');
             pages.push(totalPages);
         }
         return pages;
-    }, [page, totalPages]);
+    }, [currentPage, totalPages]);
 
-    const startItem = (page - 1) * ITEMS_PER_PAGE + 1;
-    const endItem = Math.min(page * ITEMS_PER_PAGE, dedupedLiveries.length);
+    const handleScroll = useCallback(() => {
+        const container = contentAreaRef.current;
+        if (!container) return;
+
+        // Track which page is currently visible
+        const containerTop = container.getBoundingClientRect().top;
+        const sections = container.querySelectorAll<HTMLElement>('[data-page]');
+        let detected = displayedPages[0] ?? 1;
+        sections.forEach((el) => {
+            if (el.getBoundingClientRect().top <= containerTop + 80) {
+                detected = Number(el.dataset.page);
+            }
+        });
+        setCurrentPage(detected);
+
+        // Append next page when the user has scrolled fully to the bottom
+        const {scrollTop, scrollHeight, clientHeight} = container;
+        if (hasMore && scrollHeight - scrollTop - clientHeight <= 1) {
+            setDisplayedPages((prev) => {
+                const next = prev[prev.length - 1] + 1;
+                if (next > totalPages || prev.includes(next)) return prev;
+                return [...prev, next];
+            });
+        }
+    }, [displayedPages, hasMore, totalPages]);
+
+    const jumpToPage = (n: number) => {
+        setDisplayedPages([n]);
+        setCurrentPage(n);
+        contentAreaRef.current?.scrollTo({top: 0, behavior: 'instant'});
+    };
+
+    useEffect(() => {
+        setDisplayedPages([1]);
+        setCurrentPage(1);
+        contentAreaRef.current?.scrollTo({top: 0, behavior: 'instant'});
+    }, [dedupedLiveries]);
+
+    useEffect(() => {
+        handleScroll();
+    }, [displayedPages, handleScroll]);
 
     const updateFilter = (key: FilterKey, value: string) => {
         setFilter(key, value);
-        setPage(1);
     };
-
 
     const handleQuickSelect = (key: FilterKey, value: string) => {
         if (key === 'simulator') {
@@ -516,7 +553,6 @@ export const SearchPage = () => {
 
     const clearAllFilters = () => {
         storeClearFilters();
-        setPage(1);
     };
 
     return (
@@ -553,20 +589,14 @@ export const SearchPage = () => {
                         <button
                             type="button"
                             className={classNames(styles.simChip, viewMode === 'all' && styles.simChipActive)}
-                            onClick={() => {
-                                setViewMode('all');
-                                setPage(1);
-                            }}
+                            onClick={() => setViewMode('all')}
                         >
                             All
                         </button>
                         <button
                             type="button"
                             className={classNames(styles.simChip, viewMode === 'installed' && styles.simChipActive)}
-                            onClick={() => {
-                                setViewMode('installed');
-                                setPage(1);
-                            }}
+                            onClick={() => setViewMode('installed')}
                         >
                             Installed
                         </button>
@@ -595,7 +625,7 @@ export const SearchPage = () => {
                 <div className={styles.toolbar}>
                     <SearchBar
                         value={searchTerm}
-                        onChange={(v) => { setSearchTerm(v); setPage(1); }}
+                        onChange={(v) => setSearchTerm(v)}
                     />
  
                     <div id="simulatorResolutionSelect" className={styles.simSelectorRow}>
@@ -688,8 +718,8 @@ export const SearchPage = () => {
                     </span>
                     {totalPages > 1 && (
                         <div className={styles.paginationButtons}>
-                            <button type="button" onClick={() => setPage((v) => Math.max(1, v - 1))}
-                                    disabled={page === 1} aria-label="Previous page">
+                            <button type="button" onClick={() => jumpToPage(Math.max(1, currentPage - 1))}
+                                    disabled={currentPage === 1} aria-label="Previous page">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                      strokeWidth="1.5" aria-hidden>
                                     <path d="M15 18l-6-6 6-6"/>
@@ -702,15 +732,15 @@ export const SearchPage = () => {
                                     <button
                                         key={p}
                                         type="button"
-                                        className={classNames(styles.pageButton, p === page && styles.pageButtonActive)}
-                                        onClick={() => setPage(p)}
+                                        className={classNames(styles.pageButton, p === currentPage && styles.pageButtonActive)}
+                                        onClick={() => jumpToPage(p)}
                                     >
                                         {p}
                                     </button>
                                 )
                             )}
-                            <button type="button" onClick={() => setPage((v) => Math.min(totalPages, v + 1))}
-                                    disabled={page === totalPages} aria-label="Next page">
+                            <button type="button" onClick={() => jumpToPage(Math.min(totalPages, currentPage + 1))}
+                                    disabled={currentPage === totalPages} aria-label="Next page">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                      strokeWidth="1.5" aria-hidden>
                                     <path d="M9 18l6-6-6-6"/>
@@ -720,7 +750,7 @@ export const SearchPage = () => {
                     )}
                 </div>
 
-                <div className={styles.contentArea}>
+                <div className={styles.contentArea} ref={contentAreaRef} onScroll={handleScroll}>
                 {(loading || liveriesFetching) ? (
                     <div className={styles.grid}>
                         {Array.from({length: ITEMS_PER_PAGE}).map((_, i) => (
@@ -738,45 +768,70 @@ export const SearchPage = () => {
                         </svg>
                         <p>Add a simulator path in Settings to see liveries.</p>
                     </div>
-                ) : paginated.length ? (
-                    <div className={styles.grid}>
-                        {paginated.map((livery) => (
-                            <LiveryCard
-                                key={livery.id ?? livery.name}
-                                livery={livery}
-                                allLiveries={liveries}
-                                defaultResolution={settings.defaultResolution}
-                                defaultSimulator={activeSimulatorCode ?? settings.defaultSimulator}
-                                resolutionFilter={
-                                    filters.resolution === 'all'
-                                        ? 'all'
-                                        : ((valueMaps.resolution.get(filters.resolution) ?? filters.resolution) as Resolution)
-                                }
-                                isInstalled={(resolution, simulator) => isVariantInstalled(livery, resolution, simulator)}
-                                onDownload={(resolution: Resolution, simulator: Simulator) => {
-                                    if (livery.aircraftProfileName === 'A35K') {
-                                        setWarningMessage(
-                                            <>
-                                                Note: The A350-1000 livery require additional configuration. Learn
-                                                more:{' '}
-                                                <a href="https://flightsim.to/addon/105315/a35k-speedcore"
-                                                   onClick={(e) => {
-                                                       e.preventDefault();
-                                                       window.electronAPI?.openExternalLink('https://flightsim.to/addon/105315/a35k-speedcore');
-                                                   }}
-                                                   style={{textDecoration: 'underline'}}>
-                                                    A35K Speedcore
-                                                </a>
-                                            </>
-                                        );
-                                    }
-                                    return handleDownload(livery, resolution, simulator);
-                                }}
-                                onCancelDownload={() => cancelDownload(livery.id, livery.name)}
-                                onUninstall={(resolution: Resolution, simulator: Simulator) => handleUninstall(livery, resolution, simulator)}
-                            />
-                        ))}
-                    </div>
+                ) : dedupedLiveries.length ? (
+                    <>
+                        {displayedPages.map((pageNum, idx) => {
+                            const pageItems = dedupedLiveries.slice(
+                                (pageNum - 1) * ITEMS_PER_PAGE,
+                                pageNum * ITEMS_PER_PAGE
+                            );
+                            return (
+                                <div key={pageNum} data-page={pageNum}>
+                                    {idx > 0 && (
+                                        <div className={styles.pageDivider}>
+                                            <span>Page {pageNum}</span>
+                                        </div>
+                                    )}
+                                    <div className={styles.grid}>
+                                        {pageItems.map((livery) => (
+                                            <LiveryCard
+                                                key={livery.id ?? livery.name}
+                                                livery={livery}
+                                                allLiveries={liveries}
+                                                defaultResolution={settings.defaultResolution}
+                                                defaultSimulator={activeSimulatorCode ?? settings.defaultSimulator}
+                                                resolutionFilter={
+                                                    filters.resolution === 'all'
+                                                        ? 'all'
+                                                        : ((valueMaps.resolution.get(filters.resolution) ?? filters.resolution) as Resolution)
+                                                }
+                                                isInstalled={(resolution, simulator) => isVariantInstalled(livery, resolution, simulator)}
+                                                onDownload={(resolution: Resolution, simulator: Simulator) => {
+                                                    if (livery.aircraftProfileName === 'A35K') {
+                                                        setWarningMessage(
+                                                            <>
+                                                                Note: The A350-1000 livery require additional configuration. Learn
+                                                                more:{' '}
+                                                                <a href="https://flightsim.to/addon/105315/a35k-speedcore"
+                                                                   onClick={(e) => {
+                                                                       e.preventDefault();
+                                                                       window.electronAPI?.openExternalLink('https://flightsim.to/addon/105315/a35k-speedcore');
+                                                                   }}
+                                                                   style={{textDecoration: 'underline'}}>
+                                                                    A35K Speedcore
+                                                                </a>
+                                                            </>
+                                                        );
+                                                    }
+                                                    return handleDownload(livery, resolution, simulator);
+                                                }}
+                                                onCancelDownload={() => cancelDownload(livery.id, livery.name)}
+                                                onUninstall={(resolution: Resolution, simulator: Simulator) => handleUninstall(livery, resolution, simulator)}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        <div ref={sentinelRef} className={styles.sentinel} aria-hidden>
+                            {hasMore && (
+                                <div className={styles.loadMoreIndicator}>
+                                    <div className={styles.spinner}/>
+                                    <span>Page {lastPage + 1}</span>
+                                </div>
+                            )}
+                        </div>
+                    </>
                 ) : (
                     <div className={styles.emptyState}>
                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
