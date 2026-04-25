@@ -8,6 +8,7 @@ import {useAuthStore} from '@/store/authStore';
 import {useCatalogQuery} from '@/hooks/useCatalogQuery';
 import {useLiveriesQuery} from '@/hooks/useLiveriesQuery';
 import {Toast} from '@/components/Toast';
+import {Pagination} from '@/components/Pagination';
 import {FilterPanel} from '@/components/FilterPanel';
 import {SearchBar} from '@/components/SearchBar';
 import {useFilterStore} from '@/store/filterStore';
@@ -480,23 +481,6 @@ export const SearchPage = () => {
     const startItem = (currentPage - 1) * ITEMS_PER_PAGE + 1;
     const endItem = Math.min(currentPage * ITEMS_PER_PAGE, dedupedLiveries.length);
 
-    const pageNumbers = useMemo(() => {
-        const pages: Array<number | 'ellipsis'> = [];
-        const maxVisible = 5;
-        if (totalPages <= maxVisible + 2) {
-            for (let i = 1; i <= totalPages; i++) pages.push(i);
-        } else {
-            pages.push(1);
-            const start = Math.max(2, currentPage - 1);
-            const end = Math.min(totalPages - 1, currentPage + 1);
-            if (start > 2) pages.push('ellipsis');
-            for (let i = start; i <= end; i++) pages.push(i);
-            if (end < totalPages - 1) pages.push('ellipsis');
-            pages.push(totalPages);
-        }
-        return pages;
-    }, [currentPage, totalPages]);
-
     const handleScroll = useCallback(() => {
         const container = contentAreaRef.current;
         if (!container) return;
@@ -704,51 +688,15 @@ export const SearchPage = () => {
             )}
 
             <div className={styles.scrollContainer}>
-                <div className={styles.paginationBar}>
-                    <span className={styles.paginationText}>
-                        {dedupedLiveries.length > 0 ? (
-                            <>Showing <strong>{startItem}–{endItem}</strong> of <strong>{dedupedLiveries.length}</strong></>
-                        ) : (
-                            loading || liveriesFetching ? (
-                                <>Loading liveries... please stand-by</>
-                            ) : (
-                                <>No results</>
-                            )
-                        )}
-                    </span>
-                    {totalPages > 1 && (
-                        <div className={styles.paginationButtons}>
-                            <button type="button" onClick={() => jumpToPage(Math.max(1, currentPage - 1))}
-                                    disabled={currentPage === 1} aria-label="Previous page">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                     strokeWidth="1.5" aria-hidden>
-                                    <path d="M15 18l-6-6 6-6"/>
-                                </svg>
-                            </button>
-                            {pageNumbers.map((p, i) =>
-                                p === 'ellipsis' ? (
-                                    <span key={`e${i}`} className={styles.paginationEllipsis}>…</span>
-                                ) : (
-                                    <button
-                                        key={p}
-                                        type="button"
-                                        className={classNames(styles.pageButton, p === currentPage && styles.pageButtonActive)}
-                                        onClick={() => jumpToPage(p)}
-                                    >
-                                        {p}
-                                    </button>
-                                )
-                            )}
-                            <button type="button" onClick={() => jumpToPage(Math.min(totalPages, currentPage + 1))}
-                                    disabled={currentPage === totalPages} aria-label="Next page">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                     strokeWidth="1.5" aria-hidden>
-                                    <path d="M9 18l6-6-6-6"/>
-                                </svg>
-                            </button>
-                        </div>
-                    )}
-                </div>
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    startItem={startItem}
+                    endItem={endItem}
+                    total={dedupedLiveries.length}
+                    loading={loading || liveriesFetching}
+                    onJump={jumpToPage}
+                />
 
                 <div className={styles.contentArea} ref={contentAreaRef} onScroll={handleScroll}>
                 {(loading || liveriesFetching) ? (

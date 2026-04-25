@@ -1,0 +1,107 @@
+.bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 4px;
+    margin-bottom: 14px;
+    flex-shrink: 0;
+}
+
+/* ─── Count label ─── */
+.count {
+    font-size: 0.82rem;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.count strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
+/* ─── Nav strip ─── */
+.nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ─── Arrow buttons ─── */
+.arrow {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    flex-shrink: 0;
+}
+
+.arrow:hover:not(:disabled) {
+    background: var(--chips-background-active);
+    border-color: var(--border);
+    color: var(--text);
+}
+
+.arrow:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* ─── Page number buttons ─── */
+.pages {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin: 0 4px;
+}
+
+.page {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.page:hover:not(.pageActive) {
+    background: var(--chips-background);
+    color: var(--text);
+}
+
+.pageActive {
+    background: var(--chips-background-active);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text);
+    font-weight: 600;
+    cursor: default;
+}
+
+/* ─── Ellipsis ─── */
+.ellipsis {
+    width: 28px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    user-select: none;
+    opacity: 0.6;
+}
