@@ -26,10 +26,10 @@
 }
 
 .title {
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 16px;
     color: var(--text);
     letter-spacing: 0.5px;
+    font-family: 'Majesty', sans-serif;
 }
 
 .darwin .logoContainer {

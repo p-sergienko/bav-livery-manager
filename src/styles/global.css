@@ -1,3 +1,10 @@
+@font-face {
+    font-family: 'Majesty';
+    src: url('/majesty-medium.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 :root {
     --primary: #ffffff;
     --bg: #000000;

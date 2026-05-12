@@ -554,7 +554,7 @@ export const SearchPage = () => {
                                         className={styles.simulatorLogo}
                                     />
                                     <div className={styles.headerCount}>
-                                        <h1 className={styles.title}>Liveries</h1>
+                                        <h1 className={styles.title}>BAVirtual Liveries</h1>
                                         {hasSimulatorSelection && (
                                             <p className={styles.resultCount}>
                                                 <strong>{numberFormatter.format(dedupedLiveries.length)}</strong> {dedupedLiveries.length === 1 ? 'livery' : 'liveries'} found

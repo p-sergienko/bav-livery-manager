@@ -114,7 +114,7 @@ export const DownloadsPage = () => {
         <section className={styles.page}>
             <header id="updatePage" className={styles.pageHeader}>
                 <div className={styles.headerCopy}>
-                    <h1>Livery Updates</h1>
+                    <h1 className={styles.pageHeaderText}>Livery Updates</h1>
                     <p className={styles.headerSubtitle}>
                         {allUpdateEntries.length > 0 ? (
                             <span className={styles.updateCount}>
