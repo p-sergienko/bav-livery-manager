@@ -27,11 +27,6 @@ const matchesSearch = (pkg: Package, tokens: string[]) => {
     return tokens.every((token) => haystack.includes(token));
 };
 
-const simulatorLogoMap: Record<Simulator, string> = {
-    FS20: 'FS20.webp',
-    FS24: 'FS24.webp'
-};
-
 export const PackagesPage = () => {
     const authError = useAuthStore((state) => state.error);
     const clearAuthError = useAuthStore((state) => state.setError);
@@ -86,18 +81,7 @@ export const PackagesPage = () => {
 
     const [searchTerm, setSearchTerm] = useState('');
     const debouncedSearchTerm = useDebounce(searchTerm, 150);
-    const [simulator, setSimulator] = useState<Simulator | 'all'>(settings.defaultSimulator);
     const [category, setCategory] = useState<string>('all');
-
-    useEffect(() => {
-        if (!pathEnabledSimulators.length) {
-            setSimulator('all');
-            return;
-        }
-        if (simulator !== 'all' && !pathEnabledSimulators.includes(simulator)) {
-            setSimulator(pathEnabledSimulators[0]);
-        }
-    }, [pathEnabledSimulators, simulator]);
 
     const categoryOptions = useMemo(() => {
         const set = new Set<string>();
@@ -110,11 +94,10 @@ export const PackagesPage = () => {
     const filteredPackages = useMemo(() => {
         const tokens = debouncedSearchTerm.trim().toLowerCase().split(/\s+/).filter(Boolean);
         return packages.filter((pkg) => {
-            const matchesSim = simulator === 'all' || !pkg.simulatorCode || pkg.simulatorCode === simulator;
             const matchesCategory = category === 'all' || pkg.category === category;
-            return matchesSim && matchesCategory && matchesSearch(pkg, tokens);
+            return matchesCategory && matchesSearch(pkg, tokens);
         });
-    }, [packages, debouncedSearchTerm, simulator, category]);
+    }, [packages, debouncedSearchTerm, category]);
 
     const sortedPackages = useMemo(() => {
         return [...filteredPackages].sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }));
@@ -176,10 +159,6 @@ export const PackagesPage = () => {
         if (storeError) clearStoreError();
     };
 
-    const downloadSimulator: Simulator = simulator === 'all'
-        ? (pathEnabledSimulators[0] ?? settings.defaultSimulator)
-        : simulator;
-
     const hasSimulatorPathConfigured = pathEnabledSimulators.length > 0;
 
     return (
@@ -189,11 +168,6 @@ export const PackagesPage = () => {
                     <div className={styles.headerLeft}>
                         <div className={styles.headerTitleRow}>
                             <div className={styles.simulatorLogoWrap} aria-hidden>
-                                <img
-                                    src={simulatorLogoMap[downloadSimulator] ?? ''}
-                                    alt={downloadSimulator === 'FS24' ? 'Microsoft Flight Simulator 2024' : 'Microsoft Flight Simulator 2020'}
-                                    className={styles.simulatorLogo}
-                                />
                                 <div className={styles.headerCount}>
                                     <h1 className={styles.title}>Packages</h1>
                                     <p className={styles.resultCount}>
@@ -221,31 +195,9 @@ export const PackagesPage = () => {
                     <SearchBar value={searchTerm} onChange={setSearchTerm} />
 
                     <div className={styles.simSelectorRow}>
-                        <button
-                            type="button"
-                            className={classNames(styles.simChip, simulator === 'all' && styles.simChipActive)}
-                            onClick={() => setSimulator('all')}
-                        >
-                            All sims
-                        </button>
-                        {(['FS20', 'FS24'] as Simulator[]).map((sim) => {
-                            const disabled = !pathEnabledSimulators.includes(sim);
-                            return (
-                                <button
-                                    key={sim}
-                                    type="button"
-                                    className={classNames(styles.simChip, simulator === sim && styles.simChipActive)}
-                                    disabled={disabled}
-                                    onClick={() => !disabled && setSimulator(sim)}
-                                >
-                                    {sim}
-                                </button>
-                            );
-                        })}
 
                         {categoryOptions.length > 0 && (
                             <>
-                                <span className={styles.simDivider} />
                                 <button
                                     type="button"
                                     className={classNames(styles.simChip, category === 'all' && styles.simChipActive)}

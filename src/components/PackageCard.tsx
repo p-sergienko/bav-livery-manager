@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import type { Package, PackageDownloadState } from '@/types/package';
-import type { Livery, Simulator } from '@/types/livery';
-import styles from './LiveryCard.module.css';
+import {useState} from 'react';
+import type {Package, PackageDownloadState} from '@/types/package';
+import type {Livery, Simulator} from '@/types/livery';
+import styles from './PackageCard.module.css';
 
 interface PackageCardProps {
     pkg: Package;
@@ -27,28 +27,28 @@ const formatBytes = (bytes?: number | null) => {
 
 const DownloadIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-        <polyline points="7 10 12 15 17 10" />
-        <line x1="12" y1="15" x2="12" y2="3" />
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
     </svg>
 );
 
 const UninstallIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-        <path d="M6 18L18 6M6 6l12 12" />
+        <path d="M6 18L18 6M6 6l12 12"/>
     </svg>
 );
 
 export const PackageCard = ({
-    pkg,
-    pathEnabledSimulators,
-    downloadState,
-    isInstalled,
-    findDependentLiveries,
-    onDownload,
-    onCancelDownload,
-    onUninstall
-}: PackageCardProps) => {
+                                pkg,
+                                pathEnabledSimulators,
+                                downloadState,
+                                isInstalled,
+                                findDependentLiveries,
+                                onDownload,
+                                onCancelDownload,
+                                onUninstall
+                            }: PackageCardProps) => {
     const [busy, setBusy] = useState(false);
 
     const sizeLabel = formatBytes(pkg.sizeBytes);
@@ -93,7 +93,7 @@ export const PackageCard = ({
                     <div className={classNames(styles.overlay, isExtracting ? styles.overlayExtracting : undefined)}>
                         {isExtracting ? (
                             <>
-                                <div className={styles.spinner} />
+                                <div className={styles.spinner}/>
                                 <span className={styles.overlayTitle}>Installing…</span>
                                 <span className={styles.overlaySubtitle}>Extracting files</span>
                             </>
@@ -102,7 +102,7 @@ export const PackageCard = ({
                                 <span className={styles.overlayTitle}>Downloading…</span>
                                 <span className={styles.overlayPercent}>{downloadState.progress}%</span>
                                 <div className={styles.progressBar}>
-                                    <div className={styles.progressFill} style={{ width: `${downloadState.progress}%` }} />
+                                    <div className={styles.progressFill} style={{width: `${downloadState.progress}%`}}/>
                                 </div>
                                 {downloadState.downloaded && downloadState.total ? (
                                     <span className={styles.overlaySubtitle}>
@@ -119,7 +119,7 @@ export const PackageCard = ({
                 )}
 
                 {pkg.previewUrl ? (
-                    <img className={styles.image} src={pkg.previewUrl} alt={`${pkg.title} preview`} loading="lazy" />
+                    <img className={styles.image} src={pkg.previewUrl} alt={`${pkg.title} preview`} loading="lazy"/>
                 ) : (
                     <div className={styles.placeholder}>No preview available</div>
                 )}
@@ -129,15 +129,14 @@ export const PackageCard = ({
                 <div className={styles.titleRow}>
                     <div>
                         <h3 className={styles.title}>{pkg.title}</h3>
-                        {pkg.description && (
-                            <p className={styles.infoContainer} style={{ marginTop: 4 }}>
-                                <span className={styles.infoButton}>{pkg.description}</span>
-                            </p>
-                        )}
                     </div>
                     {pkg.version && <span className={styles.badge}>v{pkg.version}</span>}
                 </div>
-
+                {pkg.description && (
+                    <p className={styles.description}>
+                        {pkg.description}
+                    </p>
+                )}
                 <dl className={styles.meta}>
                     {pkg.aircraftProfileName && (
                         <div>
@@ -149,10 +148,10 @@ export const PackageCard = ({
                         <dt className={styles.metaLabel}>Category</dt>
                         <dd className={styles.metaValue}>{pkg.category ?? 'Uncategorized'}</dd>
                     </div>
-                    {pkg.simulatorCode && (
+                    {pkg.sizeBytes && (
                         <div>
-                            <dt className={styles.metaLabel}>Simulator</dt>
-                            <dd className={styles.metaValue}>{pkg.simulatorCode}</dd>
+                            <dt className={styles.metaLabel}>Size</dt>
+                            <dd className={styles.metaValue}>{formatBytes(pkg.sizeBytes)}</dd>
                         </div>
                     )}
                 </dl>
@@ -173,7 +172,7 @@ export const PackageCard = ({
                                         type="button"
                                         className={styles.cancelDownloadButton}
                                         onClick={onCancelDownload}
-                                        style={{ marginTop: 0, width: '100%', justifyContent: 'center' }}
+                                        style={{marginTop: 0, width: '100%', justifyContent: 'center'}}
                                     >
                                         <span className={styles.btnLabelFull}>Cancel {sim}</span>
                                         <span className={styles.btnLabelShort}>Cancel</span>
@@ -192,7 +191,7 @@ export const PackageCard = ({
                                         onClick={() => handleUninstallClick(sim)}
                                     >
                                         <span className={styles.buttonIcon} aria-hidden>
-                                            <UninstallIcon />
+                                            <UninstallIcon/>
                                         </span>
                                         <span className={styles.btnLabelFull}>Uninstall {sim}</span>
                                         <span className={styles.btnLabelShort}>{sim}</span>
@@ -211,7 +210,7 @@ export const PackageCard = ({
                                     onClick={() => handleDownloadClick(sim)}
                                 >
                                     <span className={styles.buttonIcon} aria-hidden>
-                                        <DownloadIcon />
+                                        <DownloadIcon/>
                                     </span>
                                     <span className={styles.btnLabelFull}>Download {label}</span>
                                     <span className={styles.btnLabelShort}>{sim}</span>

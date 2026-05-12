@@ -4,19 +4,12 @@ import styles from './DownloadProgress.module.css';
 import {Download} from "react-feather";
 import type {DownloadProgress as DownloadProgressType} from "@/types/livery";
 import { useMemo, useState } from 'react';
+import {formatBytes} from "@/utils/formatBytes";
 
 interface DownloadProgressProps {
     isCollapsed: boolean;
     isExpanding?: boolean;
 }
-
-const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
-};
 
 const DownloadIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
