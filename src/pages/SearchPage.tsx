@@ -132,6 +132,29 @@ const dedupeLiveriesForDisplay = (liveries: Livery[], preferredResolution: Resol
     return Array.from(map.values());
 };
 
+const findLiveryVariant = (
+    liveries: Livery[],
+    reference: Livery,
+    resolution: Resolution,
+    simulator: Simulator
+): Livery | null => {
+    const normalize = (value: string | null | undefined) => (value ?? '').trim().toLowerCase();
+    const referenceTitle = normalize(reference.title ?? reference.name);
+    const targetResolution = normalize(resolution);
+    const targetSimulator = normalize(simulator);
+    return (
+        liveries.find((entry) => {
+            return (
+                entry.developerId === reference.developerId &&
+                entry.aircraftProfileId === reference.aircraftProfileId &&
+                normalize(entry.title ?? entry.name) === referenceTitle &&
+                normalize(entry.simulatorCode) === targetSimulator &&
+                normalize(entry.resolutionValue) === targetResolution
+            );
+        }) ?? null
+    );
+};
+
 const scoreSearch = (livery: Livery, tokens: string[]): number => {
     if (tokens.length === 0) return 1;
     let total = 0;
@@ -761,7 +784,8 @@ export const SearchPage = () => {
                                                             </>
                                                         );
                                                     }
-                                                    return handleDownload(livery, resolution, simulator);
+                                                    const variant = findLiveryVariant(liveries, livery, resolution, simulator) ?? livery;
+                                                    return handleDownload(variant, resolution, simulator);
                                                 }}
                                                 onCancelDownload={() => cancelDownload(livery.id, livery.name)}
                                                 onUninstall={(resolution: Resolution, simulator: Simulator) => handleUninstall(livery, resolution, simulator)}
