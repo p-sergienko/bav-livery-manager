@@ -85,4 +85,5 @@ export interface LiveryUpdate {
     installPath?: string;
     resolution?: string;
     simulator?: string;
+    requiredPackages?: string[];
 }

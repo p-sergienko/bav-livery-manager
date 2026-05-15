@@ -1,7 +1,14 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useLiveryStore } from '@/store/liveryStore';
+import { usePackageStore } from '@/store/packageStore';
+import { usePackagesQuery } from '@/hooks/usePackagesQuery';
 import type { LiveryUpdate } from '@/types/livery';
+import type { PackageUpdate } from '@/types/package';
 import styles from './UpdateNotification.module.css';
+
+type CombinedUpdate =
+    | { kind: 'livery'; key: string; update: LiveryUpdate }
+    | { kind: 'package'; key: string; update: PackageUpdate };
 
 const UpdateIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -16,41 +23,72 @@ const CloseIcon = () => (
 );
 
 export const UpdateNotification = () => {
-    const availableUpdates = useLiveryStore((state) => state.availableUpdates);
+    const liveryUpdates = useLiveryStore((state) => state.availableUpdates);
     const updateLivery = useLiveryStore((state) => state.updateLivery);
-    const dismissUpdate = useLiveryStore((state) => state.dismissUpdate);
-    const checkForUpdates = useLiveryStore((state) => state.checkForUpdates);
-    const checkingUpdates = useLiveryStore((state) => state.checkingUpdates);
-    
+    const dismissLiveryUpdate = useLiveryStore((state) => state.dismissUpdate);
+    const checkForLiveryUpdates = useLiveryStore((state) => state.checkForUpdates);
+    const checkingLiveryUpdates = useLiveryStore((state) => state.checkingUpdates);
+
+    const packageUpdates = usePackageStore((state) => state.availableUpdates);
+    const updatePackage = usePackageStore((state) => state.updatePackage);
+    const dismissPackageUpdate = usePackageStore((state) => state.dismissUpdate);
+    const checkForPackageUpdates = usePackageStore((state) => state.checkForUpdates);
+    const checkingPackageUpdates = usePackageStore((state) => state.checkingUpdates);
+
+    const { data: packagesData } = usePackagesQuery();
+    const packagesCatalog = useMemo(() => packagesData ?? [], [packagesData]);
+
     const [expandedKey, setExpandedKey] = useState<string | null>(null);
     const [updatingKeys, setUpdatingKeys] = useState<Set<string>>(new Set());
 
-    const updateKey = (update: LiveryUpdate) => `${update.liveryId}-${update.simulator ?? ''}`;
+    const liveryKey = (u: LiveryUpdate) => `livery:${u.liveryId}-${u.simulator ?? ''}`;
+    const packageKey = (u: PackageUpdate) => `package:${u.packageId}-${u.simulator ?? ''}`;
 
-    const handleUpdate = async (update: LiveryUpdate) => {
-        const key = updateKey(update);
-        setUpdatingKeys(prev => new Set(prev).add(key));
+    const combined: CombinedUpdate[] = useMemo(() => {
+        const packages: CombinedUpdate[] = packageUpdates.map((u) => ({ kind: 'package', key: packageKey(u), update: u }));
+        const liveries: CombinedUpdate[] = liveryUpdates.map((u) => ({ kind: 'livery', key: liveryKey(u), update: u }));
+        return [...packages, ...liveries];
+    }, [liveryUpdates, packageUpdates]);
+
+    const totalCount = combined.length;
+    const checking = checkingLiveryUpdates || checkingPackageUpdates;
+
+    const refreshAll = () => {
+        void checkForLiveryUpdates();
+        void checkForPackageUpdates(packagesCatalog);
+    };
+
+    const handleUpdate = async (item: CombinedUpdate) => {
+        setUpdatingKeys((prev) => new Set(prev).add(item.key));
         try {
-            await updateLivery(update);
+            if (item.kind === 'livery') {
+                await updateLivery(item.update, packagesCatalog);
+            } else {
+                await updatePackage(item.update, packagesCatalog);
+            }
         } finally {
-            setUpdatingKeys(prev => {
+            setUpdatingKeys((prev) => {
                 const next = new Set(prev);
-                next.delete(key);
+                next.delete(item.key);
                 return next;
             });
         }
     };
 
-    const handleDismiss = (liveryId: string, event: React.MouseEvent) => {
+    const handleDismiss = (item: CombinedUpdate, event: React.MouseEvent) => {
         event.stopPropagation();
-        dismissUpdate(liveryId);
+        if (item.kind === 'livery') {
+            dismissLiveryUpdate(item.update.liveryId);
+        } else {
+            dismissPackageUpdate(item.update.slug, item.update.simulator);
+        }
     };
 
     const toggleExpand = (key: string) => {
         setExpandedKey(expandedKey === key ? null : key);
     };
 
-    if (availableUpdates.length === 0 && !checkingUpdates) {
+    if (totalCount === 0 && !checking) {
         return null;
     }
 
@@ -60,15 +98,15 @@ export const UpdateNotification = () => {
                 <div className={styles.headerContent}>
                     <UpdateIcon />
                     <h3 className={styles.title}>
-                        {checkingUpdates 
-                            ? 'Checking for updates...' 
-                            : `${availableUpdates.length} update${availableUpdates.length === 1 ? '' : 's'} available`}
+                        {checking
+                            ? 'Checking for updates...'
+                            : `${totalCount} update${totalCount === 1 ? '' : 's'} available`}
                     </h3>
                 </div>
-                <button 
+                <button
                     className={styles.refreshButton}
-                    onClick={() => checkForUpdates()}
-                    disabled={checkingUpdates}
+                    onClick={refreshAll}
+                    disabled={checking}
                     aria-label="Check for updates"
                     title="Check for updates"
                 >
@@ -76,28 +114,31 @@ export const UpdateNotification = () => {
                 </button>
             </div>
 
-            {availableUpdates.length > 0 && (
+            {totalCount > 0 && (
                 <div className={styles.updateList}>
-                    {availableUpdates.map((update) => {
-                        const key = updateKey(update);
-                        const isExpanded = expandedKey === key;
-                        const isUpdating = updatingKeys.has(key);
+                    {combined.map((item) => {
+                        const isExpanded = expandedKey === item.key;
+                        const isUpdating = updatingKeys.has(item.key);
+                        const name = item.kind === 'livery'
+                            ? item.update.liveryName
+                            : item.update.packageTitle ?? item.update.slug;
+                        const label = item.kind === 'package' ? `📦 ${name}` : name;
 
                         return (
-                            <div key={key} className={styles.updateItem}>
+                            <div key={item.key} className={styles.updateItem}>
                                 <div
                                     className={styles.updateHeader}
-                                    onClick={() => toggleExpand(key)}
+                                    onClick={() => toggleExpand(item.key)}
                                 >
                                     <div className={styles.updateInfo}>
-                                        <span className={styles.liveryName}>{update.liveryName}</span>
+                                        <span className={styles.liveryName}>{label}</span>
                                         <span className={styles.versionInfo}>
-                                            {update.currentVersion} → {update.latestVersion}
+                                            {item.update.currentVersion} → {item.update.latestVersion}
                                         </span>
                                     </div>
                                     <button
                                         className={styles.dismissButton}
-                                        onClick={(e) => handleDismiss(update.liveryId, e)}
+                                        onClick={(e) => handleDismiss(item, e)}
                                         aria-label="Dismiss update"
                                         title="Dismiss"
                                     >
@@ -107,25 +148,25 @@ export const UpdateNotification = () => {
 
                                 {isExpanded && (
                                     <div className={styles.updateDetails}>
-                                        {update.changelog && (
+                                        {item.update.changelog && (
                                             <div className={styles.changelog}>
                                                 <p className={styles.changelogLabel}>What's new:</p>
-                                                <p className={styles.changelogText}>{update.changelog}</p>
+                                                <p className={styles.changelogText}>{item.update.changelog}</p>
                                             </div>
                                         )}
-                                        
+
                                         <div className={styles.metadata}>
-                                            {update.resolution && (
-                                                <span className={styles.metaItem}>Resolution: {update.resolution}</span>
+                                            {item.kind === 'livery' && item.update.resolution && (
+                                                <span className={styles.metaItem}>Resolution: {item.update.resolution}</span>
                                             )}
-                                            {update.simulator && (
-                                                <span className={styles.metaItem}>Simulator: {update.simulator}</span>
+                                            {item.update.simulator && (
+                                                <span className={styles.metaItem}>Simulator: {item.update.simulator}</span>
                                             )}
                                         </div>
 
                                         <button
                                             className={styles.updateButton}
-                                            onClick={() => handleUpdate(update)}
+                                            onClick={() => handleUpdate(item)}
                                             disabled={isUpdating}
                                         >
                                             {isUpdating ? 'Updating...' : 'Update Now'}

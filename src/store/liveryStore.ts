@@ -6,10 +6,12 @@ import type {
     InstalledLiveryRecord,
     Livery,
     LiveryUpdate,
+    RequiredPackageRef,
     Resolution,
     Settings,
     Simulator
 } from '@/types/livery';
+import type { Package } from '@/types/package';
 import { useAuthStore } from '@/store/authStore';
 import { usePackageStore } from '@/store/packageStore';
 import { useConfirmationStore } from '@/store/confirmationStore';
@@ -43,7 +45,7 @@ interface LiveryState {
     refreshLiveries: () => Promise<void>;
     refreshInstalled: () => Promise<void>;
     checkForUpdates: () => Promise<void>;
-    updateLivery: (update: LiveryUpdate) => Promise<boolean>;
+    updateLivery: (update: LiveryUpdate, packagesCatalog?: Package[]) => Promise<boolean>;
     dismissUpdate: (liveryId: string) => void;
     updateSettings: (partial: Partial<Settings>) => Promise<void>;
     handleDownload: (livery: Livery, resolution: Resolution, simulator: Simulator) => Promise<boolean>;
@@ -296,12 +298,13 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
                 }
 
                 const body = await response.json() as {
-                    data?: { updates: Array<{
+                    data?: { updates?: Array<{
                         liveryId: string;
                         hasUpdate: boolean;
                         latestVersion?: string;
                         currentVersion: string;
                         changelog?: string | null;
+                        requiredPackages?: string[];
                     }> };
                     updates?: Array<{
                         liveryId: string;
@@ -309,18 +312,22 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
                         latestVersion?: string;
                         currentVersion: string;
                         changelog?: string | null;
+                        requiredPackages?: string[];
                     }>;
                 };
-                const data = body.data ?? { updates: body.updates ?? [] };
+                const updatesList = body.data?.updates ?? body.updates ?? [];
 
                 // Map updates to installed liveries — one entry per (liveryId, simulator) pair
                 // so that liveries installed for both FS20 and FS24 both receive updates.
                 const updates: LiveryUpdate[] = [];
-                data.updates
+                updatesList
                     .filter((u) => u.hasUpdate)
                     .forEach((u) => {
                         const matchingInstalls = installedLiveries.filter((e) => e.liveryId === u.liveryId);
                         const livery = liveries.find((l) => l.id === u.liveryId);
+                        const requiredPackages = Array.isArray(u.requiredPackages)
+                            ? u.requiredPackages.filter((slug): slug is string => typeof slug === 'string' && slug.length > 0)
+                            : undefined;
 
                         if (matchingInstalls.length === 0) {
                             updates.push({
@@ -330,6 +337,7 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
                                 hasUpdate: true,
                                 changelog: u.changelog,
                                 liveryName: livery?.name || 'Unknown',
+                                requiredPackages
                             });
                         } else {
                             matchingInstalls.forEach((installed) => {
@@ -343,6 +351,7 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
                                     installPath: installed.installPath,
                                     resolution: installed.resolution,
                                     simulator: installed.simulator,
+                                    requiredPackages
                                 });
                             });
                         }
@@ -359,10 +368,10 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
             }
         },
 
-        updateLivery: async (update: LiveryUpdate) => {
+        updateLivery: async (update: LiveryUpdate, packagesCatalog?: Package[]) => {
             const api = getAPI();
             const { liveries } = get();
-            
+
             const livery = liveries.find((l) => l.id === update.liveryId);
             if (!livery) {
                 set({ error: 'Livery not found in catalog' });
@@ -376,6 +385,43 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
 
             const resolution = update.resolution as Resolution;
             const simulator = update.simulator as Simulator;
+
+            // Merge any newly-required packages from the update payload into the livery's
+            // resolved dependency list. The update endpoint is authoritative for the new
+            // version's requirements, so a freshly-introduced package must be picked up
+            // even if the cached catalog livery doesn't list it yet.
+            let targetLivery = livery;
+            if (update.requiredPackages && update.requiredPackages.length > 0) {
+                const existingRefs = livery.requiredPackagesResolved ?? [];
+                const existingSlugs = new Set(existingRefs.map((ref) => ref.slug));
+                const catalog = packagesCatalog ?? [];
+                const slugToPackage = new Map<string, Package>();
+                catalog.forEach((p) => slugToPackage.set(p.slug, p));
+
+                const newRefs: RequiredPackageRef[] = [];
+                update.requiredPackages.forEach((slug) => {
+                    if (existingSlugs.has(slug)) return;
+                    const pkg = slugToPackage.get(slug);
+                    if (!pkg) {
+                        console.warn(`Update for livery ${update.liveryId} requires package "${slug}" which is not in the packages catalog; skipping.`);
+                        return;
+                    }
+                    newRefs.push({
+                        slug: pkg.slug,
+                        title: pkg.title,
+                        version: pkg.version,
+                        sizeBytes: pkg.sizeBytes,
+                        downloadEndpoint: pkg.downloadEndpoint
+                    });
+                });
+
+                if (newRefs.length > 0) {
+                    targetLivery = {
+                        ...livery,
+                        requiredPackagesResolved: [...existingRefs, ...newRefs]
+                    };
+                }
+            }
 
             // Uninstall old version
             if (update.installPath) {
@@ -391,8 +437,8 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
                 }
             }
 
-            // Download new version
-            const downloadSuccess = await get().handleDownload(livery, resolution, simulator);
+            // Download new version (handleDownload prompts for any missing required packages)
+            const downloadSuccess = await get().handleDownload(targetLivery, resolution, simulator);
             
             if (downloadSuccess) {
                 // Remove this update from the list

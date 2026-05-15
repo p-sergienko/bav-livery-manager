@@ -1,14 +1,19 @@
+import { useEffect } from 'react';
 import { create } from 'zustand';
-import type { Package, PackageDownloadState } from '@/types/package';
+import type { Package, PackageDownloadState, PackageUpdate } from '@/types/package';
 import type { Simulator } from '@/types/livery';
 import { useAuthStore } from '@/store/authStore';
 import type { InstalledPackageRecord } from '@/types/electron-api';
+import { PACKAGE_UPDATES_URL } from '@shared/constants';
 
 const getAPI = () => (typeof window === 'undefined' ? undefined : window.electronAPI);
 
 interface PackageState {
     downloadStates: Record<string, PackageDownloadState>;
     installedPackages: InstalledPackageRecord[];
+    availableUpdates: PackageUpdate[];
+    checkingUpdates: boolean;
+    lastUpdateCheck: number | null;
     error: string | null;
     listenerAttached: boolean;
     attachListener: () => void;
@@ -17,12 +22,18 @@ interface PackageState {
     handleDownload: (pkg: Package, simulator: Simulator) => Promise<boolean>;
     cancelDownload: (slug: string) => Promise<void>;
     handleUninstall: (slug: string, simulator: Simulator) => Promise<boolean>;
+    checkForUpdates: (catalog: Package[]) => Promise<void>;
+    updatePackage: (update: PackageUpdate, catalog: Package[]) => Promise<boolean>;
+    dismissUpdate: (slug: string, simulator?: string) => void;
     clearError: () => void;
 }
 
 export const usePackageStore = create<PackageState>((set, get) => ({
     downloadStates: {},
     installedPackages: [],
+    availableUpdates: [],
+    checkingUpdates: false,
+    lastUpdateCheck: null,
     error: null,
     listenerAttached: false,
 
@@ -160,5 +171,186 @@ export const usePackageStore = create<PackageState>((set, get) => ({
         }
     },
 
+    checkForUpdates: async (catalog: Package[]) => {
+        const installed = get().installedPackages;
+        if (installed.length === 0) {
+            set({ availableUpdates: [] });
+            return;
+        }
+
+        const slugToPackage = new Map<string, Package>();
+        catalog.forEach((p) => slugToPackage.set(p.slug, p));
+
+        const requests = installed
+            .map((entry) => {
+                const cat = slugToPackage.get(entry.slug);
+                if (!cat) return null;
+                return {
+                    packageId: cat.id,
+                    currentVersion: entry.version || '1.0.0'
+                };
+            })
+            .filter((r): r is { packageId: string; currentVersion: string } => r !== null);
+
+        if (requests.length === 0) {
+            set({ availableUpdates: [], lastUpdateCheck: Date.now() });
+            return;
+        }
+
+        set({ checkingUpdates: true });
+
+        try {
+            const authToken = useAuthStore.getState().token;
+            const headers: HeadersInit = { 'Content-Type': 'application/json' };
+            if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+
+            const response = await fetch(PACKAGE_UPDATES_URL, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ packages: requests })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Package update check failed: ${response.statusText}`);
+            }
+
+            const body = (await response.json()) as {
+                data?: { updates?: Array<{
+                    packageId: string;
+                    hasUpdate: boolean;
+                    latestVersion?: string;
+                    currentVersion: string;
+                    changelog?: string | null;
+                }> };
+                updates?: Array<{
+                    packageId: string;
+                    hasUpdate: boolean;
+                    latestVersion?: string;
+                    currentVersion: string;
+                    changelog?: string | null;
+                }>;
+            };
+            const updatesList = body.data?.updates ?? body.updates ?? [];
+
+            const idToPackage = new Map<string, Package>();
+            catalog.forEach((p) => idToPackage.set(p.id, p));
+
+            const updates: PackageUpdate[] = [];
+            updatesList
+                .filter((u) => u.hasUpdate)
+                .forEach((u) => {
+                    const cat = idToPackage.get(u.packageId);
+                    if (!cat) return;
+                    const matchingInstalls = installed.filter((e) => e.slug === cat.slug);
+                    if (matchingInstalls.length === 0) {
+                        updates.push({
+                            packageId: u.packageId,
+                            slug: cat.slug,
+                            currentVersion: u.currentVersion,
+                            latestVersion: u.latestVersion || 'unknown',
+                            hasUpdate: true,
+                            changelog: u.changelog,
+                            packageTitle: cat.title
+                        });
+                    } else {
+                        matchingInstalls.forEach((entry) => {
+                            updates.push({
+                                packageId: u.packageId,
+                                slug: cat.slug,
+                                currentVersion: u.currentVersion,
+                                latestVersion: u.latestVersion || 'unknown',
+                                hasUpdate: true,
+                                changelog: u.changelog,
+                                packageTitle: cat.title,
+                                simulator: entry.simulator,
+                                installPath: entry.installPath
+                            });
+                        });
+                    }
+                });
+
+            set({ availableUpdates: updates, lastUpdateCheck: Date.now(), checkingUpdates: false });
+        } catch (error) {
+            console.error('Failed to check for package updates', error);
+            set({ checkingUpdates: false });
+        }
+    },
+
+    updatePackage: async (update: PackageUpdate, catalog: Package[]) => {
+        const api = getAPI();
+        if (!api?.uninstallPackage || !api?.downloadPackage) {
+            set({ error: 'Electron APIs are not available.' });
+            return false;
+        }
+
+        const pkg = catalog.find((p) => p.id === update.packageId || p.slug === update.slug);
+        if (!pkg) {
+            set({ error: 'Package not found in catalog' });
+            return false;
+        }
+        if (!update.simulator) {
+            set({ error: 'Missing simulator information for package update' });
+            return false;
+        }
+
+        const simulator = update.simulator as Simulator;
+
+        try {
+            const result = await api.uninstallPackage(update.slug, simulator);
+            if (!result?.success) {
+                throw new Error(result?.error || 'Failed to uninstall old package version');
+            }
+            await get().refreshInstalled();
+        } catch (error) {
+            console.error('Failed to uninstall during package update', error);
+            set({ error: error instanceof Error ? error.message : 'Failed to remove old package version' });
+            return false;
+        }
+
+        const success = await get().handleDownload(pkg, simulator);
+        if (success) {
+            set((state) => ({
+                availableUpdates: state.availableUpdates.filter(
+                    (u) => !(u.packageId === update.packageId && u.simulator === update.simulator)
+                )
+            }));
+            return true;
+        }
+        return false;
+    },
+
+    dismissUpdate: (slug: string, simulator?: string) => {
+        set((state) => ({
+            availableUpdates: state.availableUpdates.filter((u) => {
+                if (u.slug !== slug) return true;
+                if (simulator && u.simulator !== simulator) return true;
+                return false;
+            })
+        }));
+    },
+
     clearError: () => set({ error: null })
 }));
+
+const PACKAGE_UPDATE_CHECK_THROTTLE_MS = 5 * 60 * 1000;
+
+export const useInitializePackageStore = (packagesCatalog: Package[] | undefined) => {
+    const installedCount = usePackageStore((state) => state.installedPackages.length);
+    const lastUpdateCheck = usePackageStore((state) => state.lastUpdateCheck);
+
+    useEffect(() => {
+        const store = usePackageStore.getState();
+        store.attachListener();
+        void store.refreshInstalled();
+    }, []);
+
+    useEffect(() => {
+        if (!packagesCatalog || packagesCatalog.length === 0) return;
+        if (installedCount === 0) return;
+        const now = Date.now();
+        if (lastUpdateCheck && now - lastUpdateCheck < PACKAGE_UPDATE_CHECK_THROTTLE_MS) return;
+        usePackageStore.getState().checkForUpdates(packagesCatalog).catch((error) =>
+            console.error('Failed to auto-check for package updates', error)
+        );
+    }, [packagesCatalog, installedCount, lastUpdateCheck]);
+};

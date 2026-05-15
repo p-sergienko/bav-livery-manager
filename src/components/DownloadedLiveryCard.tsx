@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import type { InstalledLiveryRecord } from '@/types/electron-api';
 import type { Livery, LiveryUpdate } from '@/types/livery';
+import { useLiveryStore } from '@/store/liveryStore';
+import { usePackageStore } from '@/store/packageStore';
+import { formatBytes } from '@/utils/formatBytes';
 import styles from './DownloadedLiveryCard.module.css';
 
 interface DownloadedLiveryCardProps {
@@ -30,6 +33,15 @@ const UpdateIcon = () => (
 export const DownloadedLiveryCard = ({ entry, liveryMatch, update, onUninstall, onUpdate }: DownloadedLiveryCardProps) => {
     const [busy, setBusy] = useState(false);
     const [updating, setUpdating] = useState(false);
+
+    const downloadStateKey = entry.originalName ?? entry.liveryName ?? '';
+    const downloadState = useLiveryStore((state) =>
+        downloadStateKey ? state.downloadStates[downloadStateKey] : undefined
+    );
+    const dependencySlug = downloadState?.dependencySlug;
+    const dependencyDownloadState = usePackageStore((state) =>
+        dependencySlug ? state.downloadStates[dependencySlug] : undefined
+    );
 
     const handleUninstall = async () => {
         setBusy(true);
@@ -66,13 +78,20 @@ export const DownloadedLiveryCard = ({ entry, liveryMatch, update, onUninstall, 
     };
 
     const hasUpdate = Boolean(update);
-    const disabled = busy || updating;
+    const isDepPhase = Boolean(downloadState?.dependencyTitle);
+    const live = isDepPhase ? dependencyDownloadState : undefined;
+    const overlayProgress = Math.round(live?.progress ?? downloadState?.progress ?? 0);
+    const overlayExtracting = live?.extracting ?? downloadState?.extracting ?? false;
+    const overlayDownloaded = live?.downloaded ?? downloadState?.downloaded;
+    const overlayTotal = live?.total ?? downloadState?.total;
+    const isDownloading = Boolean(downloadState);
+    const disabled = busy || updating || isDownloading;
 
     return (
         <article className={styles.card} aria-label={`${entry.originalName ?? entry.liveryName ?? 'Livery'} update`}>
             <div className={styles.imageContainer}>
                 <span className={styles.simulatorBadge}>{simulatorLabel}</span>
-                {hasUpdate && <span className={styles.updateBadge}>Update</span>}
+                {hasUpdate && !isDownloading && <span className={styles.updateBadge}>Update</span>}
 
                 {preview ? (
                     <img className={styles.image} src={preview} alt={`${entry.originalName} preview`} loading="lazy" />
@@ -84,6 +103,46 @@ export const DownloadedLiveryCard = ({ entry, liveryMatch, update, onUninstall, 
                             <polyline points="21 15 16 10 5 21" />
                         </svg>
                         <span>No preview</span>
+                    </div>
+                )}
+
+                {downloadState && (
+                    <div className={classNames(styles.overlay, overlayExtracting && styles.overlayExtracting)}>
+                        {overlayExtracting ? (
+                            <>
+                                <div className={styles.overlaySpinner} />
+                                <span className={styles.overlayTitle}>Installing…</span>
+                                <span className={styles.overlaySubtitle}>
+                                    {isDepPhase
+                                        ? `Extracting ${downloadState.dependencyTitle}`
+                                        : 'Extracting files'}
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                <span className={styles.overlayTitle}>
+                                    {isDepPhase
+                                        ? (downloadState.dependencyTotal && downloadState.dependencyTotal > 1
+                                            ? `Required package (${downloadState.dependencyIndex}/${downloadState.dependencyTotal})…`
+                                            : 'Required package…')
+                                        : 'Updating…'}
+                                </span>
+                                {isDepPhase && (
+                                    <span className={styles.overlaySubtitle}>{downloadState.dependencyTitle}</span>
+                                )}
+                                <span className={styles.overlayPercent}>{overlayProgress}%</span>
+                                <div className={styles.overlayProgressBar}>
+                                    <div className={styles.overlayProgressFill} style={{ width: `${overlayProgress}%` }} />
+                                </div>
+                                {overlayDownloaded && overlayTotal ? (
+                                    <span className={styles.overlaySubtitle}>
+                                        {formatBytes(overlayDownloaded)} / {formatBytes(overlayTotal)}
+                                    </span>
+                                ) : isDepPhase ? (
+                                    <span className={styles.overlaySubtitle}>Livery will install next</span>
+                                ) : null}
+                            </>
+                        )}
                     </div>
                 )}
             </div>

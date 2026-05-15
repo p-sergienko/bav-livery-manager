@@ -1,9 +1,13 @@
 import { useMemo, useState } from 'react';
 import { DownloadedLiveryCard } from '@/components/DownloadedLiveryCard';
+import { DownloadedPackageCard } from '@/components/DownloadedPackageCard';
 import { useLiveryStore } from '@/store/liveryStore';
+import { usePackageStore } from '@/store/packageStore';
 import { useLiveriesQuery } from '@/hooks/useLiveriesQuery';
+import { usePackagesQuery } from '@/hooks/usePackagesQuery';
 import type { InstalledLiveryRecord } from '@/types/electron-api';
 import type { LiveryUpdate } from '@/types/livery';
+import type { PackageUpdate } from '@/types/package';
 import styles from './DownloadsPage.module.css';
 import { Download } from 'react-feather';
 
@@ -29,12 +33,26 @@ export const DownloadsPage = () => {
     const checkForUpdates = useLiveryStore((state) => state.checkForUpdates);
     const checkingUpdates = useLiveryStore((state) => state.checkingUpdates);
 
+    const packageUpdates = usePackageStore((state) => state.availableUpdates);
+    const updatePackage = usePackageStore((state) => state.updatePackage);
+    const dismissPackageUpdate = usePackageStore((state) => state.dismissUpdate);
+    const checkForPackageUpdates = usePackageStore((state) => state.checkForUpdates);
+    const checkingPackageUpdates = usePackageStore((state) => state.checkingUpdates);
+    const { data: packagesData } = usePackagesQuery();
+    const packagesCatalog = useMemo(() => packagesData ?? [], [packagesData]);
+
+    const packageUpdateKey = (u: PackageUpdate) => `${u.packageId}-${u.simulator ?? ''}`;
+
+    const handlePackageUpdate = async (update: PackageUpdate) => {
+        await updatePackage(update, packagesCatalog);
+    };
+
     const handleUninstall = async (entry: InstalledLiveryRecord): Promise<void> => {
         await uninstallEntry(entry);
     };
 
     const handleUpdate = async (update: LiveryUpdate): Promise<void> => {
-        await updateLivery(update);
+        await updateLivery(update, packagesCatalog);
     };
 
     const [page, setPage] = useState(1);
@@ -96,7 +114,7 @@ export const DownloadsPage = () => {
         setUpdatingAll(true);
         try {
             for (const update of toUpdate) {
-                await updateLivery(update);
+                await updateLivery(update, packagesCatalog);
             }
         } finally {
             setUpdatingAll(false);
@@ -109,19 +127,25 @@ export const DownloadsPage = () => {
     };
 
     const visibleUpdateCount = simFilter === 'all' ? availableUpdates.length : filterCounts[simFilter];
+    const totalAvailable = allUpdateEntries.length + packageUpdates.length;
+    const anyChecking = checkingUpdates || checkingPackageUpdates;
+    const refreshAll = () => {
+        void checkForUpdates();
+        void checkForPackageUpdates(packagesCatalog);
+    };
 
     return (
         <section className={styles.page}>
             <header id="updatePage" className={styles.pageHeader}>
                 <div className={styles.headerCopy}>
-                    <h1 className={styles.pageHeaderText}>Livery Updates</h1>
+                    <h1 className={styles.pageHeaderText}>Updates</h1>
                     <p className={styles.headerSubtitle}>
-                        {allUpdateEntries.length > 0 ? (
+                        {totalAvailable > 0 ? (
                             <span className={styles.updateCount}>
-                                {allUpdateEntries.length} Update{allUpdateEntries.length === 1 ? '' : 's'} Available
+                                {totalAvailable} Update{totalAvailable === 1 ? '' : 's'} Available
                             </span>
                         ) : (
-                            <span>All liveries are up to date</span>
+                            <span>Everything is up to date</span>
                         )}
                     </p>
                 </div>
@@ -134,13 +158,13 @@ export const DownloadsPage = () => {
                             disabled={updatingAll || checkingUpdates}
                         >
                             <Download size={18}/>
-                            {updatingAll ? 'Updating All…' : `Update All (${visibleUpdateCount})`}
+                            {updatingAll ? 'Updating All…' : `Update All Liveries (${visibleUpdateCount})`}
                         </button>
                     )}
                     <button
-                        className={classNames(styles.refreshButton, checkingUpdates && styles.refreshButtonSpin)}
-                        onClick={() => checkForUpdates()}
-                        disabled={checkingUpdates}
+                        className={classNames(styles.refreshButton, anyChecking && styles.refreshButtonSpin)}
+                        onClick={refreshAll}
+                        disabled={anyChecking}
                         aria-label="Check for updates"
                         title="Check for updates"
                     >
@@ -201,32 +225,68 @@ export const DownloadsPage = () => {
                 </div>
 
                 <div className={styles.contentArea}>
-                {paginated.length ? (
-                    <div className={styles.grid}>
-                        {paginated.map((entry) => {
-                            const liveryMatch = liveries.find((l) => l.id === entry.liveryId || l.name === entry.originalName);
-                            const update = updatesMap.get(`${entry.liveryId}-${entry.simulator ?? ''}`);
+                {packageUpdates.length > 0 && (
+                    <section className={styles.updatesSection}>
+                        <div className={styles.sectionHeader}>
+                            <h2 className={styles.sectionTitle}>Package Updates</h2>
+                            <span className={styles.sectionCount}>{packageUpdates.length}</span>
+                        </div>
+                        <div className={styles.grid}>
+                            {packageUpdates.map((update) => {
+                                const key = packageUpdateKey(update);
+                                const packageMatch = packagesCatalog.find(
+                                    (p) => p.id === update.packageId || p.slug === update.slug
+                                );
+                                return (
+                                    <DownloadedPackageCard
+                                        key={key}
+                                        update={update}
+                                        packageMatch={packageMatch}
+                                        onUpdate={handlePackageUpdate}
+                                        onDismiss={dismissPackageUpdate}
+                                    />
+                                );
+                            })}
+                        </div>
+                    </section>
+                )}
 
-                            return (
-                                <DownloadedLiveryCard
-                                    key={entry.installPath ?? `${entry.liveryId}-${entry.simulator}`}
-                                    entry={entry}
-                                    liveryMatch={liveryMatch}
-                                    update={update}
-                                    onUninstall={handleUninstall}
-                                    onUpdate={handleUpdate}
-                                />
-                            );
-                        })}
-                    </div>
-                ) : (
+                {paginated.length > 0 && (
+                    <section className={styles.updatesSection}>
+                        {packageUpdates.length > 0 && (
+                            <div className={styles.sectionHeader}>
+                                <h2 className={styles.sectionTitle}>Livery Updates</h2>
+                                <span className={styles.sectionCount}>{allUpdateEntries.length}</span>
+                            </div>
+                        )}
+                        <div className={styles.grid}>
+                            {paginated.map((entry) => {
+                                const liveryMatch = liveries.find((l) => l.id === entry.liveryId || l.name === entry.originalName);
+                                const update = updatesMap.get(`${entry.liveryId}-${entry.simulator ?? ''}`);
+
+                                return (
+                                    <DownloadedLiveryCard
+                                        key={entry.installPath ?? `${entry.liveryId}-${entry.simulator}`}
+                                        entry={entry}
+                                        liveryMatch={liveryMatch}
+                                        update={update}
+                                        onUninstall={handleUninstall}
+                                        onUpdate={handleUpdate}
+                                    />
+                                );
+                            })}
+                        </div>
+                    </section>
+                )}
+
+                {paginated.length === 0 && packageUpdates.length === 0 && (
                     <div className={styles.emptyState}>
                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden>
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                             <polyline points="7 10 12 15 17 10" />
                             <line x1="12" y1="15" x2="12" y2="3" />
                         </svg>
-                        <p>No liveries with pending updates.</p>
+                        <p>Nothing pending — your liveries and packages are up to date.</p>
                     </div>
                 )}
                 </div>

@@ -9,9 +9,11 @@ import { DownloadsPage } from '@/pages/DownloadsPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { useInitializeLiveryStore } from '@/store/liveryStore';
+import { useInitializePackageStore } from '@/store/packageStore';
 import { useSessionHeartbeat } from '@/hooks/useSessionHeartbeat';
 import { useLiveriesQuery } from '@/hooks/useLiveriesQuery';
 import { useInstalledLiveriesQuery } from '@/hooks/useInstalledLiveriesQuery';
+import { usePackagesQuery } from '@/hooks/usePackagesQuery';
 import { InformationPage } from './pages/InformationPage';
 import {ThemeSync} from "@/components/ThemeSync";
 
@@ -20,6 +22,8 @@ export const App = () => {
   useSessionHeartbeat();
   useLiveriesQuery();
   useInstalledLiveriesQuery();
+  const { data: packagesData } = usePackagesQuery();
+  useInitializePackageStore(packagesData);
 
   return (
     <HashRouter>

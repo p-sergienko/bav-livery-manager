@@ -30,3 +30,15 @@ export interface PackageDownloadState {
     extracting?: boolean;
     simulator: 'FS20' | 'FS24';
 }
+
+export interface PackageUpdate {
+    packageId: string;
+    slug: string;
+    currentVersion: string;
+    latestVersion: string;
+    hasUpdate: boolean;
+    changelog?: string | null;
+    packageTitle?: string;
+    simulator?: string;
+    installPath?: string;
+}

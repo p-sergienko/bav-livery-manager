@@ -431,3 +431,43 @@
 .pageHeaderText {
     font-family: 'Majesty', sans-serif;
 }
+
+.updatesSection {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 28px;
+}
+
+.updatesSection:last-child {
+    margin-bottom: 0;
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sectionTitle {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.sectionCount {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
