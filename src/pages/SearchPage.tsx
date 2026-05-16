@@ -768,22 +768,6 @@ export const SearchPage = () => {
                                                 }
                                                 isInstalled={(resolution, simulator) => isVariantInstalled(livery, resolution, simulator)}
                                                 onDownload={(resolution: Resolution, simulator: Simulator) => {
-                                                    if (livery.aircraftProfileName === 'A35K') {
-                                                        setWarningMessage(
-                                                            <>
-                                                                Note: The A350-1000 livery require additional configuration. Learn
-                                                                more:{' '}
-                                                                <a href="https://flightsim.to/addon/105315/a35k-speedcore"
-                                                                   onClick={(e) => {
-                                                                       e.preventDefault();
-                                                                       window.electronAPI?.openExternalLink('https://flightsim.to/addon/105315/a35k-speedcore');
-                                                                   }}
-                                                                   style={{textDecoration: 'underline'}}>
-                                                                    A35K Speedcore
-                                                                </a>
-                                                            </>
-                                                        );
-                                                    }
                                                     const variant = findLiveryVariant(liveries, livery, resolution, simulator) ?? livery;
                                                     return handleDownload(variant, resolution, simulator);
                                                 }}
