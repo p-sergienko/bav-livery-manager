@@ -4,7 +4,7 @@ import {NextFlightCard} from './NextFlightCard';
 import {UpdateBadge} from './UpdateBadge';
 import {APP_VERSION} from '@/constants/appVersion';
 import styles from './Sidebar.module.css';
-import {Package as PackageIcon, RotateCw} from 'react-feather';
+import {Package as PackageIcon, Upload} from 'react-feather';
 import {useState} from "react";
 import {useThemeStore} from "@/store/themeStore";
 import {useNextFlightQuery} from "@/hooks/useNextFlightQuery";
@@ -23,7 +23,7 @@ const Icon = ({name}: { name: string }) => {
     switch (name) {
         case 'download':
             return (
-                <RotateCw/>
+                <Upload/>
             );
         case 'package':
             return (
