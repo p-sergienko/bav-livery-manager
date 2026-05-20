@@ -540,7 +540,7 @@ export const SearchPage = () => {
         setDisplayedPages([1]);
         setCurrentPage(1);
         contentAreaRef.current?.scrollTo({top: 0, behavior: 'instant'});
-    }, [dedupedLiveries]);
+    }, [filters, debouncedSearchTerm, viewMode]);
 
     useEffect(() => {
         handleScroll();
