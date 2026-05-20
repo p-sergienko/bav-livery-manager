@@ -71,29 +71,9 @@
     align-items: center;
 }
 
-.viewToggle h4 {
-    margin: 0;
-    font-weight: 500;
-    font-size: 0.9rem;
-}
-
-.viewToggleButton {
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    padding: 0.45rem 1.1rem;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: background 0.2s ease, color 0.2s ease;
-}
-
-.viewToggleButton+.viewToggleButton {
-    border-left: 1px solid var(--border);
-}
-
-.viewToggleButtonActive {
-    color: var(--text);
-    background: rgba(255, 255, 255, 0.08);
+.viewModeContent {
+    right: 0;
+    left: auto;
 }
 
 /* ─── Toolbar ─── */

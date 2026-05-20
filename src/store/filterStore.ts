@@ -12,16 +12,18 @@ const baseFilters: FilterState = {
     category: 'all',
 };
 
+type ViewMode = 'all' | 'installed' | 'non-installed';
+
 interface FilterStore {
     filters: FilterState;
     searchTerm: string;
     showFilters: boolean;
-    viewMode: 'all' | 'installed';
+    viewMode: ViewMode;
     setFilter: (key: FilterKey, value: string) => void;
     setFilters: (updater: (prev: FilterState) => FilterState) => void;
     setSearchTerm: (term: string) => void;
     setShowFilters: (show: boolean) => void;
-    setViewMode: (mode: 'all' | 'installed') => void;
+    setViewMode: (mode: ViewMode) => void;
     clearFilters: () => void;
 }
 
@@ -51,4 +53,4 @@ export const useFilterStore = create<FilterStore>((set) => ({
 }));
 
 export {baseFilters};
-export type {FilterKey, FilterState};
+export type {FilterKey, FilterState, ViewMode};

@@ -1,4 +1,5 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import * as NavigationMenu from '@radix-ui/react-navigation-menu';
 import {LiveryCard} from '@/components/LiveryCard';
 import {LiveryCardSkeleton} from '@/components/LiveryCardSkeleton';
 import {ITEMS_PER_PAGE} from '@/utils/livery';
@@ -13,9 +14,10 @@ import {FilterPanel} from '@/components/FilterPanel';
 import {SearchBar} from '@/components/SearchBar';
 import {useFilterStore} from '@/store/filterStore';
 import {useDebounce} from '@/hooks/useDebounce';
-import type {FilterKey, FilterState} from '@/store/filterStore';
+import type {FilterKey, FilterState, ViewMode} from '@/store/filterStore';
 import type {ReactNode} from 'react';
 import styles from './SearchPage.module.css';
+import menuStyles from '@/components/FilterPanel.module.css';
 
 const uniqueStrings = (values: Array<string | null | undefined>) => {
     const set = new Set<string>();
@@ -195,7 +197,7 @@ const filterLiveries = (
     liveries: Livery[],
     filters: FilterState,
     searchTerm: string,
-    viewMode: 'all' | 'installed',
+    viewMode: ViewMode,
     installedLiveries: InstalledLiveryRecord[]
 ) => {
     const tokens = searchTerm.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -229,14 +231,14 @@ const filterLiveries = (
         );
     });
 
-    if (viewMode === 'installed') {
-        const isVariantInstalled = (livery: Livery) => {
-            return !!installedLiveries.find((l) => l.liveryId === livery.id);
-        };
-        return matches.filter((livery) => isVariantInstalled(livery));
-    }
+    if (viewMode === 'all') return matches;
 
-    return matches;
+    const isVariantInstalled = (livery: Livery) =>
+        installedLiveries.some((l) => l.liveryId === livery.id);
+
+    return viewMode === 'installed'
+        ? matches.filter(isVariantInstalled)
+        : matches.filter((livery) => !isVariantInstalled(livery));
 };
 
 const numberFormatter = new Intl.NumberFormat(undefined, {maximumFractionDigits: 0});
@@ -250,6 +252,68 @@ const CloseIcon = () => (
         <path d="M18 6L6 18M6 6l12 12"/>
     </svg>
 );
+
+const ChevronDown = () => (
+    <svg className={menuStyles.chevron} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+        <path d="M6 9l6 6 6-6"/>
+    </svg>
+);
+
+const CheckIcon = () => (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
+        <path d="M20 6L9 17l-5-5"/>
+    </svg>
+);
+
+const VIEW_MODE_LABELS: Record<ViewMode, string> = {
+    all: 'All',
+    installed: 'Installed',
+    'non-installed': 'Not installed',
+};
+const VIEW_MODE_ORDER: ViewMode[] = ['all', 'installed', 'non-installed'];
+
+const ViewModeMenu = ({value, onChange}: {value: ViewMode; onChange: (mode: ViewMode) => void}) => {
+    const [menuValue, setMenuValue] = useState('');
+    const handleSelect = (mode: ViewMode) => {
+        onChange(mode);
+        setMenuValue('');
+    };
+
+    return (
+        <NavigationMenu.Root value={menuValue} onValueChange={setMenuValue} className={menuStyles.navRoot}>
+            <NavigationMenu.List className={menuStyles.navList}>
+                <NavigationMenu.Item value="view" className={menuStyles.navItem}>
+                    <NavigationMenu.Trigger className={menuStyles.trigger} aria-label="Display liveries">
+                        <span className={menuStyles.triggerName}>Show:</span>
+                        <span className={menuStyles.triggerValue}>{VIEW_MODE_LABELS[value]}</span>
+                        <ChevronDown/>
+                    </NavigationMenu.Trigger>
+                    <NavigationMenu.Content className={`${menuStyles.content} ${styles.viewModeContent}`}>
+                        <ul className={menuStyles.optionList} role="listbox" aria-label="Display liveries">
+                            {VIEW_MODE_ORDER.map((mode) => {
+                                const selected = value === mode;
+                                return (
+                                    <li key={mode}>
+                                        <button
+                                            type="button"
+                                            role="option"
+                                            aria-selected={selected}
+                                            className={`${menuStyles.option} ${selected ? menuStyles.optionSelected : ''}`}
+                                            onClick={() => handleSelect(mode)}
+                                        >
+                                            <span className={menuStyles.optionCheck}>{selected && <CheckIcon/>}</span>
+                                            <span className={menuStyles.optionLabel}>{VIEW_MODE_LABELS[mode]}</span>
+                                        </button>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </NavigationMenu.Content>
+                </NavigationMenu.Item>
+            </NavigationMenu.List>
+        </NavigationMenu.Root>
+    );
+};
 
 
 export const SearchPage = () => {
@@ -592,21 +656,7 @@ export const SearchPage = () => {
 
                     </div>
                     <div className={styles.viewToggle}>
-                        <h4>Display liveries:</h4>
-                        <button
-                            type="button"
-                            className={classNames(styles.simChip, viewMode === 'all' && styles.simChipActive)}
-                            onClick={() => setViewMode('all')}
-                        >
-                            All
-                        </button>
-                        <button
-                            type="button"
-                            className={classNames(styles.simChip, viewMode === 'installed' && styles.simChipActive)}
-                            onClick={() => setViewMode('installed')}
-                        >
-                            Installed
-                        </button>
+                        <ViewModeMenu value={viewMode} onChange={setViewMode}/>
                     </div>
                 </header>
 
