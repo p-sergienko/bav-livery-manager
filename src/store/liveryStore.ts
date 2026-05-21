@@ -686,6 +686,14 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
                     throw new Error(result.error || 'Uninstall failed');
                 }
                 await get().refreshInstalled();
+                set((state) => ({
+                    availableUpdates: state.availableUpdates.filter((u) => {
+                        if (u.installPath && installPath) {
+                            return u.installPath !== installPath;
+                        }
+                        return !(u.liveryId === livery.id && u.simulator === simulator);
+                    })
+                }));
                 return true;
             } catch (error) {
                 console.error('Uninstall failed', error);
@@ -707,6 +715,14 @@ export const useLiveryStore = create<LiveryState>((set, get) => {
                     throw new Error(result.error || 'Uninstall failed');
                 }
                 await get().refreshInstalled();
+                set((state) => ({
+                    availableUpdates: state.availableUpdates.filter((u) => {
+                        if (u.installPath && entry.installPath) {
+                            return u.installPath !== entry.installPath;
+                        }
+                        return !(u.liveryId === entry.liveryId && u.simulator === entry.simulator);
+                    })
+                }));
                 return true;
             } catch (error) {
                 console.error('Uninstall failed', error);
