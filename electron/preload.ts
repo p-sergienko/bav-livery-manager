@@ -30,7 +30,7 @@ const INVOKE_CHANNELS = [
     'get-app-version',
     'get-disk-usage',
     'open-path',
-    // Meta Editor channels
+
     'meta-select-livery-directories',
     'meta-scan-parent-directory',
     'meta-read-manifest',
@@ -226,7 +226,6 @@ const api: ElectronAPI = {
         return ipcRenderer.invoke('open-path', targetPath);
     },
 
-    // ─── Meta Editor API ──────────────────────────────────────────────────────
     metaSelectLiveryDirectories: () => {
         ensureInvokeChannel('meta-select-livery-directories');
         return ipcRenderer.invoke('meta-select-livery-directories');

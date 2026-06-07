@@ -5,6 +5,12 @@ import styles from './TextureConfigPanel.module.css';
 
 type ScanState = 'idle' | 'scanning' | 'done';
 
+const TEXTURE_CFG_PLACEHOLDER = [
+    '[fltsim]',
+    'fallback.1=..\\..\\..\\..\\AircraftFolder\\texture',
+    'fallback.2=..\\..\\..\\..\\AircraftFolder\\texture.White',
+].join('\n');
+
 export function MetaTextureConfigPanel() {
     const { liveries, selectedIds } = useMetaManifestStore();
     const selected = liveries.filter((l) => selectedIds.has(l.id) && !l.loadError);
@@ -18,6 +24,12 @@ export function MetaTextureConfigPanel() {
     const [scanResults, setScanResults] = useState<MetaTextureCfgScanResult[]>([]);
     const [content, setContent] = useState('');
     const [saving, setSaving] = useState(false);
+
+    function saveButtonLabel() {
+        if (saving) return 'Writing…';
+        const count = `${selected.length} livery${selected.length !== 1 ? 's' : ''}`;
+        return isEditMode ? `Save to ${count}` : `Write to ${count}`;
+    }
     const [saveResults, setSaveResults] = useState<MetaTextureCfgWriteResult[] | null>(null);
 
     const doScan = useCallback(async (dirs: string[], signal: { cancelled: boolean }) => {
@@ -148,11 +160,7 @@ export function MetaTextureConfigPanel() {
                         className={styles.textarea}
                         value={content}
                         onChange={(e) => { setContent(e.target.value); setSaveResults(null); }}
-                        placeholder={
-                            isEditMode
-                                ? ''
-                                : '[fltsim]\nfallback.1=..\\..\\..\\..\\AircraftFolder\\texture\nfallback.2=..\\..\\..\\..\\AircraftFolder\\texture.White'
-                        }
+                        placeholder={isEditMode ? '' : TEXTURE_CFG_PLACEHOLDER}
                         spellCheck={false}
                     />
                     <div className={styles.actions}>
@@ -161,11 +169,7 @@ export function MetaTextureConfigPanel() {
                             onClick={handleSave}
                             disabled={saving || !content.trim()}
                         >
-                            {saving
-                                ? 'Writing…'
-                                : isEditMode
-                                ? `Save to ${selected.length} livery${selected.length !== 1 ? 's' : ''}`
-                                : `Write to ${selected.length} livery${selected.length !== 1 ? 's' : ''}`}
+                            {saveButtonLabel()}
                         </button>
                     </div>
                 </div>

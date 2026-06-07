@@ -80,10 +80,6 @@
           "BAV-Livery-Manager.png",
           "BAV-Livery-Manager.ico"
         ]
-      },
-      {
-        "from": "resources/MSFSLayoutGenerator.exe",
-        "to": "MSFSLayoutGenerator.exe"
       }
     ],
     "files": [

@@ -1,7 +1,7 @@
 import path from 'node:path';
 import fs from 'fs-extra';
-import { app, dialog, ipcMain, shell } from 'electron';
-import { spawn, type ChildProcess } from 'child_process';
+import { dialog, ipcMain, shell } from 'electron';
+import { generateLayout } from 'msfs-layout-generator';
 import { ZipArchive } from 'archiver';
 import type { OpenDialogOptions } from 'electron';
 import type { AppContext, DownloadResult, Settings } from '../types';
@@ -471,10 +471,7 @@ export function registerIpcHandlers(appContext: AppContext) {
         }
     });
 
-    // ─── MetaBird / Meta Editor handlers ───────────────────────────────────────
-
     let metaCancelRequested = false;
-    let metaActiveProc: ChildProcess | null = null;
 
     const META_MANIFEST_KEY_ORDER = [
         'dependencies', 'content_type', 'title', 'manufacturer', 'package_version',
@@ -611,15 +608,8 @@ export function registerIpcHandlers(appContext: AppContext) {
         return null;
     }
 
-    function metaGetExePath(): string {
-        return app.isPackaged
-            ? path.join(process.resourcesPath, 'MSFSLayoutGenerator.exe')
-            : path.join(process.cwd(), 'resources', 'MSFSLayoutGenerator.exe');
-    }
-
     function metaLogTimestamp(): string {
-        const d = new Date();
-        return `[${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}]`;
+        return `[${new Date().toLocaleTimeString('en-GB', { hour12: false })}]`;
     }
 
     function metaLog(msg: string) {
@@ -699,11 +689,6 @@ export function registerIpcHandlers(appContext: AppContext) {
 
     ipcMain.handle('meta-run-layout-generator', async (_event, workspaceDir: string) => {
         metaCancelRequested = false;
-        const exePath = metaGetExePath();
-        if (!(await fs.pathExists(exePath))) {
-            metaLog(`ERROR: MSFSLayoutGenerator.exe not found at ${exePath}`);
-            return false;
-        }
         const layoutDirs = await metaFindLayoutDirsRecursively(workspaceDir);
         if (layoutDirs.length === 0) { metaLog('No packages with layout.json found in workspace'); return false; }
 
@@ -713,27 +698,11 @@ export function registerIpcHandlers(appContext: AppContext) {
 
         for (const dir of layoutDirs) {
             if (metaCancelRequested) { metaLog('Cancelled'); break; }
-            const pkgName = path.basename(dir);
-            metaLog(`Processing: ${pkgName}`);
+            metaLog(`Processing: ${path.basename(dir)}`);
             try {
-                await new Promise<void>((resolve, reject) => {
-                    const proc = spawn(exePath, [path.join(dir, 'layout.json')], { cwd: dir, windowsHide: true });
-                    metaActiveProc = proc;
-                    proc.stdout?.on('data', (data: Buffer) => {
-                        data.toString().split(/\r?\n/).filter(Boolean).forEach((line) => metaLog(`  ${line}`));
-                    });
-                    proc.stderr?.on('data', (data: Buffer) => {
-                        data.toString().split(/\r?\n/).filter(Boolean).forEach((line) => metaLog(`  ${line}`));
-                    });
-                    proc.on('close', (code) => {
-                        metaActiveProc = null;
-                        if (metaCancelRequested) resolve();
-                        else if (code === 0) resolve();
-                        else reject(new Error(`Exited with code ${code}`));
-                    });
-                    proc.on('error', (err) => { metaActiveProc = null; reject(err); });
-                });
-                if (!metaCancelRequested) { metaLog(`  ✓ layout.json regenerated`); success++; }
+                await generateLayout(dir, { force: true, quiet: true });
+                metaLog('  ✓ layout.json regenerated');
+                success++;
             } catch (err) {
                 metaLog(`  ✗ ${err instanceof Error ? err.message : String(err)}`);
                 failed++;
@@ -781,7 +750,6 @@ export function registerIpcHandlers(appContext: AppContext) {
 
     ipcMain.handle('meta-cancel-finaliser', () => {
         metaCancelRequested = true;
-        if (metaActiveProc) { metaActiveProc.kill(); metaActiveProc = null; }
         metaLog('Cancelling...');
     });
 
