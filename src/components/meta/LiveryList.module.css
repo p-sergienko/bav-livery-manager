@@ -53,8 +53,13 @@
   transition: border-color 0.15s;
 }
 
-.searchInput:focus { border-color: var(--accent); }
-.searchInput::placeholder { color: var(--text-muted); }
+.searchInput:focus {
+  border-color: var(--accent);
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+}
 
 .clearBtn {
   position: absolute;
@@ -70,7 +75,9 @@
   padding: 0 2px;
 }
 
-.clearBtn:hover { color: var(--text-primary); }
+.clearBtn:hover {
+  color: var(--text-primary);
+}
 
 .noResults {
   list-style: none;
@@ -99,9 +106,13 @@
   font-family: inherit;
 }
 
-.linkBtn:hover { text-decoration: underline; }
+.linkBtn:hover {
+  text-decoration: underline;
+}
 
-.divider { color: var(--text-muted); }
+.divider {
+  color: var(--text-muted);
+}
 
 .selectedCount {
   margin-left: auto;
@@ -128,9 +139,17 @@
   min-width: 0;
 }
 
-.item:hover { background: var(--surface-elevated); }
-.itemSelected { background: rgba(79, 126, 247, 0.12) !important; }
-.itemError { opacity: 0.5; }
+.item:hover {
+  background: var(--surface-elevated);
+}
+
+.itemSelected {
+  background: rgba(79, 126, 247, 0.12) !important;
+}
+
+.itemError {
+  opacity: 0.5;
+}
 
 .checkbox {
   width: 16px;
@@ -138,9 +157,6 @@
   flex-shrink: 0;
   color: var(--accent);
 }
-
-.checkboxRect { fill: var(--accent); }
-.checkboxEmpty { stroke: var(--border-strong); stroke-width: 1.5; }
 
 .itemContent {
   flex: 1;
@@ -193,8 +209,13 @@
   transition: opacity 0.1s, color 0.1s;
 }
 
-.item:hover .removeBtn { opacity: 1; }
-.removeBtn:hover { color: var(--danger); }
+.item:hover .removeBtn {
+  opacity: 1;
+}
+
+.removeBtn:hover {
+  color: var(--danger);
+}
 
 .empty {
   flex: 1;

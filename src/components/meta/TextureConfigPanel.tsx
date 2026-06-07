@@ -15,9 +15,11 @@ export function MetaTextureConfigPanel() {
     const { liveries, selectedIds } = useMetaManifestStore();
     const selected = liveries.filter((l) => selectedIds.has(l.id) && !l.loadError);
 
-    const selectedKey = useMemo(
-        () => [...selectedIds].sort().join(','),
-        [selectedIds]
+    const selectedDirPaths = useMemo(
+        () => liveries
+            .filter((l) => selectedIds.has(l.id) && !l.loadError)
+            .map((l) => l.dirPath),
+        [liveries, selectedIds]
     );
 
     const [scanState, setScanState] = useState<ScanState>('idle');
@@ -52,7 +54,7 @@ export function MetaTextureConfigPanel() {
     }, []);
 
     useEffect(() => {
-        if (selected.length === 0) {
+        if (selectedDirPaths.length === 0) {
             setScanState('idle');
             setScanResults([]);
             setContent('');
@@ -60,24 +62,22 @@ export function MetaTextureConfigPanel() {
             return;
         }
         const signal = { cancelled: false };
-        doScan(selected.map((l) => l.dirPath), signal);
+        doScan(selectedDirPaths, signal);
         return () => { signal.cancelled = true; };
-    // selectedKey is the stable derived value that represents selection changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedKey]);
+    }, [selectedDirPaths, doScan]);
 
     async function handleSave() {
         if (!content.trim() || selected.length === 0) return;
         setSaving(true);
         setSaveResults(null);
         const results = await window.electronAPI!.metaWriteTextureCfg(
-            selected.map((l) => l.dirPath),
+            selectedDirPaths,
             content
         );
         setSaveResults(results);
         setSaving(false);
         const signal = { cancelled: false };
-        await doScan(selected.map((l) => l.dirPath), signal);
+        await doScan(selectedDirPaths, signal);
     }
 
     if (selected.length === 0) {
@@ -129,8 +129,8 @@ export function MetaTextureConfigPanel() {
                     {scanResults.map((r) => {
                         const status =
                             r.cfgPaths.length === 0 ? 'missing'
-                            : !r.allMatch ? 'conflict'
-                            : 'ok';
+                                : !r.allMatch ? 'conflict'
+                                    : 'ok';
                         return (
                             <div key={r.liveryDir} className={styles.liveryRow}>
                                 <span className={`${styles.statusDot} ${styles[`dot_${status}`]}`} />
@@ -139,8 +139,8 @@ export function MetaTextureConfigPanel() {
                                     {r.cfgPaths.length === 0
                                         ? 'no texture.cfg found'
                                         : !r.allMatch
-                                        ? `${r.cfgPaths.length} files · contents differ`
-                                        : `${r.cfgPaths.length} file${r.cfgPaths.length !== 1 ? 's' : ''}`}
+                                            ? `${r.cfgPaths.length} files · contents differ`
+                                            : `${r.cfgPaths.length} file${r.cfgPaths.length !== 1 ? 's' : ''}`}
                                 </span>
                             </div>
                         );

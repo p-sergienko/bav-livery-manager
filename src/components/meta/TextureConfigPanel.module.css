@@ -9,7 +9,6 @@
   gap: 0;
 }
 
-/* ─── Status bar ─────────────────────────────────────────────────────────── */
 .statusBar {
   display: flex;
   align-items: center;
@@ -38,7 +37,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ─── Per-livery list ─────────────────────────────────────────────────────── */
@@ -71,9 +72,17 @@
   flex-shrink: 0;
 }
 
-.dot_ok { background: var(--success); }
-.dot_missing { background: var(--text-muted); }
-.dot_conflict { background: var(--warning); }
+.dot_ok {
+  background: var(--success);
+}
+
+.dot_missing {
+  background: var(--text-muted);
+}
+
+.dot_conflict {
+  background: var(--warning);
+}
 
 .liveryName {
   font-weight: 500;
@@ -171,8 +180,14 @@
   transition: opacity 0.1s;
 }
 
-.saveBtn:hover:not(:disabled) { opacity: 0.85; }
-.saveBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.saveBtn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.saveBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 /* ─── Save results ───────────────────────────────────────────────────────── */
 .results {
@@ -200,11 +215,22 @@
   border-bottom: 1px solid var(--border);
 }
 
-.resultRow:last-child { border-bottom: none; }
+.resultRow:last-child {
+  border-bottom: none;
+}
 
-.resultIcon { flex-shrink: 0; font-size: 11px; }
-.resultOk { color: var(--success); }
-.resultErr { color: var(--danger); }
+.resultIcon {
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.resultOk {
+  color: var(--success);
+}
+
+.resultErr {
+  color: var(--danger);
+}
 
 .resultName {
   font-weight: 600;
@@ -239,4 +265,7 @@
   text-align: center;
 }
 
-.emptyIcon { font-size: 40px; opacity: 0.4; }
+.emptyIcon {
+  font-size: 40px;
+  opacity: 0.4;
+}

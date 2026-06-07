@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMetaManifestStore } from '@/store/metaManifestStore';
+import { CheckboxChecked, CheckboxEmpty } from '@/components/icons';
 import styles from './LiveryList.module.css';
 
 export function MetaLiveryList() {
@@ -8,10 +9,10 @@ export function MetaLiveryList() {
 
     const filtered = search.trim()
         ? liveries.filter(
-              (l) =>
-                  l.dirName.toLowerCase().includes(search.toLowerCase()) ||
-                  (l.manifest.title as string | undefined)?.toLowerCase().includes(search.toLowerCase())
-          )
+            (l) =>
+                l.dirName.toLowerCase().includes(search.toLowerCase()) ||
+                (l.manifest.title as string | undefined)?.toLowerCase().includes(search.toLowerCase())
+        )
         : liveries;
 
     return (
@@ -55,16 +56,7 @@ export function MetaLiveryList() {
                             onClick={() => toggleSelect(livery.id)}
                         >
                             <span className={styles.checkbox}>
-                                {isSelected ? (
-                                    <svg viewBox="0 0 16 16" fill="currentColor">
-                                        <rect x="1" y="1" width="14" height="14" rx="3" className={styles.checkboxRect} />
-                                        <path d="M4.5 8l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                ) : (
-                                    <svg viewBox="0 0 16 16" fill="none">
-                                        <rect x="1.5" y="1.5" width="13" height="13" rx="2.5" className={styles.checkboxEmpty} />
-                                    </svg>
-                                )}
+                                {isSelected ? <CheckboxChecked /> : <CheckboxEmpty />}
                             </span>
                             <span className={styles.itemContent}>
                                 <span className={styles.dirName} title={livery.dirPath}>{livery.dirName}</span>
