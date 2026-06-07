@@ -3,7 +3,6 @@ import fs from 'fs-extra';
 import { app, dialog, ipcMain, shell } from 'electron';
 import { spawn, type ChildProcess } from 'child_process';
 import { ZipArchive } from 'archiver';
-import { loadMetaDb, saveMetaDb, type AircraftRecord } from '../services/metaAircraftDb';
 import type { OpenDialogOptions } from 'electron';
 import type { AppContext, DownloadResult, Settings } from '../types';
 import { detectSimulatorPaths } from '../services/simulatorPaths';
@@ -685,12 +684,6 @@ export function registerIpcHandlers(appContext: AppContext) {
             } catch { /* try next */ }
         }
         return null;
-    });
-
-    ipcMain.handle('meta-get-aircraft-db', async () => loadMetaDb());
-
-    ipcMain.handle('meta-save-aircraft-db', async (_event, records: AircraftRecord[]) => {
-        try { await saveMetaDb(records); return true; } catch { return false; }
     });
 
     ipcMain.handle('meta-select-workspace-directory', async () => {

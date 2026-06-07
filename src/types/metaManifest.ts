@@ -1,6 +1,11 @@
-import type { MetaAircraftRecord } from './electron-api';
-
-export type AircraftRecord = MetaAircraftRecord;
+export interface AircraftRecord {
+    registration: string;
+    aircraftType: string;
+    engine: string;
+    category: string;
+    year: string;
+    livery: string;
+}
 
 export interface ManagerData {
     name?: string;

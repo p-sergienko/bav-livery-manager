@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MetaAircraftDb",
+  "description": "Schema for aircraft database",
+  "definitions": {
+    "AircraftRecord": {
+      "type": "object",
+      "description": "A single aircraft entry",
+      "required": ["registration", "aircraftType", "engine", "category", "year", "livery"],
+      "additionalProperties": false,
+      "properties": {
+        "registration": {
+          "type": "string",
+          "description": "Aircraft registration (e.g. G-EUUA)",
+          "pattern": "^[A-Z0-9\\-]+$"
+        },
+        "aircraftType": {
+          "type": "string",
+          "description": "Aircraft type code (e.g. A320, B77W, E190)"
+        },
+        "engine": {
+          "type": "string",
+          "description": "Engine variant (e.g. IAE, GE90)"
+        },
+        "category": {
+          "type": "string",
+          "description": "Aircraft Subsidiary",
+          "enum": ["Mainline", "Euroflyer", "Cityflyer"]
+        },
+        "year": {
+          "type": "string",
+          "description": "Year the aircraft entered service",
+          "pattern": "^[0-9]{4}$"
+        },
+        "livery": {
+          "type": "string",
+          "description": "Livery name"
+        }
+      }
+    },
+    "AircraftRecordArray": {
+      "type": "array",
+      "description": "Ordered list of aircraft registration records",
+      "items": {
+        "$ref": "#/definitions/AircraftRecord"
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "title": "GetAircraftDbResponse",
+      "description": "Response payload for metaGetAircraftDb — returns the full aircraft DB",
+      "$ref": "#/definitions/AircraftRecordArray"
+    }
+  ],
+  "MetaSaveAircraftDbRequest": {
+    "title": "SaveAircraftDbRequest",
+    "description": "Request payload for metaSaveAircraftDb — the complete updated record set",
+    "$ref": "#/definitions/AircraftRecordArray"
+  },
+  "MetaSaveAircraftDbResponse": {
+    "title": "SaveAircraftDbResponse",
+    "description": "Response from metaSaveAircraftDb — true on success, false on failure",
+    "type": "boolean"
+  }
+}

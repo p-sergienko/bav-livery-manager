@@ -36,8 +36,6 @@ const INVOKE_CHANNELS = [
     'meta-read-manifest',
     'meta-write-manifests',
     'meta-find-registration',
-    'meta-get-aircraft-db',
-    'meta-save-aircraft-db',
     'meta-select-workspace-directory',
     'meta-run-layout-generator',
     'meta-run-zip-packages',
@@ -248,14 +246,6 @@ const api: ElectronAPI = {
     metaFindRegistration: (dirPath: string) => {
         ensureInvokeChannel('meta-find-registration');
         return ipcRenderer.invoke('meta-find-registration', dirPath);
-    },
-    metaGetAircraftDb: () => {
-        ensureInvokeChannel('meta-get-aircraft-db');
-        return ipcRenderer.invoke('meta-get-aircraft-db');
-    },
-    metaSaveAircraftDb: (records: unknown[]) => {
-        ensureInvokeChannel('meta-save-aircraft-db');
-        return ipcRenderer.invoke('meta-save-aircraft-db', records);
     },
     metaSelectWorkspaceDirectory: () => {
         ensureInvokeChannel('meta-select-workspace-directory');

@@ -107,15 +107,6 @@ export interface DiskUsageReport {
     scannedAt: number;
 }
 
-export interface MetaAircraftRecord {
-    registration: string;
-    aircraftType: string;
-    engine: string;
-    category: string;
-    year: string;
-    livery: string;
-}
-
 export interface MetaCopyAssetResult {
     liveryName: string;
     success: boolean;
@@ -200,8 +191,6 @@ export interface ElectronAPI {
         updates: Array<{ dirPath: string; manifest: Record<string, unknown> }>
     ) => Promise<{ success: boolean; errors: string[] }>;
     metaFindRegistration: (dirPath: string) => Promise<string | null>;
-    metaGetAircraftDb: () => Promise<MetaAircraftRecord[]>;
-    metaSaveAircraftDb: (records: MetaAircraftRecord[]) => Promise<boolean>;
     metaSelectWorkspaceDirectory: () => Promise<string | null>;
     metaRunLayoutGenerator: (workspaceDir: string) => Promise<boolean>;
     metaRunZipPackages: (workspaceDir: string) => Promise<boolean>;

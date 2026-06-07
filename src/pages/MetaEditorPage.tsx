@@ -17,7 +17,7 @@ type EditorTab = 'manifest' | 'assets' | 'texture';
 const EMPTY_RECORD: AircraftRecord = { registration: '', aircraftType: '', engine: '', category: '', year: '', livery: '' };
 
 function DatabaseTab() {
-    const { records, upsert, remove, save } = useMetaDbStore();
+    const { records, isLoaded, loadError, load, upsert, remove, save } = useMetaDbStore();
     const [search, setSearch] = useState('');
     const [editingReg, setEditingReg] = useState<string | null>(null);
     const [form, setForm] = useState<AircraftRecord>(EMPTY_RECORD);
@@ -48,6 +48,13 @@ function DatabaseTab() {
 
     return (
         <div className={styles.dbPage}>
+            {loadError && (
+                <div className={styles.errorBar}>
+                    <span>Failed to load database: {loadError}</span>
+                    <button className={styles.dismissBtn} onClick={() => load()}>Retry</button>
+                </div>
+            )}
+
             <div className={styles.dbToolbar}>
                 <input
                     className={styles.dbSearch}
@@ -57,8 +64,8 @@ function DatabaseTab() {
                     onChange={(e) => setSearch(e.target.value)}
                 />
                 <span className={styles.dbCount}>{filtered.length} of {records.length}</span>
-                <button className={styles.addBtn} onClick={startAdd}>+ Add Entry</button>
-                <button className={styles.saveDbBtn} onClick={handleSave} disabled={isSaving}>
+                <button className={styles.addBtn} onClick={startAdd} disabled={!isLoaded}>+ Add Entry</button>
+                <button className={styles.saveDbBtn} onClick={handleSave} disabled={isSaving || !isLoaded}>
                     {isSaving ? 'Saving…' : 'Save DB'}
                 </button>
                 {saveMsg && <span className={styles.saveMsg}>{saveMsg}</span>}
@@ -68,58 +75,64 @@ function DatabaseTab() {
                 <div className={styles.formRow}>
                     <FormFields form={form} onChange={setForm} />
                     <button className={styles.commitBtn} onClick={commitEdit}>Add</button>
-                    <button className={styles.cancelBtn} onClick={cancelEdit}>Cancel</button>
+                    <button className={styles.formCancelBtn} onClick={cancelEdit}>Cancel</button>
                 </div>
             )}
 
             <div className={styles.tableWrap}>
-                <table className={styles.table}>
-                    <thead>
-                        <tr>
-                            <th>Registration</th><th>Aircraft</th><th>Engine</th>
-                            <th>Category</th><th>Year</th><th>Livery</th><th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filtered.map((record) =>
-                            editingReg === record.registration ? (
-                                <tr key={record.registration} className={styles.editRow}>
-                                    <td colSpan={6}>
-                                        <div className={styles.formRow}>
-                                            <FormFields form={form} onChange={setForm} />
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className={styles.rowActions}>
-                                            <button className={styles.commitBtn} onClick={commitEdit}>Save</button>
-                                            <button className={styles.cancelBtn} onClick={cancelEdit}>Cancel</button>
-                                        </div>
-                                    </td>
+                {!isLoaded ? (
+                    <div className={styles.noResults}>Loading aircraft database…</div>
+                ) : (
+                    <>
+                        <table className={styles.table}>
+                            <thead>
+                                <tr>
+                                    <th>Registration</th><th>Aircraft</th><th>Engine</th>
+                                    <th>Category</th><th>Year</th><th>Livery</th><th></th>
                                 </tr>
-                            ) : (
-                                <tr key={record.registration}>
-                                    <td className={styles.regCell}>{record.registration}</td>
-                                    <td>{record.aircraftType}</td>
-                                    <td>{record.engine}</td>
-                                    <td>
-                                        <span className={`${styles.catBadge} ${styles[`cat_${record.category.toLowerCase()}`]}`}>
-                                            {record.category}
-                                        </span>
-                                    </td>
-                                    <td>{record.year}</td>
-                                    <td className={styles.liveryCell}>{record.livery}</td>
-                                    <td>
-                                        <div className={styles.rowActions}>
-                                            <button className={styles.editBtn} onClick={() => startEdit(record)}>Edit</button>
-                                            <button className={styles.deleteBtn} onClick={() => remove(record.registration)}>×</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )
-                        )}
-                    </tbody>
-                </table>
-                {filtered.length === 0 && <div className={styles.noResults}>No records match your search</div>}
+                            </thead>
+                            <tbody>
+                                {filtered.map((record) =>
+                                    editingReg === record.registration ? (
+                                        <tr key={record.registration} className={styles.editRow}>
+                                            <td colSpan={6}>
+                                                <div className={styles.formRow}>
+                                                    <FormFields form={form} onChange={setForm} />
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className={styles.rowActions}>
+                                                    <button className={styles.commitBtn} onClick={commitEdit}>Save</button>
+                                                    <button className={styles.formCancelBtn} onClick={cancelEdit}>Cancel</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        <tr key={record.registration}>
+                                            <td className={styles.regCell}>{record.registration}</td>
+                                            <td>{record.aircraftType}</td>
+                                            <td>{record.engine}</td>
+                                            <td>
+                                                <span className={`${styles.catBadge} ${styles[`cat_${record.category.toLowerCase()}`]}`}>
+                                                    {record.category}
+                                                </span>
+                                            </td>
+                                            <td>{record.year}</td>
+                                            <td className={styles.liveryCell}>{record.livery}</td>
+                                            <td>
+                                                <div className={styles.rowActions}>
+                                                    <button className={styles.editBtn} onClick={() => startEdit(record)}>Edit</button>
+                                                    <button className={styles.deleteBtn} onClick={() => remove(record.registration)}>×</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )
+                                )}
+                            </tbody>
+                        </table>
+                        {filtered.length === 0 && <div className={styles.noResults}>No records match your search</div>}
+                    </>
+                )}
             </div>
         </div>
     );
@@ -133,7 +146,12 @@ function FormFields({ form, onChange }: FormFieldsProps) {
             <input className={styles.formInput} placeholder="Registration" value={form.registration} onChange={(e) => set('registration', e.target.value)} />
             <input className={styles.formInput} placeholder="Aircraft Type" value={form.aircraftType} onChange={(e) => set('aircraftType', e.target.value)} />
             <input className={styles.formInput} placeholder="Engine" value={form.engine} onChange={(e) => set('engine', e.target.value)} />
-            <input className={styles.formInput} placeholder="Category" value={form.category} onChange={(e) => set('category', e.target.value)} />
+            <select className={styles.formSelect} value={form.category} onChange={(e) => set('category', e.target.value)}>
+                <option value="">Category</option>
+                <option value="Mainline">Mainline</option>
+                <option value="Euroflyer">Euroflyer</option>
+                <option value="Cityflyer">Cityflyer</option>
+            </select>
             <input className={styles.formInput} placeholder="Year" value={form.year} onChange={(e) => set('year', e.target.value)} />
             <input className={styles.formInput} placeholder="Livery" value={form.livery} onChange={(e) => set('livery', e.target.value)} style={{ flex: 2 }} />
         </div>

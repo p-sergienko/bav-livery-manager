@@ -1,15 +1,9 @@
 import { useState } from 'react';
 import { useMetaManifestStore } from '@/store/metaManifestStore';
+import type { MetaCopyAssetResult } from '@/types/electron-api';
 import styles from './AssetsPanel.module.css';
 
 type AssetType = 'manager-thumbnail' | 'ingame-thumbnail' | 'texture';
-
-interface CopyResult {
-    liveryName: string;
-    success: boolean;
-    targetDir: string | null;
-    error?: string;
-}
 
 const FILTERS: Record<AssetType, { name: string; extensions: string[] }[]> = {
     'manager-thumbnail': [{ name: 'PNG Image', extensions: ['png'] }],
@@ -39,7 +33,7 @@ export function MetaAssetsPanel() {
     const [managerFile, setManagerFile] = useState<string | null>(null);
     const [thumbnailFiles, setThumbnailFiles] = useState<string[]>([]);
     const [textureFiles, setTextureFiles] = useState<string[]>([]);
-    const [lastResults, setLastResults] = useState<{ type: AssetType; items: CopyResult[] } | null>(null);
+    const [lastResults, setLastResults] = useState<{ type: AssetType; items: MetaCopyAssetResult[] } | null>(null);
     const [copying, setCopying] = useState<AssetType | null>(null);
 
     const browse = async (type: AssetType) => {

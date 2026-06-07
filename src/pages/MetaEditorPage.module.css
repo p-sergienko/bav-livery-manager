@@ -415,17 +415,6 @@
   font-family: inherit;
 }
 
-.cancelBtn {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--muted);
-  padding: 5px 12px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 12px;
-  font-family: inherit;
-}
-
 .editRow td { background: rgba(79, 126, 247, 0.05) !important; padding: 8px 16px; }
 
 .formRow {
@@ -457,6 +446,35 @@
 }
 
 .formInput:focus { border-color: #4f7ef7; }
+
+.formSelect {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  padding: 5px 9px;
+  outline: none;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.formSelect:focus { border-color: #4f7ef7; }
+
+.formCancelBtn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 5px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.formCancelBtn:hover { border-color: rgba(255,255,255,0.25); color: var(--text); }
 
 .noResults {
   padding: 40px;
