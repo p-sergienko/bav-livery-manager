@@ -29,10 +29,26 @@ const INVOKE_CHANNELS = [
     'install-app-update',
     'get-app-version',
     'get-disk-usage',
-    'open-path'
+    'open-path',
+    // Meta Editor channels
+    'meta-select-livery-directories',
+    'meta-scan-parent-directory',
+    'meta-read-manifest',
+    'meta-write-manifests',
+    'meta-find-registration',
+    'meta-get-aircraft-db',
+    'meta-save-aircraft-db',
+    'meta-select-workspace-directory',
+    'meta-run-layout-generator',
+    'meta-run-zip-packages',
+    'meta-cancel-finaliser',
+    'meta-select-asset-files',
+    'meta-copy-asset-to-liveries',
+    'meta-scan-texture-cfg',
+    'meta-write-texture-cfg',
 ] as const;
 
-const ON_CHANNELS = ['download-progress', 'package-progress', 'auth-token', 'app-update-status'] as const;
+const ON_CHANNELS = ['download-progress', 'package-progress', 'auth-token', 'app-update-status', 'meta-finaliser-log'] as const;
 
 type InvokeChannel = typeof INVOKE_CHANNELS[number];
 type OnChannel = typeof ON_CHANNELS[number];
@@ -210,7 +226,83 @@ const api: ElectronAPI = {
     openPath: (targetPath: string) => {
         ensureInvokeChannel('open-path');
         return ipcRenderer.invoke('open-path', targetPath);
-    }
+    },
+
+    // ─── Meta Editor API ──────────────────────────────────────────────────────
+    metaSelectLiveryDirectories: () => {
+        ensureInvokeChannel('meta-select-livery-directories');
+        return ipcRenderer.invoke('meta-select-livery-directories');
+    },
+    metaScanParentDirectory: () => {
+        ensureInvokeChannel('meta-scan-parent-directory');
+        return ipcRenderer.invoke('meta-scan-parent-directory');
+    },
+    metaReadManifest: (dirPath: string) => {
+        ensureInvokeChannel('meta-read-manifest');
+        return ipcRenderer.invoke('meta-read-manifest', dirPath);
+    },
+    metaWriteManifests: (updates: Array<{ dirPath: string; manifest: Record<string, unknown> }>) => {
+        ensureInvokeChannel('meta-write-manifests');
+        return ipcRenderer.invoke('meta-write-manifests', updates);
+    },
+    metaFindRegistration: (dirPath: string) => {
+        ensureInvokeChannel('meta-find-registration');
+        return ipcRenderer.invoke('meta-find-registration', dirPath);
+    },
+    metaGetAircraftDb: () => {
+        ensureInvokeChannel('meta-get-aircraft-db');
+        return ipcRenderer.invoke('meta-get-aircraft-db');
+    },
+    metaSaveAircraftDb: (records: unknown[]) => {
+        ensureInvokeChannel('meta-save-aircraft-db');
+        return ipcRenderer.invoke('meta-save-aircraft-db', records);
+    },
+    metaSelectWorkspaceDirectory: () => {
+        ensureInvokeChannel('meta-select-workspace-directory');
+        return ipcRenderer.invoke('meta-select-workspace-directory');
+    },
+    metaRunLayoutGenerator: (workspaceDir: string) => {
+        ensureInvokeChannel('meta-run-layout-generator');
+        return ipcRenderer.invoke('meta-run-layout-generator', workspaceDir);
+    },
+    metaRunZipPackages: (workspaceDir: string) => {
+        ensureInvokeChannel('meta-run-zip-packages');
+        return ipcRenderer.invoke('meta-run-zip-packages', workspaceDir);
+    },
+    metaCancelFinaliser: () => {
+        ensureInvokeChannel('meta-cancel-finaliser');
+        return ipcRenderer.invoke('meta-cancel-finaliser');
+    },
+    metaSelectAssetFiles: (filters: { name: string; extensions: string[] }[], multiSelect: boolean) => {
+        ensureInvokeChannel('meta-select-asset-files');
+        return ipcRenderer.invoke('meta-select-asset-files', filters, multiSelect);
+    },
+    metaCopyAssetToLiveries: (
+        filePaths: string[],
+        liveryDirs: string[],
+        assetType: 'manager-thumbnail' | 'ingame-thumbnail' | 'texture'
+    ) => {
+        ensureInvokeChannel('meta-copy-asset-to-liveries');
+        return ipcRenderer.invoke('meta-copy-asset-to-liveries', filePaths, liveryDirs, assetType);
+    },
+    metaScanTextureCfg: (liveryDirs: string[]) => {
+        ensureInvokeChannel('meta-scan-texture-cfg');
+        return ipcRenderer.invoke('meta-scan-texture-cfg', liveryDirs);
+    },
+    metaWriteTextureCfg: (liveryDirs: string[], content: string) => {
+        ensureInvokeChannel('meta-write-texture-cfg');
+        return ipcRenderer.invoke('meta-write-texture-cfg', liveryDirs, content);
+    },
+    onMetaFinaliserLog: (callback: (message: string) => void) => {
+        ensureOnChannel('meta-finaliser-log');
+        ipcRenderer.removeAllListeners('meta-finaliser-log');
+        if (callback && typeof callback === 'function') {
+            ipcRenderer.on('meta-finaliser-log', (_event, message: string) => callback(message));
+        }
+    },
+    removeMetaFinaliserLogListeners: () => {
+        ipcRenderer.removeAllListeners('meta-finaliser-log');
+    },
 };
 
 contextBridge.exposeInMainWorld('electronAPI', api);

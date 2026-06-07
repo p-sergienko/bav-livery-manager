@@ -10,6 +10,7 @@ import {useThemeStore} from "@/store/themeStore";
 import {useNextFlightQuery} from "@/hooks/useNextFlightQuery";
 import {useLiveryStore} from "@/store/liveryStore";
 import {usePackagesQuery} from "@/hooks/usePackagesQuery";
+import {useAuthStore} from "@/store/authStore";
 
 const NAV_ITEMS = [
     {label: 'Liveries', to: '/search', icon: 'search'},
@@ -56,6 +57,7 @@ export const Sidebar = () => {
     const [isRenderExpanded, setIsRenderExpanded] = useState(true);
 
     const {theme, currentTheme} = useThemeStore();
+    const role = useAuthStore((state) => state.role);
     const {data: flight} = useNextFlightQuery();
     const liveriesCount = useLiveryStore((state) => state.liveries.length);
     const {data: packages} = usePackagesQuery();
@@ -112,6 +114,21 @@ export const Sidebar = () => {
                             </NavLink>
                         );
                     })}
+                    {role === 'admin' && (
+                        <NavLink
+                            to="/meta-editor"
+                            className={({isActive}) =>
+                                classNames(styles.panelButton, isActive && styles.panelButtonActive)
+                            }
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                <path d="M2 17l10 5 10-5"/>
+                                <path d="M2 12l10 5 10-5"/>
+                            </svg>
+                            {!isCollapsed && <span>Meta Editor</span>}
+                        </NavLink>
+                    )}
                 </nav>
             </div>
 

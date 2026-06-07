@@ -107,6 +107,38 @@ export interface DiskUsageReport {
     scannedAt: number;
 }
 
+export interface MetaAircraftRecord {
+    registration: string;
+    aircraftType: string;
+    engine: string;
+    category: string;
+    year: string;
+    livery: string;
+}
+
+export interface MetaCopyAssetResult {
+    liveryName: string;
+    success: boolean;
+    targetDir: string | null;
+    error?: string;
+}
+
+export interface MetaTextureCfgScanResult {
+    liveryDir: string;
+    dirName: string;
+    cfgPaths: string[];
+    content: string | null;
+    allMatch: boolean;
+}
+
+export interface MetaTextureCfgWriteResult {
+    liveryDir: string;
+    dirName: string;
+    success: boolean;
+    path: string | null;
+    error?: string;
+}
+
 export interface ElectronAPI {
     fetchLiveries: (authToken?: string | null) => Promise<{ version?: string; liveries: Livery[] }>;
     downloadLivery: (
@@ -159,6 +191,34 @@ export interface ElectronAPI {
     removeAppUpdateListeners: () => void;
     getDiskUsage: () => Promise<DiskUsageReport>;
     openPath: (targetPath: string) => Promise<{ success: boolean; error?: string }>;
+
+    // ─── Meta Editor API ─────────────────────────────────────────────────────
+    metaSelectLiveryDirectories: () => Promise<string[]>;
+    metaScanParentDirectory: () => Promise<string[]>;
+    metaReadManifest: (dirPath: string) => Promise<Record<string, unknown> | null>;
+    metaWriteManifests: (
+        updates: Array<{ dirPath: string; manifest: Record<string, unknown> }>
+    ) => Promise<{ success: boolean; errors: string[] }>;
+    metaFindRegistration: (dirPath: string) => Promise<string | null>;
+    metaGetAircraftDb: () => Promise<MetaAircraftRecord[]>;
+    metaSaveAircraftDb: (records: MetaAircraftRecord[]) => Promise<boolean>;
+    metaSelectWorkspaceDirectory: () => Promise<string | null>;
+    metaRunLayoutGenerator: (workspaceDir: string) => Promise<boolean>;
+    metaRunZipPackages: (workspaceDir: string) => Promise<boolean>;
+    metaCancelFinaliser: () => Promise<void>;
+    metaSelectAssetFiles: (
+        filters: { name: string; extensions: string[] }[],
+        multiSelect: boolean
+    ) => Promise<string[]>;
+    metaCopyAssetToLiveries: (
+        filePaths: string[],
+        liveryDirs: string[],
+        assetType: 'manager-thumbnail' | 'ingame-thumbnail' | 'texture'
+    ) => Promise<MetaCopyAssetResult[]>;
+    onMetaFinaliserLog: (callback: (message: string) => void) => void;
+    removeMetaFinaliserLogListeners: () => void;
+    metaScanTextureCfg: (liveryDirs: string[]) => Promise<MetaTextureCfgScanResult[]>;
+    metaWriteTextureCfg: (liveryDirs: string[], content: string) => Promise<MetaTextureCfgWriteResult[]>;
 }
 
 declare global {
