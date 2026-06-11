@@ -29,7 +29,7 @@
     "@tanstack/react-query": "^5.100.14",
     "electron-devtools-installer": "^4.0.0",
     "electron-log": "^5.4.4",
-    "electron-updater": "^6.8.3",
+    "electron-updater": "^6.8.9",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-fade": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
