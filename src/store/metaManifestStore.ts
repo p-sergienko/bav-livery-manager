@@ -25,6 +25,7 @@ interface ManifestStore {
     selectedIds: Set<string>;
     isSaving: boolean;
     saveErrors: string[];
+    pendingTextureCfg: { content: string; dirPaths: string[] } | null;
     addLiveries: (dirPaths: string[]) => Promise<void>;
     removeLivery: (id: string) => void;
     clearAll: () => void;
@@ -37,6 +38,7 @@ interface ManifestStore {
     saveSelected: () => Promise<void>;
     saveAll: () => Promise<void>;
     clearSaveErrors: () => void;
+    setPendingTextureCfg: (pending: { content: string; dirPaths: string[] } | null) => void;
 }
 
 export const useMetaManifestStore = create<ManifestStore>((set, get) => ({
@@ -44,6 +46,7 @@ export const useMetaManifestStore = create<ManifestStore>((set, get) => ({
     selectedIds: new Set(),
     isSaving: false,
     saveErrors: [],
+    pendingTextureCfg: null,
 
     addLiveries: async (dirPaths) => {
         const existing = new Set(get().liveries.map((l) => l.dirPath));
@@ -74,7 +77,9 @@ export const useMetaManifestStore = create<ManifestStore>((set, get) => ({
         });
     },
 
-    clearAll: () => set({ liveries: [], selectedIds: new Set() }),
+    clearAll: () => set({ liveries: [], selectedIds: new Set(), pendingTextureCfg: null }),
+
+    setPendingTextureCfg: (pending) => set({ pendingTextureCfg: pending }),
 
     toggleSelect: (id) => {
         set((state) => {
@@ -136,10 +141,13 @@ export const useMetaManifestStore = create<ManifestStore>((set, get) => ({
     },
 
     saveAll: async () => {
-        const { liveries } = get();
+        const { liveries, pendingTextureCfg } = get();
         const toSave = liveries.filter((l) => l.hasChanges && !l.loadError);
-        if (toSave.length === 0) return;
-        await performSave(toSave, set);
+        if (toSave.length > 0) await performSave(toSave, set);
+        if (pendingTextureCfg) {
+            await window.electronAPI!.metaWriteTextureCfg(pendingTextureCfg.dirPaths, pendingTextureCfg.content);
+            set({ pendingTextureCfg: null });
+        }
     },
 
     clearSaveErrors: () => set({ saveErrors: [] }),

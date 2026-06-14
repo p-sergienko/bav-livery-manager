@@ -6,19 +6,22 @@
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
+  background: var(--panel);
 }
 
 .editorHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 24px;
+  min-height: 57px;
+  padding: 0 24px;
   border-bottom: 1px solid var(--border);
   gap: 16px;
   position: sticky;
   top: 0;
   z-index: 2;
-  background: var(--bg);
+  background: var(--panel);
+  flex-shrink: 0;
 }
 
 .editorMeta {
@@ -31,7 +34,7 @@
 .editorTitle {
   font-size: 15px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -39,7 +42,7 @@
 
 .unsavedBadge {
   font-size: 11px;
-  color: var(--warning);
+  color: #fab005;
   font-weight: 600;
   background: rgba(250, 176, 5, 0.12);
   padding: 2px 8px;
@@ -58,7 +61,7 @@
 .revertBtn {
   background: none;
   border: 1px solid var(--border);
-  color: var(--text-secondary);
+  color: var(--muted);
   padding: 5px 13px;
   border-radius: 6px;
   cursor: pointer;
@@ -69,31 +72,16 @@
 
 .revertBtn:hover { border-color: var(--danger); color: var(--danger); }
 
-.saveBtn {
-  background: var(--accent);
-  border: none;
-  color: #fff;
-  padding: 5px 15px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  font-family: inherit;
-  transition: opacity 0.1s;
-}
-
-.saveBtn:hover:not(:disabled) { opacity: 0.85; }
-.saveBtn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .multiEditNotice {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 9px 24px;
-  background: rgba(79, 126, 247, 0.06);
+  background: rgba(255, 255, 255, 0.03);
   border-bottom: 1px solid var(--border);
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--muted);
   position: sticky;
   top: 57px;
   z-index: 2;
@@ -104,7 +92,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--muted);
   flex-shrink: 0;
 }
 
@@ -113,6 +101,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  background: var(--panel);
 }
 
 .section {
@@ -129,14 +118,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
-  background: var(--surface-elevated);
+  background: var(--card);
   border-bottom: 1px solid var(--border);
 }
 
 .sectionTitle {
   font-size: 11px;
   font-weight: 700;
-  color: var(--text-secondary);
+  color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -184,7 +173,7 @@
 .label {
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   display: flex;
@@ -203,8 +192,8 @@
 }
 
 .mixedTag {
-  background: rgba(79, 126, 247, 0.15);
-  color: var(--accent);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted);
   font-size: 9px;
   padding: 1px 5px;
   border-radius: 3px;
@@ -213,10 +202,10 @@
 }
 
 .input {
-  background: var(--surface-elevated);
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 6px;
-  color: var(--text-primary);
+  color: var(--text);
   font-size: 13px;
   font-family: monospace;
   padding: 8px 10px;
@@ -226,12 +215,12 @@
   outline: none;
 }
 
-.input:focus { border-color: var(--accent); }
-.input::placeholder { color: var(--text-muted); font-style: italic; }
+.input:focus { border-color: var(--focus); }
+.input::placeholder { color: rgba(179, 179, 179, 0.5); font-style: italic; }
 
 .inputMixed {
-  border-color: rgba(79, 126, 247, 0.3);
-  background: rgba(79, 126, 247, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .textarea {
@@ -247,11 +236,11 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: var(--text-secondary);
+  color: var(--muted);
   font-size: 14px;
   padding: 40px;
   text-align: center;
 }
 
 .emptyIcon { font-size: 40px; opacity: 0.4; }
-.emptySub { color: var(--text-muted); font-size: 12px; margin: 0; }
+.emptySub { color: rgba(179, 179, 179, 0.5); font-size: 12px; margin: 0; }

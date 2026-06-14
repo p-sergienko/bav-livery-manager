@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FileText } from 'react-feather';
 import { useMetaManifestStore } from '@/store/metaManifestStore';
-import type { MetaTextureCfgScanResult, MetaTextureCfgWriteResult } from '@/types/electron-api';
+import type { MetaTextureCfgScanResult } from '@/types/electron-api';
 import styles from './TextureConfigPanel.module.css';
 
 type ScanState = 'idle' | 'scanning' | 'done';
@@ -12,7 +13,7 @@ const TEXTURE_CFG_PLACEHOLDER = [
 ].join('\n');
 
 export function MetaTextureConfigPanel() {
-    const { liveries, selectedIds } = useMetaManifestStore();
+    const { liveries, selectedIds, setPendingTextureCfg, pendingTextureCfg } = useMetaManifestStore();
     const selected = liveries.filter((l) => selectedIds.has(l.id) && !l.loadError);
 
     const selectedDirPaths = useMemo(
@@ -25,18 +26,11 @@ export function MetaTextureConfigPanel() {
     const [scanState, setScanState] = useState<ScanState>('idle');
     const [scanResults, setScanResults] = useState<MetaTextureCfgScanResult[]>([]);
     const [content, setContent] = useState('');
-    const [saving, setSaving] = useState(false);
-
-    function saveButtonLabel() {
-        if (saving) return 'Writing…';
-        const count = `${selected.length} livery${selected.length !== 1 ? 's' : ''}`;
-        return isEditMode ? `Save to ${count}` : `Write to ${count}`;
-    }
-    const [saveResults, setSaveResults] = useState<MetaTextureCfgWriteResult[] | null>(null);
+    const [originalContent, setOriginalContent] = useState('');
 
     const doScan = useCallback(async (dirs: string[], signal: { cancelled: boolean }) => {
         setScanState('scanning');
-        setSaveResults(null);
+        setPendingTextureCfg(null);
         try {
             const results = await window.electronAPI!.metaScanTextureCfg(dirs);
             if (signal.cancelled) return;
@@ -45,150 +39,87 @@ export function MetaTextureConfigPanel() {
                 allHaveFile &&
                 results.every((r) => r.allMatch) &&
                 new Set(results.map((r) => r.content ?? '')).size === 1;
+            const scanned = allContentsMatch ? (results[0].content ?? '') : '';
             setScanResults(results);
-            setContent(allContentsMatch ? (results[0].content ?? '') : '');
+            setContent(scanned);
+            setOriginalContent(scanned);
             setScanState('done');
         } catch {
             if (!signal.cancelled) setScanState('idle');
         }
-    }, []);
+    }, [setPendingTextureCfg]);
 
     useEffect(() => {
         if (selectedDirPaths.length === 0) {
             setScanState('idle');
             setScanResults([]);
             setContent('');
-            setSaveResults(null);
+            setOriginalContent('');
+            setPendingTextureCfg(null);
             return;
         }
         const signal = { cancelled: false };
         doScan(selectedDirPaths, signal);
         return () => { signal.cancelled = true; };
-    }, [selectedDirPaths, doScan]);
-
-    async function handleSave() {
-        if (!content.trim() || selected.length === 0) return;
-        setSaving(true);
-        setSaveResults(null);
-        const results = await window.electronAPI!.metaWriteTextureCfg(
-            selectedDirPaths,
-            content
-        );
-        setSaveResults(results);
-        setSaving(false);
-        const signal = { cancelled: false };
-        await doScan(selectedDirPaths, signal);
-    }
+    }, [selectedDirPaths, doScan, setPendingTextureCfg]);
 
     if (selected.length === 0) {
         return (
             <div className={styles.empty}>
-                <div className={styles.emptyIcon}>📄</div>
+                <div className={styles.emptyIcon}><FileText size={40} strokeWidth={1} /></div>
                 <p>Select one or more liveries to scan for texture.cfg</p>
+                {liveries.length === 0 && <p className={styles.emptySub}>Texture CFG files will be edited in mass to configure liveries for fallback folders</p>}
             </div>
         );
     }
 
+    const handleRevert = () => {
+        setContent(originalContent);
+        setPendingTextureCfg(null);
+    };
+
     const allHaveFile = scanResults.length > 0 && scanResults.every((r) => r.cfgPaths.length > 0);
-    const noneHaveFile = scanResults.length > 0 && scanResults.every((r) => r.cfgPaths.length === 0);
     const allContentsMatch =
         allHaveFile &&
         scanResults.every((r) => r.allMatch) &&
         new Set(scanResults.map((r) => r.content ?? '')).size === 1;
     const isEditMode = allContentsMatch;
-    const missingCount = scanResults.filter((r) => r.cfgPaths.length === 0).length;
-    const mismatchCount = scanResults.filter((r) => r.cfgPaths.length > 0 && !r.allMatch).length;
-    const crossMismatch = scanState === 'done' && allHaveFile && !allContentsMatch;
 
     return (
         <div className={styles.panel}>
-            {scanState === 'scanning' && (
-                <div className={styles.statusBar}>
-                    <span className={styles.statusSpin}>⟳</span> Scanning…
-                </div>
-            )}
-
-            {scanState === 'done' && (
-                <div className={`${styles.statusBar} ${isEditMode ? styles.statusOk : styles.statusWarn}`}>
-                    {isEditMode ? (
-                        <>✓ All {scanResults.length} liveries have identical texture.cfg — editing in place</>
-                    ) : (
-                        <>
-                            ⚠ Mismatches detected
-                            {missingCount > 0 && ` · ${missingCount} missing`}
-                            {mismatchCount > 0 && ` · ${mismatchCount} internal conflict`}
-                            {crossMismatch && ' · contents differ across liveries'}
-                            {' '}— write a fresh file to all
-                        </>
+            <div className={styles.panelHeader}>
+                <span className={styles.panelTitle}>
+                    {selected.length === 1 ? selected[0].dirName : `Editing ${selected.length} liveries`}
+                </span>
+                <div className={styles.panelActions}>
+                    {scanState === 'done' && !isEditMode && (
+                        <span className={styles.freshTag}>fresh write</span>
+                    )}
+                    {pendingTextureCfg && (
+                        <button className={styles.revertBtn} onClick={handleRevert}>Revert</button>
                     )}
                 </div>
-            )}
+            </div>
 
-            {scanState === 'done' && scanResults.length > 0 && (
-                <div className={styles.liveryList}>
-                    {scanResults.map((r) => {
-                        const status =
-                            r.cfgPaths.length === 0 ? 'missing'
-                                : !r.allMatch ? 'conflict'
-                                    : 'ok';
-                        return (
-                            <div key={r.liveryDir} className={styles.liveryRow}>
-                                <span className={`${styles.statusDot} ${styles[`dot_${status}`]}`} />
-                                <span className={styles.liveryName} title={r.liveryDir}>{r.dirName}</span>
-                                <span className={styles.liveryMeta}>
-                                    {r.cfgPaths.length === 0
-                                        ? 'no texture.cfg found'
-                                        : !r.allMatch
-                                            ? `${r.cfgPaths.length} files · contents differ`
-                                            : `${r.cfgPaths.length} file${r.cfgPaths.length !== 1 ? 's' : ''}`}
-                                </span>
-                            </div>
-                        );
-                    })}
-                </div>
+            {scanState === 'scanning' && (
+                <div className={styles.scanningMsg}>Scanning…</div>
             )}
 
             {scanState === 'done' && (
                 <div className={styles.editorSection}>
                     <div className={styles.editorHeader}>
-                        <span className={styles.editorLabel}>
-                            {isEditMode ? 'texture.cfg' : 'New texture.cfg content'}
-                        </span>
-                        {!isEditMode && <span className={styles.freshTag}>fresh write</span>}
+                        <span className={styles.editorLabel}>texture.cfg</span>
                     </div>
                     <textarea
                         className={styles.textarea}
                         value={content}
-                        onChange={(e) => { setContent(e.target.value); setSaveResults(null); }}
+                        onChange={(e) => {
+                            setContent(e.target.value);
+                            setPendingTextureCfg({ content: e.target.value, dirPaths: selectedDirPaths });
+                        }}
                         placeholder={isEditMode ? '' : TEXTURE_CFG_PLACEHOLDER}
                         spellCheck={false}
                     />
-                    <div className={styles.actions}>
-                        <button
-                            className={styles.saveBtn}
-                            onClick={handleSave}
-                            disabled={saving || !content.trim()}
-                        >
-                            {saveButtonLabel()}
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {saveResults && (
-                <div className={styles.results}>
-                    <div className={styles.resultsHeader}>
-                        {saveResults.filter((r) => r.success).length}/{saveResults.length} succeeded
-                    </div>
-                    {saveResults.map((r) => (
-                        <div key={r.liveryDir} className={styles.resultRow}>
-                            <span className={`${styles.resultIcon} ${r.success ? styles.resultOk : styles.resultErr}`}>
-                                {r.success ? '✓' : '✗'}
-                            </span>
-                            <span className={styles.resultName}>{r.dirName}</span>
-                            <span className={styles.resultPath}>{r.error ?? r.path ?? ''}</span>
-                        </div>
-                    ))}
                 </div>
             )}
         </div>

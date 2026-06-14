@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { Clipboard } from 'react-feather';
 import { useMetaManifestStore, getNestedValue } from '@/store/metaManifestStore';
 import { useMetaDbStore } from '@/store/metaDbStore';
 import type { Manifest } from '@/types/metaManifest';
@@ -52,7 +53,7 @@ function getEffectiveValue(manifests: Manifest[], keyPath: string): string | typ
 }
 
 export function MetaManifestEditor() {
-    const { liveries, selectedIds, updateField, revertSelected, saveSelected, isSaving, applyAutoFill } = useMetaManifestStore();
+    const { liveries, selectedIds, updateField, revertSelected, applyAutoFill } = useMetaManifestStore();
     const { lookup } = useMetaDbStore();
     const [isAutoFilling, setIsAutoFilling] = useState(false);
     const [autoFillResults, setAutoFillResults] = useState<string | null>(null);
@@ -97,9 +98,9 @@ export function MetaManifestEditor() {
     if (!hasSelected) {
         return (
             <div className={styles.empty}>
-                <div className={styles.emptyIcon}>📋</div>
+                <div className={styles.emptyIcon}><Clipboard size={40} strokeWidth={1} /></div>
                 <p>Select one or more liveries to edit their manifest</p>
-                {liveries.length === 0 && <p className={styles.emptySub}>Add livery directories using the buttons above</p>}
+                {liveries.length === 0 && <p className={styles.emptySub}>Manifest JSON files will be edited in mass. Airframe details can be populated with the auto-fill feature</p>}
             </div>
         );
     }
@@ -115,14 +116,11 @@ export function MetaManifestEditor() {
                     )}
                     {hasChanges && <span className={styles.unsavedBadge}>Unsaved changes</span>}
                 </div>
-                <div className={styles.editorActions}>
-                    {hasChanges && (
+                {hasChanges && (
+                    <div className={styles.editorActions}>
                         <button className={styles.revertBtn} onClick={revertSelected}>Revert</button>
-                    )}
-                    <button className={styles.saveBtn} onClick={saveSelected} disabled={!hasChanges || isSaving}>
-                        {isSaving ? 'Saving…' : 'Save Selected'}
-                    </button>
-                </div>
+                    </div>
+                )}
             </div>
 
             <div className={styles.fields}>

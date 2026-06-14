@@ -1,7 +1,7 @@
 .sidebar {
   width: 280px;
   min-width: 280px;
-  background: var(--surface);
+  background: var(--panel);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -12,21 +12,23 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 16px;
+  min-height: 42px;
+  padding: 0 16px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .count {
-  background: var(--surface-elevated);
-  color: var(--text-secondary);
+  background: var(--card);
+  color: var(--muted);
   font-size: 11px;
   font-weight: 600;
   padding: 2px 7px;
@@ -35,17 +37,21 @@
 
 .searchBar {
   position: relative;
-  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  min-height: 57px;
+  padding: 0 10px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .searchInput {
   width: 100%;
   box-sizing: border-box;
-  background: var(--surface-elevated);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 5px;
-  color: var(--text-primary);
+  color: var(--text);
   font-size: 12px;
   font-family: inherit;
   padding: 5px 26px 5px 9px;
@@ -54,11 +60,11 @@
 }
 
 .searchInput:focus {
-  border-color: var(--accent);
+  border-color: var(--focus);
 }
 
 .searchInput::placeholder {
-  color: var(--text-muted);
+  color: rgba(179, 179, 179, 0.5);
 }
 
 .clearBtn {
@@ -68,7 +74,7 @@
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: rgba(179, 179, 179, 0.5);
   cursor: pointer;
   font-size: 15px;
   line-height: 1;
@@ -76,14 +82,14 @@
 }
 
 .clearBtn:hover {
-  color: var(--text-primary);
+  color: var(--text);
 }
 
 .noResults {
   list-style: none;
   padding: 16px 12px;
   font-size: 12px;
-  color: var(--text-muted);
+  color: rgba(179, 179, 179, 0.5);
   text-align: center;
 }
 
@@ -99,7 +105,7 @@
 .linkBtn {
   background: none;
   border: none;
-  color: var(--accent);
+  color: var(--muted);
   cursor: pointer;
   padding: 0;
   font-size: 12px;
@@ -111,12 +117,12 @@
 }
 
 .divider {
-  color: var(--text-muted);
+  color: rgba(179, 179, 179, 0.5);
 }
 
 .selectedCount {
   margin-left: auto;
-  color: var(--text-muted);
+  color: var(--muted);
   font-size: 11px;
 }
 
@@ -126,6 +132,8 @@
   padding: 6px;
   overflow-y: auto;
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .item {
@@ -140,11 +148,11 @@
 }
 
 .item:hover {
-  background: var(--surface-elevated);
+  background: var(--card);
 }
 
 .itemSelected {
-  background: rgba(79, 126, 247, 0.12) !important;
+  background: var(--chips-background-active) !important;
 }
 
 .itemError {
@@ -155,7 +163,7 @@
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-  color: var(--accent);
+  color: var(--text);
 }
 
 .itemContent {
@@ -168,7 +176,7 @@
 
 .dirName {
   font-size: 13px;
-  color: var(--text-primary);
+  color: var(--text);
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -177,7 +185,7 @@
 
 .manifestTitle {
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -191,7 +199,7 @@
 
 .changeBadge {
   font-size: 8px;
-  color: var(--warning);
+  color: #fab005;
   line-height: 1;
 }
 
@@ -199,7 +207,7 @@
   flex-shrink: 0;
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: rgba(179, 179, 179, 0.5);
   cursor: pointer;
   font-size: 16px;
   line-height: 1;
@@ -222,8 +230,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
+  color: rgba(179, 179, 179, 0.5);
   font-size: 13px;
   padding: 40px 16px;
   text-align: center;
+  list-style: none;
 }

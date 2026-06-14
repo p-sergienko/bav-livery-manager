@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMetaManifestStore } from '@/store/metaManifestStore';
-import { CheckboxChecked, CheckboxEmpty } from '@/components/icons';
+import { CheckboxChecked, CheckboxEmpty } from '@/components/Icons';
 import styles from './LiveryList.module.css';
 
 export function MetaLiveryList() {
@@ -47,43 +47,45 @@ export function MetaLiveryList() {
             )}
 
             <ul className={styles.list}>
-                {filtered.map((livery) => {
-                    const isSelected = selectedIds.has(livery.id);
-                    return (
-                        <li
-                            key={livery.id}
-                            className={`${styles.item} ${isSelected ? styles.itemSelected : ''} ${livery.loadError ? styles.itemError : ''}`}
-                            onClick={() => toggleSelect(livery.id)}
-                        >
-                            <span className={styles.checkbox}>
-                                {isSelected ? <CheckboxChecked /> : <CheckboxEmpty />}
-                            </span>
-                            <span className={styles.itemContent}>
-                                <span className={styles.dirName} title={livery.dirPath}>{livery.dirName}</span>
-                                {livery.manifest.title && livery.manifest.title !== livery.dirName && (
-                                    <span className={styles.manifestTitle}>{livery.manifest.title as string}</span>
-                                )}
-                                {livery.loadError && <span className={styles.errorBadge}>No manifest</span>}
-                                {livery.hasChanges && !livery.loadError && <span className={styles.changeBadge}>●</span>}
-                            </span>
-                            <button
-                                className={styles.removeBtn}
-                                title="Remove from list"
-                                onClick={(e) => { e.stopPropagation(); removeLivery(livery.id); }}
-                            >
-                                ×
-                            </button>
-                        </li>
-                    );
-                })}
-                {filtered.length === 0 && liveries.length > 0 && (
-                    <li className={styles.noResults}>No matches for "{search}"</li>
+                {liveries.length === 0 ? (
+                    <li className={styles.empty}><span>Add liveries via the <span style={{ fontWeight: 600 }}>Add Liveries</span> button, or scan a directory for liveries using the <span style={{ fontWeight: 600 }}>Scan Folder</span> button</span></li>
+                ) : (
+                    <>
+                        {filtered.map((livery) => {
+                            const isSelected = selectedIds.has(livery.id);
+                            return (
+                                <li
+                                    key={livery.id}
+                                    className={`${styles.item} ${isSelected ? styles.itemSelected : ''} ${livery.loadError ? styles.itemError : ''}`}
+                                    onClick={() => toggleSelect(livery.id)}
+                                >
+                                    <span className={styles.checkbox}>
+                                        {isSelected ? <CheckboxChecked /> : <CheckboxEmpty />}
+                                    </span>
+                                    <span className={styles.itemContent}>
+                                        <span className={styles.dirName} title={livery.dirPath}>{livery.dirName}</span>
+                                        {livery.manifest.title && livery.manifest.title !== livery.dirName && (
+                                            <span className={styles.manifestTitle}>{livery.manifest.title as string}</span>
+                                        )}
+                                        {livery.loadError && <span className={styles.errorBadge}>No manifest</span>}
+                                        {livery.hasChanges && !livery.loadError && <span className={styles.changeBadge}>●</span>}
+                                    </span>
+                                    <button
+                                        className={styles.removeBtn}
+                                        title="Remove from list"
+                                        onClick={(e) => { e.stopPropagation(); removeLivery(livery.id); }}
+                                    >
+                                        ×
+                                    </button>
+                                </li>
+                            );
+                        })}
+                        {filtered.length === 0 && (
+                            <li className={styles.noResults}>No matches for "{search}"</li>
+                        )}
+                    </>
                 )}
             </ul>
-
-            {liveries.length === 0 && (
-                <div className={styles.empty}><span>No liveries added yet</span></div>
-            )}
         </aside>
     );
 }

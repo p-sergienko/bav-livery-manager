@@ -384,6 +384,7 @@ export function registerIpcHandlers(appContext: AppContext) {
         targetWindow.setTitle(title);
     });
 
+
     ipcMain.handle('get-disk-usage', async (): Promise<DiskUsageReport> => {
         try {
             await validateInstallations();

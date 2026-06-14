@@ -7,12 +7,11 @@ import { MetaManifestEditor } from '@/components/meta/ManifestEditor';
 import { MetaAssetsPanel } from '@/components/meta/AssetsPanel';
 import { MetaTextureConfigPanel } from '@/components/meta/TextureConfigPanel';
 import type { AircraftRecord } from '@/types/metaManifest';
+import { Folder, Plus, Search, Play } from 'react-feather';
 import styles from './MetaEditorPage.module.css';
 
 type MainTab = 'editor' | 'database' | 'finaliser';
 type EditorTab = 'manifest' | 'assets' | 'texture';
-
-// ─── Database sub-page ────────────────────────────────────────────────────────
 
 const EMPTY_RECORD: AircraftRecord = { registration: '', aircraftType: '', engine: '', category: '', year: '', livery: '' };
 
@@ -158,8 +157,6 @@ function FormFields({ form, onChange }: FormFieldsProps) {
     );
 }
 
-// ─── Finaliser sub-page ───────────────────────────────────────────────────────
-
 function FinaliserTab() {
     const { workspaceDir, setWorkspaceDir, logs, clearLogs, running, setRunning } = useMetaFinaliserStore();
     const [copied, setCopied] = useState(false);
@@ -232,7 +229,10 @@ function FinaliserTab() {
                                 <span className={`${styles.dirPath} ${!workspaceDir ? styles.dirPathEmpty : ''}`}>
                                     {workspaceDir ?? 'No directory selected'}
                                 </span>
-                                <button className={styles.browseBtn} onClick={handleSelectWorkspace} disabled={running}>Browse…</button>
+                                <button className={styles.actionBtn} onClick={handleSelectWorkspace} disabled={running}>
+                                    <Folder size={20} />
+                                    <p>Browse</p>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -245,7 +245,7 @@ function FinaliserTab() {
                             </div>
                             <div className={styles.stepBody}>
                                 <p className={styles.stepDesc}>Recursively finds every package with a layout.json and runs MSFSLayoutGenerator.exe to regenerate it.</p>
-                                <button className={styles.runBtn} onClick={handleRunLayouts} disabled={!canRun}>Run Step 1</button>
+                                <button className={styles.actionBtn} style={{ justifyContent: 'center' }} onClick={handleRunLayouts} disabled={!canRun}>Run Step 1</button>
                             </div>
                         </div>
                         <div className={styles.step}>
@@ -255,15 +255,15 @@ function FinaliserTab() {
                             </div>
                             <div className={styles.stepBody}>
                                 <p className={styles.stepDesc}>Recursively finds every package with a layout.json and zips its contents next to the source folder.</p>
-                                <button className={styles.runBtn} onClick={handleRunZips} disabled={!canRun}>Run Step 2</button>
+                                <button className={styles.actionBtn} style={{ justifyContent: 'center' }} onClick={handleRunZips} disabled={!canRun}>Run Step 2</button>
                             </div>
                         </div>
                     </div>
 
                     <div className={styles.actionsRow}>
-                        <button className={styles.runAllBtn} onClick={handleRunAll} disabled={!canRun}>
+                        <button className={styles.actionBtn} onClick={handleRunAll} disabled={!canRun}>
                             {running && <span className={styles.runningDot} />}
-                            {running ? 'Running…' : 'Run All'}
+                            {running ? 'Running…' : <><Play size={20} /><p>Run All</p></>}
                         </button>
                         {running && <button className={styles.cancelBtn} onClick={handleCancel}>Cancel</button>}
                     </div>
@@ -300,13 +300,11 @@ function FinaliserTab() {
     );
 }
 
-// ─── Editor sub-page ──────────────────────────────────────────────────────────
-
 function EditorTab() {
-    const { addLiveries, saveAll, clearAll, isSaving, saveErrors, clearSaveErrors, liveries } = useMetaManifestStore();
+    const { addLiveries, saveAll, clearAll, isSaving, saveErrors, clearSaveErrors, liveries, pendingTextureCfg } = useMetaManifestStore();
     const [editorTab, setEditorTab] = useState<EditorTab>('manifest');
 
-    const hasChanges = liveries.some((l) => l.hasChanges);
+    const hasChanges = liveries.some((l) => l.hasChanges) || pendingTextureCfg !== null;
     const changedCount = liveries.filter((l) => l.hasChanges).length;
 
     async function handleAddDirectories() {
@@ -322,12 +320,11 @@ function EditorTab() {
     return (
         <div className={styles.editorPage}>
             <header className={styles.editorToolbar}>
-                <button className={styles.btn} onClick={handleAddDirectories}>+ Add Liveries</button>
-                <button className={styles.btnSecondary} onClick={handleScanParent}>Scan Folder</button>
+                <button className={styles.btn} onClick={handleAddDirectories}><Plus size={13} />Add Liveries</button>
+                <button className={styles.btnSecondary} onClick={handleScanParent}><Search size={13} />Scan Folder</button>
                 {liveries.length > 0 && (
                     <>
-                        <div className={styles.separator} />
-                        <button className={styles.btnSaveAll} onClick={saveAll} disabled={!hasChanges || isSaving}>
+                        <button className={styles.btnSaveAll} style={{ marginLeft: 'auto' }} onClick={saveAll} disabled={!hasChanges || isSaving}>
                             {isSaving ? 'Saving…' : `Save All${changedCount > 0 ? ` (${changedCount})` : ''}`}
                         </button>
                         <button className={styles.btnDanger} onClick={clearAll}>Clear</button>
@@ -373,8 +370,6 @@ function EditorTab() {
         </div>
     );
 }
-
-// ─── Main page ────────────────────────────────────────────────────────────────
 
 const TAB_LABELS: Record<MainTab, string> = {
     editor: 'Editor',
