@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { useMetaManifestStore } from '@/store/metaManifestStore';
-import { CheckboxChecked } from '@/components/Icons/CheckboxChecked';
-import { CheckboxEmpty } from '@/components/Icons/CheckboxEmpty';
 import styles from './LiveryList.module.css';
 
 export function MetaLiveryList() {
@@ -60,9 +58,13 @@ export function MetaLiveryList() {
                                     className={`${styles.item} ${isSelected ? styles.itemSelected : ''} ${livery.loadError ? styles.itemError : ''}`}
                                     onClick={() => toggleSelect(livery.id)}
                                 >
-                                    <span className={styles.checkbox}>
-                                        {isSelected ? <CheckboxChecked /> : <CheckboxEmpty />}
-                                    </span>
+                                    <input
+                                        type="checkbox"
+                                        className={styles.checkbox}
+                                        checked={isSelected}
+                                        onChange={() => toggleSelect(livery.id)}
+                                        onClick={(e) => e.stopPropagation()}
+                                    />
                                     <span className={styles.itemContent}>
                                         <span className={styles.dirName} title={livery.dirPath}>{livery.dirName}</span>
                                         {livery.manifest.title && livery.manifest.title !== livery.dirName && (
