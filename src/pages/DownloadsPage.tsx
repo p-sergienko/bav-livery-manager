@@ -261,7 +261,7 @@ export const DownloadsPage = () => {
                         )}
                         <div className={styles.grid}>
                             {paginated.map((entry) => {
-                                const liveryMatch = liveries.find((l) => l.id === entry.liveryId || l.name === entry.originalName);
+                                const liveryMatch = liveries.find((l) => (entry.liveryId ? l.id === entry.liveryId : l.name === entry.originalName));
                                 const update = updatesMap.get(`${entry.liveryId}-${entry.simulator ?? ''}`);
 
                                 return (
