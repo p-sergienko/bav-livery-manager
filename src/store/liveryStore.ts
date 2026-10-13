@@ -59,34 +59,30 @@ interface LiveryState {
 }
 
 export const useLiveryStore = create<LiveryState>((set, get) => {
+    const isSameLivery = (entry: InstalledLiveryRecord, livery: Livery) =>
+        entry.liveryId ? entry.liveryId === livery.id : entry.originalName === livery.name;
+
     const matchInstalledEntry = (livery: Livery, resolution: Resolution, simulator: Simulator) => {
         const installed = get().installedLiveries;
 
-        return installed.find((entry) => {
-            // Match by liveryId (preferred) or fall back to originalName for older records
-            const idMatch = entry.liveryId === livery.id;
-            const nameMatch = entry.originalName === livery.name;
-            return (
-                (idMatch || nameMatch) &&
+        return installed.find(
+            (entry) =>
+                isSameLivery(entry, livery) &&
                 entry.resolution === resolution &&
                 entry.simulator === simulator
-            );
-        });
+        );
     };
 
     const hasHighResolutionConflict = (livery: Livery, resolution: Resolution, simulator: Simulator) => {
         const installed = get().installedLiveries;
         const conflictingResolution: Resolution = resolution === '4K' ? '8K' : '4K';
 
-        return installed.some((entry) => {
-            const idMatch = entry.liveryId === livery.id;
-            const nameMatch = entry.originalName === livery.name;
-            return (
-                (idMatch || nameMatch) &&
+        return installed.some(
+            (entry) =>
+                isSameLivery(entry, livery) &&
                 entry.simulator === simulator &&
                 entry.resolution === conflictingResolution
-            );
-        });
+        );
     };
 
     return ({

@@ -74,7 +74,9 @@ export async function recordInstallation(record: Omit<InstalledLiveryRecord, 'in
     // Remove any existing record for the same livery+resolution+simulator combo
     data.liveries = data.liveries.filter(
         (entry) => !(
-            entry.originalName === record.originalName &&
+            (entry.liveryId
+                ? entry.liveryId === record.liveryId
+                : entry.originalName === record.originalName) &&
             entry.resolution === record.resolution &&
             entry.simulator === record.simulator
         )
